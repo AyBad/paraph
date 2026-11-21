@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Atinge „Scanează” și fă o fotografie: foaia este decupată și îndreptată, iar zonele de scris și căsuțele sunt detectate.",
  "tutoDocs": "Caută documente, organizează-le în dosare și folosește ⋮ pentru a redenumi, muta, partaja sau șterge.",
  "tutoSettings": "Limbă, temă luminoasă sau întunecată și cod de blocare a aplicației.",
- "tutoOpenWith": "Poți deschide un PDF și din altă aplicație (Gmail, WhatsApp, Fișiere…) cu „Deschide cu” sau „Partajează” → Paraph."
+ "tutoOpenWith": "Poți deschide un PDF și din altă aplicație (Gmail, WhatsApp, Fișiere…) cu „Deschide cu” sau „Partajează” → Paraph.",
+ "autofillTitle": "Completare automată: un profil pe persoană",
+ "skipSection": "Nu completa",
+ "fill": "Completează",
+ "ocrRunning": "Se citește textul (OCR)…",
+ "pinOffer": "Protejează-ți documentele",
+ "pinOfferD": "Setează un cod de 4 cifre pentru a bloca Paraph. Îl poți schimba din Setări.",
+ "later": "Mai târziu",
+ "signCity": "Localitate (semnătură)"
 };

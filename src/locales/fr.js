@@ -160,5 +160,13 @@ export default {
  "tutoScan": "Touchez « Scanner » et prenez une photo : la feuille est recadrée et redressée, les zones d'écriture et les cases sont détectées.",
  "tutoDocs": "Recherchez vos documents, classez-les dans des dossiers et utilisez ⋮ pour renommer, déplacer, partager ou supprimer.",
  "tutoSettings": "Langue, thème clair ou sombre, et code pour verrouiller l'application.",
- "tutoOpenWith": "Vous pouvez aussi ouvrir un PDF depuis une autre application (Gmail, WhatsApp, Fichiers…) avec « Ouvrir avec » ou « Partager » → Paraph."
+ "tutoOpenWith": "Vous pouvez aussi ouvrir un PDF depuis une autre application (Gmail, WhatsApp, Fichiers…) avec « Ouvrir avec » ou « Partager » → Paraph.",
+ "autofillTitle": "Remplissage auto : un profil par personne",
+ "skipSection": "Ne pas remplir",
+ "fill": "Remplir",
+ "ocrRunning": "Lecture du texte (OCR)…",
+ "pinOffer": "Protégez vos documents",
+ "pinOfferD": "Définissez un code à 4 chiffres pour verrouiller Paraph. Vous pourrez le changer dans les Paramètres.",
+ "later": "Plus tard",
+ "signCity": "Ville (signature)"
 };

@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tapnite »Skeniraj« in fotografirajte: list se obreže in poravna, zaznajo se področja za pisanje in polja.",
  "tutoDocs": "Iščite dokumente, razvrstite jih v mape in z ⋮ jih preimenujte, premaknite, delite ali izbrišite.",
  "tutoSettings": "Jezik, svetla ali temna tema in koda za zaklep aplikacije.",
- "tutoOpenWith": "PDF lahko odprete tudi iz druge aplikacije (Gmail, WhatsApp, Datoteke…) z »Odpri z« ali »Deli« → Paraph."
+ "tutoOpenWith": "PDF lahko odprete tudi iz druge aplikacije (Gmail, WhatsApp, Datoteke…) z »Odpri z« ali »Deli« → Paraph.",
+ "autofillTitle": "Samodejno izpolnjevanje: en profil na osebo",
+ "skipSection": "Ne izpolni",
+ "fill": "Izpolni",
+ "ocrRunning": "Branje besedila (OCR)…",
+ "pinOffer": "Zaščitite svoje dokumente",
+ "pinOfferD": "Nastavite 4-mestno kodo za zaklep Paraph. Spremenite jo v Nastavitvah.",
+ "later": "Pozneje",
+ "signCity": "Kraj (podpis)"
 };

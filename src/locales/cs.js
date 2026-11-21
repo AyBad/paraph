@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Klepněte na „Skenovat“ a vyfoťte: list se ořízne a narovná, rozpoznají se oblasti k psaní i políčka.",
  "tutoDocs": "Vyhledávejte dokumenty, třiďte je do složek a pomocí ⋮ je přejmenujte, přesuňte, sdílejte nebo smažte.",
  "tutoSettings": "Jazyk, světlý nebo tmavý motiv a kód pro zamknutí aplikace.",
- "tutoOpenWith": "PDF můžete otevřít i z jiné aplikace (Gmail, WhatsApp, Soubory…) přes „Otevřít v“ nebo „Sdílet“ → Paraph."
+ "tutoOpenWith": "PDF můžete otevřít i z jiné aplikace (Gmail, WhatsApp, Soubory…) přes „Otevřít v“ nebo „Sdílet“ → Paraph.",
+ "autofillTitle": "Automatické vyplnění: jeden profil na osobu",
+ "skipSection": "Nevyplňovat",
+ "fill": "Vyplnit",
+ "ocrRunning": "Čtení textu (OCR)…",
+ "pinOffer": "Chraňte své dokumenty",
+ "pinOfferD": "Nastavte 4místný kód pro zamknutí Paraph. Změníte ho v Nastavení.",
+ "later": "Později",
+ "signCity": "Místo (podpis)"
 };

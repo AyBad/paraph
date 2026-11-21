@@ -157,5 +157,13 @@ export default {
  "tutoScan": "点击“扫描”并拍照：自动裁剪并拉直页面，识别书写区域和复选框。",
  "tutoDocs": "搜索文档、分类到文件夹，并通过 ⋮ 重命名、移动、分享或删除。",
  "tutoSettings": "语言、浅色或深色主题，以及用于锁定应用的密码。",
- "tutoOpenWith": "也可以在其他应用（Gmail、WhatsApp、文件…）中通过“打开方式”或“分享”→ Paraph 打开 PDF。"
+ "tutoOpenWith": "也可以在其他应用（Gmail、WhatsApp、文件…）中通过“打开方式”或“分享”→ Paraph 打开 PDF。",
+ "autofillTitle": "自动填写：每人一个个人资料",
+ "skipSection": "不填写",
+ "fill": "填写",
+ "ocrRunning": "正在识别文字（OCR）…",
+ "pinOffer": "保护您的文档",
+ "pinOfferD": "设置 4 位密码锁定 Paraph，之后可在设置中更改。",
+ "later": "稍后",
+ "signCity": "城市（签署地）"
 };

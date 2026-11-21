@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Dotknij „Skanuj” i zrób zdjęcie: kartka zostanie przycięta i wyprostowana, a pola i kratki wykryte.",
  "tutoDocs": "Wyszukuj dokumenty, porządkuj je w folderach i używaj ⋮, by zmienić nazwę, przenieść, udostępnić lub usunąć.",
  "tutoSettings": "Język, jasny lub ciemny motyw oraz kod blokady aplikacji.",
- "tutoOpenWith": "Możesz też otworzyć PDF z innej aplikacji (Gmail, WhatsApp, Pliki…) przez „Otwórz za pomocą” lub „Udostępnij” → Paraph."
+ "tutoOpenWith": "Możesz też otworzyć PDF z innej aplikacji (Gmail, WhatsApp, Pliki…) przez „Otwórz za pomocą” lub „Udostępnij” → Paraph.",
+ "autofillTitle": "Autouzupełnianie: jeden profil na osobę",
+ "skipSection": "Nie wypełniaj",
+ "fill": "Wypełnij",
+ "ocrRunning": "Odczytywanie tekstu (OCR)…",
+ "pinOffer": "Chroń swoje dokumenty",
+ "pinOfferD": "Ustaw 4-cyfrowy kod blokady Paraph. Zmienisz go w Ustawieniach.",
+ "later": "Później",
+ "signCity": "Miejscowość (podpis)"
 };

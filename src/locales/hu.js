@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Koppintson a „Szkennelés” gombra és fényképezzen: a lap kivágásra és kiegyenesítésre kerül, az írási területek és jelölőnégyzetek felismerésre kerülnek.",
  "tutoDocs": "Keressen a dokumentumok között, rendezze mappákba, és a ⋮ menüvel nevezze át, helyezze át, ossza meg vagy törölje őket.",
  "tutoSettings": "Nyelv, világos vagy sötét téma és kód az alkalmazás zárolásához.",
- "tutoOpenWith": "PDF-et más alkalmazásból is megnyithat (Gmail, WhatsApp, Fájlok…) a „Megnyitás ezzel” vagy „Megosztás” → Paraph menüvel."
+ "tutoOpenWith": "PDF-et más alkalmazásból is megnyithat (Gmail, WhatsApp, Fájlok…) a „Megnyitás ezzel” vagy „Megosztás” → Paraph menüvel.",
+ "autofillTitle": "Automatikus kitöltés: személyenként egy profil",
+ "skipSection": "Ne töltse ki",
+ "fill": "Kitöltés",
+ "ocrRunning": "Szöveg olvasása (OCR)…",
+ "pinOffer": "Védje dokumentumait",
+ "pinOfferD": "Állítson be 4 jegyű kódot a Paraph zárolásához. A Beállításokban módosítható.",
+ "later": "Később",
+ "signCity": "Hely (aláírás)"
 };

@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Pieskarieties “Skenēt” un nofotografējiet: lapa tiek apgriezta un iztaisnota, rakstīšanas zonas un rūtiņas tiek noteiktas.",
  "tutoDocs": "Meklējiet dokumentus, kārtojiet tos mapēs un ar ⋮ pārdēvējiet, pārvietojiet, kopīgojiet vai dzēsiet.",
  "tutoSettings": "Valoda, gaišs vai tumšs motīvs un kods lietotnes bloķēšanai.",
- "tutoOpenWith": "PDF var atvērt arī no citas lietotnes (Gmail, WhatsApp, Faili…) ar “Atvērt ar” vai “Kopīgot” → Paraph."
+ "tutoOpenWith": "PDF var atvērt arī no citas lietotnes (Gmail, WhatsApp, Faili…) ar “Atvērt ar” vai “Kopīgot” → Paraph.",
+ "autofillTitle": "Automātiskā aizpilde: viens profils katrai personai",
+ "skipSection": "Neaizpildīt",
+ "fill": "Aizpildīt",
+ "ocrRunning": "Teksta nolasīšana (OCR)…",
+ "pinOffer": "Aizsargājiet savus dokumentus",
+ "pinOfferD": "Iestatiet 4 ciparu kodu Paraph bloķēšanai. To var mainīt iestatījumos.",
+ "later": "Vēlāk",
+ "signCity": "Vieta (paraksts)"
 };

@@ -157,5 +157,13 @@ export default {
  "tutoScan": "“Tara”ya dokunup fotoğraf çekin: sayfa kırpılıp düzeltilir, yazı alanları ve kutucuklar algılanır.",
  "tutoDocs": "Belgelerde arayın, klasörlere ayırın ve ⋮ ile yeniden adlandırın, taşıyın, paylaşın veya silin.",
  "tutoSettings": "Dil, açık veya koyu tema ve uygulamayı kilitlemek için kod.",
- "tutoOpenWith": "Başka bir uygulamadan da (Gmail, WhatsApp, Dosyalar…) “Birlikte aç” veya “Paylaş” → Paraph ile PDF açabilirsiniz."
+ "tutoOpenWith": "Başka bir uygulamadan da (Gmail, WhatsApp, Dosyalar…) “Birlikte aç” veya “Paylaş” → Paraph ile PDF açabilirsiniz.",
+ "autofillTitle": "Otomatik doldur: kişi başına bir profil",
+ "skipSection": "Doldurma",
+ "fill": "Doldur",
+ "ocrRunning": "Metin okunuyor (OCR)…",
+ "pinOffer": "Belgelerinizi koruyun",
+ "pinOfferD": "Paraph'ı kilitlemek için 4 haneli kod belirleyin. Ayarlar'dan değiştirebilirsiniz.",
+ "later": "Daha sonra",
+ "signCity": "Şehir (imza)"
 };

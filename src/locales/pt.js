@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Toque em «Digitalizar» e tire uma foto: a folha é recortada e endireitada, as zonas de escrita e as caixas são detetadas.",
  "tutoDocs": "Pesquise documentos, organize-os em pastas e use ⋮ para mudar o nome, mover, partilhar ou eliminar.",
  "tutoSettings": "Idioma, tema claro ou escuro e código para bloquear a app.",
- "tutoOpenWith": "Também pode abrir um PDF a partir de outra app (Gmail, WhatsApp, Ficheiros…) com «Abrir com» ou «Partilhar» → Paraph."
+ "tutoOpenWith": "Também pode abrir um PDF a partir de outra app (Gmail, WhatsApp, Ficheiros…) com «Abrir com» ou «Partilhar» → Paraph.",
+ "autofillTitle": "Preenchimento automático: um perfil por pessoa",
+ "skipSection": "Não preencher",
+ "fill": "Preencher",
+ "ocrRunning": "A ler o texto (OCR)…",
+ "pinOffer": "Proteja os seus documentos",
+ "pinOfferD": "Defina um código de 4 dígitos para bloquear o Paraph. Pode alterá-lo nas Definições.",
+ "later": "Mais tarde",
+ "signCity": "Localidade (assinatura)"
 };

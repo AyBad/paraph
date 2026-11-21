@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Agħfas “Skennja” u ħu ritratt: il-folja tinqata' u tiddritta, iż-żoni tal-kitba u l-kaxxi jinstabu.",
  "tutoDocs": "Fittex id-dokumenti, poġġihom f'folders u uża ⋮ biex tibdel l-isem, tmexxi, taqsam jew tħassar.",
  "tutoSettings": "Lingwa, tema ċara jew skura u kodiċi biex tissakkar l-app.",
- "tutoOpenWith": "Tista' tiftaħ PDF minn app oħra (Gmail, WhatsApp, Fajls…) b'“Iftaħ b'” jew “Aqsam” → Paraph."
+ "tutoOpenWith": "Tista' tiftaħ PDF minn app oħra (Gmail, WhatsApp, Fajls…) b'“Iftaħ b'” jew “Aqsam” → Paraph.",
+ "autofillTitle": "Mili awtomatiku: profil wieħed għal kull persuna",
+ "skipSection": "Timliex",
+ "fill": "Imla",
+ "ocrRunning": "Qed jinqara t-test (OCR)…",
+ "pinOffer": "Ipproteġi d-dokumenti tiegħek",
+ "pinOfferD": "Issettja kodiċi ta' 4 ċifri biex tissakkar Paraph. Tista' tibdlu fis-Settings.",
+ "later": "Aktar tard",
+ "signCity": "Post (firma)"
 };

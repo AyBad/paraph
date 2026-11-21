@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Napauta ”Skannaa” ja ota kuva: arkki rajataan ja suoristetaan, kirjoitusalueet ja ruudut tunnistetaan.",
  "tutoDocs": "Hae asiakirjoja, järjestä ne kansioihin ja käytä ⋮ nimeämiseen, siirtämiseen, jakamiseen tai poistamiseen.",
  "tutoSettings": "Kieli, vaalea tai tumma teema sekä koodi sovelluksen lukitsemiseen.",
- "tutoOpenWith": "Voit myös avata PDF:n toisesta sovelluksesta (Gmail, WhatsApp, Tiedostot…) valinnalla ”Avaa sovelluksella” tai ”Jaa” → Paraph."
+ "tutoOpenWith": "Voit myös avata PDF:n toisesta sovelluksesta (Gmail, WhatsApp, Tiedostot…) valinnalla ”Avaa sovelluksella” tai ”Jaa” → Paraph.",
+ "autofillTitle": "Automaattinen täyttö: yksi profiili henkilöä kohden",
+ "skipSection": "Älä täytä",
+ "fill": "Täytä",
+ "ocrRunning": "Luetaan tekstiä (OCR)…",
+ "pinOffer": "Suojaa asiakirjasi",
+ "pinOfferD": "Aseta 4-numeroinen koodi Paraphin lukitsemiseksi. Voit vaihtaa sen asetuksista.",
+ "later": "Myöhemmin",
+ "signCity": "Paikka (allekirjoitus)"
 };

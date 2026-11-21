@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tik op „Scannen” en maak een foto: het blad wordt bijgesneden en rechtgezet, schrijfzones en vakjes worden herkend.",
  "tutoDocs": "Zoek je documenten, orden ze in mappen en gebruik ⋮ om te hernoemen, verplaatsen, delen of verwijderen.",
  "tutoSettings": "Taal, licht of donker thema en een code om de app te vergrendelen.",
- "tutoOpenWith": "Je kunt ook een pdf openen vanuit een andere app (Gmail, WhatsApp, Bestanden…) via „Openen met” of „Delen” → Paraph."
+ "tutoOpenWith": "Je kunt ook een pdf openen vanuit een andere app (Gmail, WhatsApp, Bestanden…) via „Openen met” of „Delen” → Paraph.",
+ "autofillTitle": "Automatisch invullen: één profiel per persoon",
+ "skipSection": "Niet invullen",
+ "fill": "Invullen",
+ "ocrRunning": "Tekst lezen (OCR)…",
+ "pinOffer": "Bescherm je documenten",
+ "pinOfferD": "Stel een code van 4 cijfers in om Paraph te vergrendelen. Wijzigbaar in Instellingen.",
+ "later": "Later",
+ "signCity": "Plaats (ondertekening)"
 };

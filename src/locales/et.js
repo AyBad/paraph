@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Puuduta „Skanni” ja tee foto: leht kärbitakse ja sirgestatakse, kirjutusalad ja ruudud tuvastatakse.",
  "tutoDocs": "Otsi dokumente, jaota need kaustadesse ja kasuta ⋮ ümbernimetamiseks, teisaldamiseks, jagamiseks või kustutamiseks.",
  "tutoSettings": "Keel, hele või tume teema ja kood rakenduse lukustamiseks.",
- "tutoOpenWith": "PDF-i saab avada ka teisest rakendusest (Gmail, WhatsApp, Failid…) valikuga „Ava rakendusega” või „Jaga” → Paraph."
+ "tutoOpenWith": "PDF-i saab avada ka teisest rakendusest (Gmail, WhatsApp, Failid…) valikuga „Ava rakendusega” või „Jaga” → Paraph.",
+ "autofillTitle": "Automaatne täitmine: üks profiil inimese kohta",
+ "skipSection": "Ära täida",
+ "fill": "Täida",
+ "ocrRunning": "Teksti lugemine (OCR)…",
+ "pinOffer": "Kaitse oma dokumente",
+ "pinOfferD": "Määra Paraphi lukustamiseks 4-kohaline kood. Saad seda muuta seadetes.",
+ "later": "Hiljem",
+ "signCity": "Koht (allkiri)"
 };
