@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Kiekvienas puslapis įdedamas kaip paveikslėlis į Word failą (tekstas neredaguojamas)",
  "fmt_jpg": "Vaizdas (.jpg)",
- "fmtHint_jpg": "Visi puslapiai viename vaizde"
+ "fmtHint_jpg": "Visi puslapiai viename vaizde",
+ "scanColor": "Spalvotas",
+ "scanBW": "Nespalvotas"
 };

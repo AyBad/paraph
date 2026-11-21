@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Her sayfa Word dosyasına resim olarak eklenir (metin düzenlenemez)",
  "fmt_jpg": "Resim (.jpg)",
- "fmtHint_jpg": "Tüm sayfalar tek bir resimde"
+ "fmtHint_jpg": "Tüm sayfalar tek bir resimde",
+ "scanColor": "Renkli",
+ "scanBW": "Siyah beyaz"
 };

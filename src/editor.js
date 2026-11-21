@@ -122,6 +122,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (st) {
       for (const [x, y, w, h, lab] of st.z) fields.push({ kind: 'zone', page: i - 1, x, y, w, h, sure: true, lab });
       for (const [x, y, w, h] of st.b) boxes.push({ x, y, w, h });
+      // round / drawn tick boxes of the Word page ("◯ M.  ◯ Mme") are only visible in the picture
+      if (!initialObjs) { try { const z = await detectZones(page); for (const bx of z.boxes) if (!boxes.some(o => Math.abs(o.x - bx.x) < 3 && Math.abs(o.y - bx.y) < 3)) boxes.push(bx); } catch { } }
     } else if (!pf.length) {
       boxes = await detectBoxes(page, vp);
       if (!initialObjs && i <= 30) {
@@ -363,7 +365,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         const sp = splitLeaders(items); sp.text.ink = items.ink; sp.text.quality = items.quality;
         pageText[pi] = { items: sp.text, lines: textLines(sp.text), ocr: true };
         // too few readable words = blurry / dark photo: nothing can be trusted on this page
-        if (sp.text.length < 12 || items.quality < 50) { dropPending(pi); continue; }
+        if (sp.text.length < 4 || items.quality < 50) { dropPending(pi); continue; }
         leaderZones(pi, sp.leaders);
         attachLabels(objs.filter(o => o.field && o.page === pi), sp.text);
         markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines);
@@ -421,6 +423,12 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (key === 'streetName') return streetOnly();
     if (key === 'fullAddress') {
       const l1 = [profile.streetNumber, profile.streetName].filter(Boolean).join(' ');
+      // the form has its own "Code postal" / "Ville" boxes (same section): only the street goes in "Demeurant / Adresse"
+      if (o && o.field) {
+        const near = objs.filter(f => f.field && f !== o && f.page === o.page && (o.section == null || f.section === o.section));
+        const hasPc = near.some(f => f.match === 'postalCode'), hasCity = near.some(f => f.match === 'city');
+        if (hasPc || hasCity) return [l1, profile.addressExtra, hasPc ? '' : profile.postalCode, hasCity ? '' : profile.city].filter(Boolean).join(', ');
+      }
       const l2 = [profile.postalCode, profile.city].filter(Boolean).join(' ');
       return [l1, profile.addressExtra, l2, profile.country].filter(Boolean).join(', ');
     }
@@ -746,7 +754,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       o = { ...base, type: 'text', x, y: y - 7, fontSize: 11, text, bind: tool === 'insert' ? pending : undefined };
     } else if (tool === 'check' || tool === 'cross') {
       const bx = boxAt(pi, x, y);
-      if (bx) { markBox(pi, bx, tool); return; }
+      if (bx) { markBox(pi, bx, tool); setTool(null); return; }
       o = { ...base, type: tool, x: x - 7, y: y - 7, w: 14, h: 14 };
     } else if (tool === 'strike') {
       o = { ...base, type: 'strike', x: x - 40, y: y - 5, w: 80, h: 10 };
@@ -757,7 +765,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     }
     if (!o) return;
     snap(); objs.push(o); sel = o;
-    if (!(tool === 'check' || tool === 'cross')) setTool(null);
+    setTool(null);
     renderObjs();
     if (o.type === 'text' && !o.text) startEdit(o);
   }
@@ -816,6 +824,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         commitEdit(); snap();
         const mark = tool === 'cross' ? 'cross' : 'check';
         if (o.on && o.mark === mark) o.on = false; else { setRadio(o, true); o.mark = mark; o.color = color; }
+        if (tool === 'check' || tool === 'cross') setTool(null);
         sel = null; renderObjs(); return;
       }
       if (o.field && o.type === 'text') { startEdit(o); return; }
@@ -962,10 +971,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     for (const o of objs) {
       if (!o.bind || o.bindSec) continue;
       if (o.type === 'text') { o.text = profVal(o.bind, o); fit(o); changed = true; }
-      if (o.type === 'image' && profile[o.bind]) {
-        const { h } = await imageSize(profile[o.bind], o.w);
-        o.orig = profile[o.bind]; o.src = o.tinted ? await tint(o.orig, o.color) : o.orig; o.h = h; changed = true;
-      }
+      // a signature or initials already placed belongs to the person who signed: never replaced
     }
     if (changed) renderObjs();
     toast(`${t('profile')} : ${profile.name || t('unnamed')}`);

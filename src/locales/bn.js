@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "প্রতিটি পৃষ্ঠা Word ফাইলে ছবি হিসেবে (লেখা সম্পাদনযোগ্য নয়)",
  "fmt_jpg": "ছবি (.jpg)",
- "fmtHint_jpg": "সব পৃষ্ঠা একটি ছবিতে"
+ "fmtHint_jpg": "সব পৃষ্ঠা একটি ছবিতে",
+ "scanColor": "রঙিন",
+ "scanBW": "সাদা-কালো"
 };

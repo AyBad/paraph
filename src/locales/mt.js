@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Kull paġna titqiegħed bħala stampa fil-fajl Word (test mhux editjabbli)",
  "fmt_jpg": "Stampa (.jpg)",
- "fmtHint_jpg": "Il-paġni kollha fi stampa waħda"
+ "fmtHint_jpg": "Il-paġni kollha fi stampa waħda",
+ "scanColor": "Kulur",
+ "scanBW": "Iswed u abjad"
 };

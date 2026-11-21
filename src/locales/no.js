@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Hver side settes inn som bilde i Word-filen (tekst kan ikke redigeres)",
  "fmt_jpg": "Bilde (.jpg)",
- "fmtHint_jpg": "Alle sider i ett bilde"
+ "fmtHint_jpg": "Alle sider i ett bilde",
+ "scanColor": "Farge",
+ "scanBW": "Svart-hvitt"
 };

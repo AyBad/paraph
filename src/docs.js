@@ -53,11 +53,11 @@ function docxLayout(sec) {
   const range = document.createRange();
   for (let n = tw.nextNode(); n; n = tw.nextNode()) {
     const s = n.nodeValue; if (!s || !s.trim()) continue;
-    const re = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}|[☐□❑▢◻]|[^\s.·…_☐□❑▢◻]+|\S/g; let m;
+    const re = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}|[☐□❑▢◻○◯❍⭘\uF06F\uF0A8\uF06D\uF071\uF072\uF0A1\uF070]|[^\s.·…_☐□❑▢◻○◯❍⭘\uF06F\uF0A8\uF06D\uF071\uF072\uF0A1\uF070]+|\S/g; let m;
     while ((m = re.exec(s))) {
       range.setStart(n, m.index); range.setEnd(n, m.index + m[0].length);
       const rects = [...range.getClientRects()].filter(r => r.width > 0.5 && r.height > 0.5);
-      if (/^[☐□❑▢◻]$/.test(m[0])) { for (const r of rects) { const [x, y, w, h] = rel(r); const sz = Math.min(w, h) * 0.8; boxes.push([x + (w - sz) / 2, y + (h - sz) / 2, sz, sz]); } continue; }
+      if (/^[☐□❑▢◻○◯❍⭘\uF06F\uF0A8\uF06D\uF071\uF072\uF0A1\uF070]$/.test(m[0])) { for (const r of rects) { const [x, y, w, h] = rel(r); const sz = Math.min(w, h) * 0.8; boxes.push([x + (w - sz) / 2, y + (h - sz) / 2, sz, sz]); } continue; }
       LEAD_RE.lastIndex = 0;
       if (LEAD_RE.test(m[0]) && (m[0].replace(/\s/g, '').replace(/…/g, '...').length >= 4 || /_{3,}/.test(m[0]))) { for (const r of rects) if (r.width > 18) zones.push(rel(r)); continue; }
       for (const r of rects) { const [x, y, w, h] = rel(r); words.push({ t: m[0], x, y, w, h }); }
@@ -381,9 +381,17 @@ export async function detectZones(page) {
     if (big || w < lo || h < lo || Math.abs(w - h) > Math.max(2, w * 0.2)) continue;
     const side = (a, b, c2, d) => darkRatio(a, b, c2, d) > 0.75;
     const t = Math.max(1, Math.round(S));
-    if (side(x0, y0, x1 + 1, y0 + t) && side(x0, y1 + 1 - t, x1 + 1, y1 + 1) && side(x0, y0, x0 + t, y1 + 1) && side(x1 + 1 - t, y0, x1 + 1, y1 + 1)
-      && darkRatio(x0 + 2 * t, y0 + 2 * t, x1 - 2 * t, y1 - 2 * t) < 0.15)
+    const hollow = darkRatio(x0 + 2 * t, y0 + 2 * t, x1 - 2 * t, y1 - 2 * t) < 0.15;
+    if (side(x0, y0, x1 + 1, y0 + t) && side(x0, y1 + 1 - t, x1 + 1, y1 + 1) && side(x0, y0, x0 + t, y1 + 1) && side(x1 + 1 - t, y0, x1 + 1, y1 + 1) && hollow)
       boxes.push({ x: x0 / S, y: y0 / S, w: w / S, h: h / S });
+    else if (hollow && w >= 9 * S && n < w * h * 0.45) {
+      // round box or square with rounded corners: the middle of each side touches the frame, thin line, empty inside
+      const mx0 = x0 + w * 0.35 | 0, mx1 = x0 + w * 0.65 | 0, my0 = y0 + h * 0.35 | 0, my1 = y0 + h * 0.65 | 0;
+      let thick = 0; for (let y = y0; y < y1 && dark[y * W + ((x0 + x1) >> 1)]; y++) thick++;
+      const half = (a, b, c2, d) => darkRatio(a, b, c2, d) > 0.45;
+      if (half(mx0, y0, mx1, y0 + t) && half(mx0, y1 + 1 - t, mx1, y1 + 1) && half(x0, my0, x0 + t, my1) && half(x1 + 1 - t, my0, x1 + 1, my1) && thick <= Math.max(3, h * 0.14))
+        boxes.push({ x: x0 / S, y: y0 / S, w: w / S, h: h / S, round: true });
+    }
   }
   return { zones: out.slice(0, 120).map(z => ({ x: z.x0 / S, y: z.y0 / S, w: (z.x1 - z.x0) / S, h: (z.y1 - z.y0) / S, dotted: !!z.dotted })), boxes };
 }

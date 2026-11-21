@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Katra lapa ievietota kā attēls Word failā (teksts nav rediģējams)",
  "fmt_jpg": "Attēls (.jpg)",
- "fmtHint_jpg": "Visas lapas vienā attēlā"
+ "fmtHint_jpg": "Visas lapas vienā attēlā",
+ "scanColor": "Krāsains",
+ "scanBW": "Melnbalts"
 };

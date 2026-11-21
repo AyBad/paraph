@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Cuirtear gach leathanach mar íomhá sa chomhad Word (téacs nach féidir a chur in eagar)",
  "fmt_jpg": "Íomhá (.jpg)",
- "fmtHint_jpg": "Na leathanaigh go léir in aon íomhá amháin"
+ "fmtHint_jpg": "Na leathanaigh go léir in aon íomhá amháin",
+ "scanColor": "Dath",
+ "scanBW": "Dubh agus bán"
 };

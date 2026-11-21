@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Fiecare pagină este pusă ca imagine în fișierul Word (text needitabil)",
  "fmt_jpg": "Imagine (.jpg)",
- "fmtHint_jpg": "Toate paginile într-o singură imagine"
+ "fmtHint_jpg": "Toate paginile într-o singură imagine",
+ "scanColor": "Color",
+ "scanBW": "Alb-negru"
 };

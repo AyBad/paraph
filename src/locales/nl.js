@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Elke pagina wordt als afbeelding in het Word-bestand gezet (tekst niet bewerkbaar)",
  "fmt_jpg": "Afbeelding (.jpg)",
- "fmtHint_jpg": "Alle pagina's in één afbeelding"
+ "fmtHint_jpg": "Alle pagina's in één afbeelding",
+ "scanColor": "Kleur",
+ "scanBW": "Zwart-wit"
 };

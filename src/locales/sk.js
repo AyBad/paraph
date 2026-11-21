@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Každá strana je vložená ako obrázok do súboru Word (text nie je upraviteľný)",
  "fmt_jpg": "Obrázok (.jpg)",
- "fmtHint_jpg": "Všetky strany v jednom obrázku"
+ "fmtHint_jpg": "Všetky strany v jednom obrázku",
+ "scanColor": "Farebne",
+ "scanBW": "Čiernobielo"
 };

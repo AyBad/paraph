@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "แต่ละหน้าถูกใส่เป็นรูปภาพในไฟล์ Word (แก้ไขข้อความไม่ได้)",
  "fmt_jpg": "รูปภาพ (.jpg)",
- "fmtHint_jpg": "รวมทุกหน้าเป็นภาพเดียว"
+ "fmtHint_jpg": "รวมทุกหน้าเป็นภาพเดียว",
+ "scanColor": "สี",
+ "scanBW": "ขาวดำ"
 };

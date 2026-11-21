@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Vsaka stran je vstavljena kot slika v datoteko Word (besedilo ni urejljivo)",
  "fmt_jpg": "Slika (.jpg)",
- "fmtHint_jpg": "Vse strani v eni sliki"
+ "fmtHint_jpg": "Vse strani v eni sliki",
+ "scanColor": "Barvno",
+ "scanBW": "Črno-belo"
 };

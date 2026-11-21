@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Jokainen sivu lisätään kuvana Word-tiedostoon (teksti ei muokattavissa)",
  "fmt_jpg": "Kuva (.jpg)",
- "fmtHint_jpg": "Kaikki sivut yhdessä kuvassa"
+ "fmtHint_jpg": "Kaikki sivut yhdessä kuvassa",
+ "scanColor": "Väri",
+ "scanBW": "Mustavalko"
 };
