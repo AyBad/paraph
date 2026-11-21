@@ -181,5 +181,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Each page is placed as a picture in the Word file (text not editable)",
  "fmt_jpg": "Image (.jpg)",
- "fmtHint_jpg": "All pages joined in a single picture"
+ "fmtHint_jpg": "All pages joined in a single picture",
+ "scanColor": "Colour",
+ "scanBW": "Black & white"
 };

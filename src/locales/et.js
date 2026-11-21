@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Iga leht lisatakse Wordi faili pildina (teksti ei saa muuta)",
  "fmt_jpg": "Pilt (.jpg)",
- "fmtHint_jpg": "Kõik lehed ühel pildil"
+ "fmtHint_jpg": "Kõik lehed ühel pildil",
+ "scanColor": "Värviline",
+ "scanBW": "Mustvalge"
 };

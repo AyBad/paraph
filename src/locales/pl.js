@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Każda strona jako obraz w pliku Word (tekst nieedytowalny)",
  "fmt_jpg": "Obraz (.jpg)",
- "fmtHint_jpg": "Wszystkie strony w jednym obrazie"
+ "fmtHint_jpg": "Wszystkie strony w jednym obrazie",
+ "scanColor": "Kolor",
+ "scanBW": "Czarno-białe"
 };

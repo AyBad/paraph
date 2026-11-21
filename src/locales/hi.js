@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "हर पेज Word फ़ाइल में चित्र के रूप में (टेक्स्ट संपादन योग्य नहीं)",
  "fmt_jpg": "चित्र (.jpg)",
- "fmtHint_jpg": "सभी पेज एक ही चित्र में"
+ "fmtHint_jpg": "सभी पेज एक ही चित्र में",
+ "scanColor": "रंगीन",
+ "scanBW": "श्वेत-श्याम"
 };

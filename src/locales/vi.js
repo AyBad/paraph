@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Mỗi trang được đặt thành ảnh trong tệp Word (không sửa được chữ)",
  "fmt_jpg": "Ảnh (.jpg)",
- "fmtHint_jpg": "Tất cả trang trong một ảnh"
+ "fmtHint_jpg": "Tất cả trang trong một ảnh",
+ "scanColor": "Màu",
+ "scanBW": "Đen trắng"
 };

@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "各ページを画像として Word ファイルに配置（テキスト編集不可）",
  "fmt_jpg": "画像 (.jpg)",
- "fmtHint_jpg": "全ページを1枚の画像に"
+ "fmtHint_jpg": "全ページを1枚の画像に",
+ "scanColor": "カラー",
+ "scanBW": "白黒"
 };

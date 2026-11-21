@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Svaka stranica umetnuta je kao slika u Word datoteku (tekst se ne može uređivati)",
  "fmt_jpg": "Slika (.jpg)",
- "fmtHint_jpg": "Sve stranice u jednoj slici"
+ "fmtHint_jpg": "Sve stranice u jednoj slici",
+ "scanColor": "Boja",
+ "scanBW": "Crno-bijelo"
 };

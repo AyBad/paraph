@@ -354,3 +354,6 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .pdd-row .grow{flex:1;margin:0}
 .dd-sig{height:22px;width:44px;object-fit:contain}
 [data-theme=dark] .dd-sig{filter:invert(1)}
+.scan-bar .s-mode{background:#2b2b33;flex:0 0 auto}
+.scan-bar .s-mode .seg-b{color:#bbb;padding:9px 12px}
+.scan-bar .s-mode .seg-b.on{background:#3949ab;color:#fff}

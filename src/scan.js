@@ -51,6 +51,21 @@ function warp(img, quad) {
   return out;
 }
 
+/** colour scan: white paper, deeper ink, colours kept */
+function enhanceColor(canvas) {
+  const ctx = canvas.getContext('2d'); const id = ctx.getImageData(0, 0, canvas.width, canvas.height), d = id.data;
+  const hs = [0, 1, 2].map(() => new Array(256).fill(0));
+  for (let i = 0; i < d.length; i += 16) for (let c = 0; c < 3; c++) hs[c][d[i + c]]++;
+  const tot = hs[0].reduce((a, b) => a + b, 0);
+  const lim = hs.map(h => { let acc = 0, lo = 0, hi = 255; for (let i = 0; i < 256; i++) { acc += h[i]; if (acc < tot * 0.01) lo = i; if (acc < tot * 0.7) hi = i; } return [lo, Math.max(hi, lo + 40)]; });
+  for (let i = 0; i < d.length; i += 4) for (let c = 0; c < 3; c++) {
+    const [lo, hi] = lim[c]; let v = (d[i + c] - lo) * 255 / (hi - lo);
+    d[i + c] = v > 245 ? 255 : v < 0 ? 0 : v;
+  }
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
 function enhance(canvas) {
   const ctx = canvas.getContext('2d'); const id = ctx.getImageData(0, 0, canvas.width, canvas.height), d = id.data;
   const hist = new Array(256).fill(0);
@@ -130,14 +145,15 @@ export function scanDocument() {
       <div class="scan-bar">
         <label class="btn ghost s-shoot">${ICON.camera}<span>${t('takePhoto')}</span><input type="file" accept="image/*" capture="environment" hidden></label>
         <button class="btn ghost s-rot hidden">${ICON.rotate}</button>
-        <button class="btn ghost s-filter hidden">${ICON.magic}<span>${t('enhance')}</span></button>
+        <div class="seg s-mode hidden"><button class="seg-b" data-m="color">${t('scanColor')}</button><button class="seg-b" data-m="bw">${t('scanBW')}</button></div>
         <button class="btn ghost s-add hidden">${ICON.plus}<span>${t('addPage')}</span></button>
         <button class="btn primary s-done hidden">${ICON.done}<span>${t('finish')}</span></button>
       </div>`;
     document.body.appendChild(root);
     const $ = (s) => root.querySelector(s);
     const cv = $('.s-cv'), ctx = cv.getContext('2d');
-    let img = null, quad = null, enhanced = true, view = { k: 1, ox: 0, oy: 0 };
+    let img = null, quad = null, view = { k: 1, ox: 0, oy: 0 };
+    let mode = 'bw'; try { mode = localStorage.getItem('paraph-scan-mode') || 'bw'; } catch { }
 
     const draw = () => {
       if (!img) return;
@@ -146,16 +162,19 @@ export function scanDocument() {
       const k = Math.min((W - 40) / img.width, (H - 40) / img.height);
       view = { k, ox: (W - img.width * k) / 2, oy: (H - img.height * k) / 2 };
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      // preview of the chosen look
+      ctx.filter = mode === 'bw' ? 'grayscale(1) contrast(1.5) brightness(1.08)' : 'contrast(1.15) brightness(1.06) saturate(1.1)';
       ctx.drawImage(img, view.ox, view.oy, img.width * k, img.height * k);
+      ctx.filter = 'none';
       const P = quad.map(([x, y]) => [view.ox + x * k, view.oy + y * k]);
       ctx.fillStyle = 'rgba(57,73,171,.18)'; ctx.strokeStyle = '#7aa2ff'; ctx.lineWidth = 2.5;
       ctx.beginPath(); P.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.fill(); ctx.stroke();
       P.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 13, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#3949ab'; ctx.stroke(); });
     };
     const ui = () => {
-      ['.s-rot', '.s-filter', '.s-add', '.s-done'].forEach(c => $(c).classList.toggle('hidden', !img && !(c === '.s-done' && pages.length)));
+      ['.s-rot', '.s-mode', '.s-add', '.s-done'].forEach(c => $(c).classList.toggle('hidden', !img && !(c === '.s-done' && pages.length)));
       $('.s-empty').classList.toggle('hidden', !!img);
-      $('.s-filter').classList.toggle('on', enhanced);
+      root.querySelectorAll('.s-mode .seg-b').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
       $('.s-count').textContent = pages.length ? `${pages.length} ${t('pages')}` : '';
       $('.s-shoot span').textContent = img ? t('retake') : t('takePhoto');
     };
@@ -183,10 +202,10 @@ export function scanDocument() {
       quad = quad.map(([qx, qy]) => [img.height - qy, qx]); quad = [quad[3], quad[0], quad[1], quad[2]];
       img = c; draw();
     };
-    $('.s-filter').onclick = () => { enhanced = !enhanced; ui(); };
+    root.querySelectorAll('.s-mode .seg-b').forEach(b => b.onclick = () => { mode = b.dataset.m; try { localStorage.setItem('paraph-scan-mode', mode); } catch { } ui(); draw(); });
     const commitPage = () => {
       if (!img) return;
-      let out = warp(img, quad); if (enhanced) out = enhance(out);
+      let out = warp(img, quad); out = mode === 'color' ? enhanceColor(out) : enhance(out);
       pages.push(out.toDataURL('image/jpeg', 0.85)); img = null; quad = null;
       ctx.clearRect(0, 0, cv.width, cv.height);
     };

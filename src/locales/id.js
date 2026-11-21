@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Setiap halaman dimasukkan sebagai gambar di file Word (teks tidak dapat diedit)",
  "fmt_jpg": "Gambar (.jpg)",
- "fmtHint_jpg": "Semua halaman dalam satu gambar"
+ "fmtHint_jpg": "Semua halaman dalam satu gambar",
+ "scanColor": "Warna",
+ "scanBW": "Hitam putih"
 };

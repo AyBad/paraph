@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Minden oldal képként kerül a Word-fájlba (a szöveg nem szerkeszthető)",
  "fmt_jpg": "Kép (.jpg)",
- "fmtHint_jpg": "Minden oldal egyetlen képen"
+ "fmtHint_jpg": "Minden oldal egyetlen képen",
+ "scanColor": "Színes",
+ "scanBW": "Fekete-fehér"
 };

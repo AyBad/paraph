@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "每页以图片形式放入 Word 文件（文字不可编辑）",
  "fmt_jpg": "图片 (.jpg)",
- "fmtHint_jpg": "所有页面合成一张图片"
+ "fmtHint_jpg": "所有页面合成一张图片",
+ "scanColor": "彩色",
+ "scanBW": "黑白"
 };

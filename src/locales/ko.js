@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "각 페이지를 이미지로 Word 파일에 넣음 (텍스트 편집 불가)",
  "fmt_jpg": "이미지 (.jpg)",
- "fmtHint_jpg": "모든 페이지를 한 장의 이미지로"
+ "fmtHint_jpg": "모든 페이지를 한 장의 이미지로",
+ "scanColor": "컬러",
+ "scanBW": "흑백"
 };

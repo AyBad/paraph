@@ -178,5 +178,7 @@ export default {
  "fmt_docx": "Word (.docx)",
  "fmtHint_docx": "Ogni pagina è inserita come immagine nel file Word (testo non modificabile)",
  "fmt_jpg": "Immagine (.jpg)",
- "fmtHint_jpg": "Tutte le pagine in un'unica immagine"
+ "fmtHint_jpg": "Tutte le pagine in un'unica immagine",
+ "scanColor": "Colore",
+ "scanBW": "Bianco e nero"
 };
