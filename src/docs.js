@@ -71,8 +71,22 @@ async function docxToPdf(file) {
   } finally { host.remove(); }
 }
 
+/** Tooltips (TU) of form fields, read from the field dictionaries (pdf.js only sees the widget's own) */
+export async function fieldTooltips(bytes) {
+  const map = {};
+  try {
+    const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false });
+    for (const f of pdf.getForm().getFields()) {
+      let d = f.acroField.dict, tu = null, i = 0;
+      while (d && !tu && i++ < 8) { tu = d.lookup(PDFName.of('TU')); d = d.lookupMaybe(PDFName.of('Parent'), PDFDict); }
+      if (tu) map[f.getName()] = tu.decodeText ? tu.decodeText() : String(tu);
+    }
+  } catch { }
+  return map;
+}
+
 /** Read AcroForm widgets with pdf.js; return fields in viewport (scale 1) units */
-export async function detectFields(page, vp) {
+export async function detectFields(page, vp, tips = {}) {
   const out = [];
   let annots = [];
   try { annots = await page.getAnnotations(); } catch { return out; }
@@ -81,10 +95,51 @@ export async function detectFields(page, vp) {
     const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
     const r = { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) };
     if (r.w < 4 || r.h < 4) continue;
-    if (a.fieldType === 'Tx') out.push({ kind: 'text', name: a.fieldName || '', alt: a.alternativeText || '', value: typeof a.fieldValue === 'string' ? a.fieldValue : '', multiline: !!a.multiLine, ...r });
+    if (a.fieldType === 'Tx') out.push({ kind: 'text', name: a.fieldName || '', alt: a.alternativeText || tips[a.fieldName] || '', value: typeof a.fieldValue === 'string' ? a.fieldValue : '', multiline: !!a.multiLine, comb: a.comb ? a.maxLen : 0, maxLen: a.maxLen || 0, ...r });
     else if (a.fieldType === 'Btn' && (a.checkBox || a.radioButton)) {
       const on = a.checkBox ? (a.fieldValue && a.fieldValue !== 'Off' && a.fieldValue === a.exportValue) : (a.fieldValue === a.buttonValue);
-      out.push({ kind: 'check', name: a.fieldName || '', alt: a.alternativeText || '', value: !!on, ...r });
+      out.push({ kind: 'check', name: a.fieldName || '', alt: a.alternativeText || tips[a.fieldName] || '', value: !!on, ...r });
+    }
+  }
+  return out;
+}
+
+/** Find small square boxes drawn on flat (non-form) pages: candidate tick boxes. Viewport units. */
+export async function detectBoxes(page, vp) {
+  let ops;
+  try { ops = await page.getOperatorList(); } catch { return []; }
+  const O = pdfjs.OPS, out = [];
+  let ctm = [1, 0, 0, 1, 0, 0]; const stack = [];
+  const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+  const ap = (x, y) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]];
+  const consider = (pts) => {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const w = x1 - x0, h = y1 - y0;
+    if (w < 4.5 || h < 4.5 || w > 20 || h > 20 || Math.abs(w - h) > Math.max(1.2, w * 0.15)) return;
+    // all points must lie on the bounding box border (axis aligned)
+    if (!pts.every(([x, y]) => (Math.abs(x - x0) < .6 || Math.abs(x - x1) < .6) && (Math.abs(y - y0) < .6 || Math.abs(y - y1) < .6))) return;
+    const [a, b, c, d] = vp.convertToViewportRectangle([x0, y0, x1, y1]);
+    const r = { x: Math.min(a, c), y: Math.min(b, d), w: Math.abs(c - a), h: Math.abs(d - b) };
+    if (!out.some(o => Math.abs(o.x - r.x) < 2 && Math.abs(o.y - r.y) < 2)) out.push(r);
+  };
+  for (let i = 0; i < ops.fnArray.length && out.length < 400; i++) {
+    const fn = ops.fnArray[i], args = ops.argsArray[i];
+    if (fn === O.save) stack.push(ctm);
+    else if (fn === O.restore) ctm = stack.pop() || [1, 0, 0, 1, 0, 0];
+    else if (fn === O.transform) ctm = mul(ctm, args);
+    else if (fn === O.constructPath) {
+      const [sub, a] = args; let j = 0, cur = [];
+      const flush = () => { if (cur.length >= 4 && cur.length <= 6) consider(cur); cur = []; };
+      for (const op of sub) {
+        if (op === O.rectangle) { const [x, y, w, h] = a.slice(j, j + 4); j += 4; consider([ap(x, y), ap(x + w, y), ap(x + w, y + h), ap(x, y + h)]); }
+        else if (op === O.moveTo) { flush(); cur.push(ap(a[j], a[j + 1])); j += 2; }
+        else if (op === O.lineTo) { cur.push(ap(a[j], a[j + 1])); j += 2; }
+        else if (op === O.curveTo) { j += 6; cur = []; }
+        else if (op === O.curveTo2 || op === O.curveTo3) { j += 4; cur = []; }
+        else if (op === O.closePath) flush();
+      }
+      flush();
     }
   }
   return out;
@@ -166,6 +221,23 @@ export async function exportPdf(bytes, objects, pagesInfo) {
     const lw = (o.lw || 1.6);
     const line = (x1, y1, x2, y2, th) => page.drawLine({ start: P(x1, y1), end: P(x2, y2), thickness: th, color, lineCap: LineCapStyle.Round });
 
+    if (o.type === 'text' && o.comb) {
+      const chars = [...(o.text || '')].slice(0, o.comb); const cw = o.w / o.comb;
+      for (let i = 0; i < chars.length; i++) {
+        let vector = true; try { helv.encodeText(chars[i]); } catch { vector = false; }
+        const cx = o.x + cw * i + cw / 2;
+        if (vector) {
+          const tw = helv.widthOfTextAtSize(chars[i], o.fontSize);
+          const a = P(cx - tw / 2, o.y + 0.9465 * o.fontSize);
+          page.drawText(chars[i], { x: a.x, y: a.y, size: o.fontSize, font: helv, color, rotate: rot });
+        } else {
+          const r = textToPng([chars[i]], o.fontSize, o.color); const im = await embedPng(r.url);
+          const a = P(cx - r.w / 2, o.y + r.h);
+          page.drawImage(im, { x: a.x, y: a.y, width: r.w, height: r.h, rotate: rot });
+        }
+      }
+      continue;
+    }
     if (o.type === 'text') {
       const txt = (o.text || '').replace(/\r/g, '');
       if (!txt.trim()) continue;
@@ -184,6 +256,11 @@ export async function exportPdf(bytes, objects, pagesInfo) {
         const a = P(left, o.y + r.h);
         page.drawImage(im, { x: a.x, y: a.y, width: r.w, height: r.h, rotate: rot });
       }
+    } else if (o.type === 'check' && o.mark === 'cross') {
+      if (o.field && !o.on) continue;
+      const { x, y, w, h } = o; const th = Math.max(1, w * 0.12);
+      line(x + w * .2, y + h * .2, x + w * .8, y + h * .8, th);
+      line(x + w * .8, y + h * .2, x + w * .2, y + h * .8, th);
     } else if (o.type === 'check') {
       if (o.field && !o.on) continue;
       const { x, y, w, h } = o; const th = Math.max(1, w * 0.12);
