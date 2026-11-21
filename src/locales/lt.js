@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Palieskite „Skenuoti“ ir nufotografuokite: lapas apkerpamas ir ištiesinamas, rašymo sritys ir langeliai aptinkami.",
  "tutoDocs": "Ieškokite dokumentų, rūšiuokite juos į aplankus ir per ⋮ pervadinkite, perkelkite, bendrinkite ar ištrinkite.",
  "tutoSettings": "Kalba, šviesi ar tamsi tema ir kodas programėlei užrakinti.",
- "tutoOpenWith": "PDF galite atidaryti ir iš kitos programėlės (Gmail, WhatsApp, Failai…) per „Atidaryti naudojant“ arba „Bendrinti“ → Paraph."
+ "tutoOpenWith": "PDF galite atidaryti ir iš kitos programėlės (Gmail, WhatsApp, Failai…) per „Atidaryti naudojant“ arba „Bendrinti“ → Paraph.",
+ "autofillTitle": "Automatinis pildymas: vienas profilis kiekvienam asmeniui",
+ "skipSection": "Nepildyti",
+ "fill": "Pildyti",
+ "ocrRunning": "Skaitomas tekstas (OCR)…",
+ "pinOffer": "Apsaugokite dokumentus",
+ "pinOfferD": "Nustatykite 4 skaitmenų kodą Paraph užrakinti. Jį pakeisite nustatymuose.",
+ "later": "Vėliau",
+ "signCity": "Vieta (parašas)"
 };

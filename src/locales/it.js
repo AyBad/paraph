@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tocca «Scansiona» e scatta una foto: il foglio viene ritagliato e raddrizzato, le zone di scrittura e le caselle vengono rilevate.",
  "tutoDocs": "Cerca i documenti, ordinali in cartelle e usa ⋮ per rinominare, spostare, condividere o eliminare.",
  "tutoSettings": "Lingua, tema chiaro o scuro e codice per bloccare l'app.",
- "tutoOpenWith": "Puoi anche aprire un PDF da un'altra app (Gmail, WhatsApp, File…) con «Apri con» o «Condividi» → Paraph."
+ "tutoOpenWith": "Puoi anche aprire un PDF da un'altra app (Gmail, WhatsApp, File…) con «Apri con» o «Condividi» → Paraph.",
+ "autofillTitle": "Compilazione automatica: un profilo per persona",
+ "skipSection": "Non compilare",
+ "fill": "Compila",
+ "ocrRunning": "Lettura del testo (OCR)…",
+ "pinOffer": "Proteggi i tuoi documenti",
+ "pinOfferD": "Imposta un codice di 4 cifre per bloccare Paraph. Potrai cambiarlo nelle Impostazioni.",
+ "later": "Più tardi",
+ "signCity": "Città (firma)"
 };

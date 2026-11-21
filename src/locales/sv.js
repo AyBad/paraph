@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tryck på ”Skanna” och ta ett foto: arket beskärs och rätas upp, skrivområden och kryssrutor hittas.",
  "tutoDocs": "Sök bland dokument, sortera dem i mappar och använd ⋮ för att byta namn, flytta, dela eller radera.",
  "tutoSettings": "Språk, ljust eller mörkt tema och en kod för att låsa appen.",
- "tutoOpenWith": "Du kan också öppna en pdf från en annan app (Gmail, WhatsApp, Filer…) via ”Öppna med” eller ”Dela” → Paraph."
+ "tutoOpenWith": "Du kan också öppna en pdf från en annan app (Gmail, WhatsApp, Filer…) via ”Öppna med” eller ”Dela” → Paraph.",
+ "autofillTitle": "Fyll i automatiskt: en profil per person",
+ "skipSection": "Fyll inte i",
+ "fill": "Fyll i",
+ "ocrRunning": "Läser texten (OCR)…",
+ "pinOffer": "Skydda dina dokument",
+ "pinOfferD": "Ange en fyrsiffrig kod för att låsa Paraph. Kan ändras i Inställningar.",
+ "later": "Senare",
+ "signCity": "Ort (underskrift)"
 };

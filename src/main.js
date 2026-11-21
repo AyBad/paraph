@@ -129,9 +129,10 @@ function onboarding(fromMenu) {
     { ic: ICON.magic, t: 's2t', d: 's2d' },
     { ic: ICON.sign, t: 's3t', d: 's3d' },
     { ic: ICON.share, t: 's4t', d: 's4d' },
-    { ic: ICON.lock, t: 'permT', d: 'permD', perm: true }
+    { ic: ICON.lock, t: 'permT', d: 'permD', perm: true },
+    { ic: ICON.shield, t: 'pinOffer', d: 'pinOfferD', pin: true }
   ];
-  if (fromMenu) slides.pop();
+  if (fromMenu) slides.splice(-2);
   let i = 0;
   const finish = async () => { await store.setOnboarded(); home(); };
   const draw = () => {
@@ -142,16 +143,19 @@ function onboarding(fromMenu) {
       <div class="onb-art">${i === 0 ? LOGO : `<div class="onb-ic">${s.ic}</div>`}</div>
       <h1>${t(s.t)}</h1><p>${t(s.d)}</p>
       <div class="dots">${slides.map((_, k) => `<span class="${k === i ? 'on' : ''}"></span>`).join('')}</div>
-      <button class="btn primary big nx">${s.perm ? t('allow') : last ? t('getStarted') : t('next')}</button>
+      <button class="btn primary big nx">${s.perm ? t('allow') : s.pin ? t('pinLock') : last ? t('getStarted') : t('next')}</button>
+      ${s.pin ? `<button class="link later">${t('later')}</button>` : ''}
     </div>`;
-    const sk = app.querySelector('.skip'); if (sk) sk.onclick = () => { i = slides.length - 1; draw(); };
+    const lt = app.querySelector('.later'); if (lt) lt.onclick = finish;
+    const sk = app.querySelector('.skip'); if (sk) sk.onclick = () => { const k = slides.findIndex(x => x.perm); i = k >= 0 ? k : slides.length - 1; draw(); };
     app.querySelector('.nx').onclick = async () => {
       if (s.perm) {
         if (native) {
           try { const { Filesystem } = await import('@capacitor/filesystem'); await Filesystem.requestPermissions(); } catch { }
         }
-        return finish();
+        i++; return draw();
       }
+      if (s.pin) { await setPinFlow(); return finish(); }
       if (last) return finish();
       i++; draw();
     };

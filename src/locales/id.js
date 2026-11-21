@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Ketuk “Pindai” lalu ambil foto: halaman dipotong dan diluruskan, area tulisan dan kotak centang terdeteksi.",
  "tutoDocs": "Cari dokumen, atur ke dalam folder, dan gunakan ⋮ untuk ganti nama, pindahkan, bagikan, atau hapus.",
  "tutoSettings": "Bahasa, tema terang atau gelap, dan kode untuk mengunci aplikasi.",
- "tutoOpenWith": "Anda juga bisa membuka PDF dari aplikasi lain (Gmail, WhatsApp, File…) lewat “Buka dengan” atau “Bagikan” → Paraph."
+ "tutoOpenWith": "Anda juga bisa membuka PDF dari aplikasi lain (Gmail, WhatsApp, File…) lewat “Buka dengan” atau “Bagikan” → Paraph.",
+ "autofillTitle": "Isi otomatis: satu profil per orang",
+ "skipSection": "Jangan isi",
+ "fill": "Isi",
+ "ocrRunning": "Membaca teks (OCR)…",
+ "pinOffer": "Lindungi dokumen Anda",
+ "pinOfferD": "Atur kode 4 digit untuk mengunci Paraph. Bisa diubah di Pengaturan.",
+ "later": "Nanti",
+ "signCity": "Kota (tanda tangan)"
 };

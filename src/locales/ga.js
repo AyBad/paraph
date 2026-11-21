@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tapáil “Scanáil” agus tóg grianghraf: bearrtar agus díríthear an leathanach, aimsítear limistéir scríbhneoireachta agus boscaí.",
  "tutoDocs": "Cuardaigh do dhoiciméid, eagraigh i bhfillteáin iad agus úsáid ⋮ chun athainmniú, bogadh, comhroinnt nó scriosadh.",
  "tutoSettings": "Teanga, téama geal nó dorcha agus cód chun an aip a ghlasáil.",
- "tutoOpenWith": "Is féidir PDF a oscailt ó aip eile (Gmail, WhatsApp, Comhaid…) le “Oscail le” nó “Comhroinn” → Paraph."
+ "tutoOpenWith": "Is féidir PDF a oscailt ó aip eile (Gmail, WhatsApp, Comhaid…) le “Oscail le” nó “Comhroinn” → Paraph.",
+ "autofillTitle": "Líonadh uathoibríoch: próifíl amháin in aghaidh an duine",
+ "skipSection": "Ná líon",
+ "fill": "Líon",
+ "ocrRunning": "Ag léamh an téacs (OCR)…",
+ "pinOffer": "Cosain do dhoiciméid",
+ "pinOfferD": "Socraigh cód 4 dhigit chun Paraph a ghlasáil. Is féidir é a athrú sna Socruithe.",
+ "later": "Ar ball",
+ "signCity": "Áit (síniú)"
 };

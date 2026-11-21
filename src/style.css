@@ -313,3 +313,12 @@ body.ad-on .modal.sheet{margin-bottom:0}
 [data-theme=dark] .chip img,[data-theme=dark] .prof-open img,[data-theme=dark] .list-item img,[data-theme=dark] .sig-box img{background:#f4f5fa;border-radius:6px;padding:2px 4px}
 [data-theme=dark] .dot{box-shadow:0 0 0 2px #fff6}
 [data-theme=dark] .color-dot span{box-shadow:0 0 0 1.5px #fff8}
+
+/* --- v6 --- */
+.editor.typing .ed-tools{display:none}
+.editor.typing .ed-selbar{padding-bottom:calc(6px + var(--sab))}
+.sec-list{display:flex;flex-direction:column;gap:14px;margin-bottom:10px;max-height:55vh;overflow:auto}
+.sec b{display:block;margin-bottom:6px;font-size:14px}
+.muted.small{font-size:12px;margin:4px 0}
+.spin-s{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid #9fa8da;border-top-color:var(--ink);animation:sp 1s linear infinite;vertical-align:-2px;margin-inline-end:8px}
+.onb .later{margin-top:12px}

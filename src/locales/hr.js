@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Dodirnite „Skeniraj” i snimite: list se obrezuje i izravnava, a područja za pisanje i kućice se prepoznaju.",
  "tutoDocs": "Pretražujte dokumente, razvrstajte ih u mape i pomoću ⋮ ih preimenujte, premjestite, podijelite ili izbrišite.",
  "tutoSettings": "Jezik, svijetla ili tamna tema i kod za zaključavanje aplikacije.",
- "tutoOpenWith": "PDF možete otvoriti i iz druge aplikacije (Gmail, WhatsApp, Datoteke…) putem „Otvori pomoću” ili „Dijeli” → Paraph."
+ "tutoOpenWith": "PDF možete otvoriti i iz druge aplikacije (Gmail, WhatsApp, Datoteke…) putem „Otvori pomoću” ili „Dijeli” → Paraph.",
+ "autofillTitle": "Automatsko ispunjavanje: jedan profil po osobi",
+ "skipSection": "Ne ispunjavaj",
+ "fill": "Ispuni",
+ "ocrRunning": "Čitanje teksta (OCR)…",
+ "pinOffer": "Zaštitite svoje dokumente",
+ "pinOfferD": "Postavite 4-znamenkasti kod za zaključavanje Paraph. Promijenite ga u Postavkama.",
+ "later": "Kasnije",
+ "signCity": "Mjesto (potpis)"
 };

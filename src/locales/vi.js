@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Chạm “Quét” và chụp ảnh: trang được cắt và làm thẳng, vùng viết và ô đánh dấu được nhận diện.",
  "tutoDocs": "Tìm kiếm tài liệu, sắp xếp vào thư mục và dùng ⋮ để đổi tên, di chuyển, chia sẻ hoặc xóa.",
  "tutoSettings": "Ngôn ngữ, giao diện sáng hoặc tối và mã khóa ứng dụng.",
- "tutoOpenWith": "Bạn cũng có thể mở PDF từ ứng dụng khác (Gmail, WhatsApp, Tệp…) bằng “Mở bằng” hoặc “Chia sẻ” → Paraph."
+ "tutoOpenWith": "Bạn cũng có thể mở PDF từ ứng dụng khác (Gmail, WhatsApp, Tệp…) bằng “Mở bằng” hoặc “Chia sẻ” → Paraph.",
+ "autofillTitle": "Tự động điền: mỗi người một hồ sơ",
+ "skipSection": "Không điền",
+ "fill": "Điền",
+ "ocrRunning": "Đang đọc văn bản (OCR)…",
+ "pinOffer": "Bảo vệ tài liệu của bạn",
+ "pinOfferD": "Đặt mã 4 chữ số để khóa Paraph. Có thể đổi trong Cài đặt.",
+ "later": "Để sau",
+ "signCity": "Thành phố (nơi ký)"
 };

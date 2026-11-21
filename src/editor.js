@@ -1,8 +1,10 @@
+import { Capacitor } from '@capacitor/core';
 import { pdfjs, detectFields, detectBoxes, detectZones, exportPdf, fieldTooltips } from './docs.js';
 import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
 import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
+import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow } from './labels.js';
 import { downloadPdf, shareFile } from './share.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
@@ -26,7 +28,7 @@ function matchField(f) {
   if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie|numero voie/)) return 'streetNumber';
   if (has(/nom (de )?(la )?voie|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
   if (has(/complement/)) return 'addressExtra';
-  if (has(/fait a\b|signed at|lieu (de )?(la )?(signature|declaration)/)) return 'city';
+  if (has(/fait a\b|signed at|lieu (de )?(la )?(signature|declaration)/)) return 'signCity';
   if (has(/commune|ville|\bcity\b|localite|\btown\b|\bort\b|ciudad|citta|municipal/)) return 'city';
   if (has(/\bpays\b|country|\bpais\b/)) return 'country';
   if (has(/adress|address|domicile|anschrift|direcc|indirizzo|demeurant/)) return 'fullAddress';
@@ -151,43 +153,125 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       });
     }
   }
-  // split dates typed in several boxes on one row (dd | mm | yyyy)
-  const textFields = objs.filter(o => o.field && o.type === 'text');
-  for (const key of ['birthDate', 'today']) {
-    const used = new Set();
-    for (const o of textFields.filter(x => x.match === key)) {
-      if (used.has(o) || o.part) continue;
-      const row = textFields.filter(x => x.match === key && x.page === o.page && Math.abs(x.fy - o.fy) < 4).sort((a, c) => a.x - c.x);
-      row.forEach(x => used.add(x));
-      if (row.length === 3) ['d', 'm', 'y'].forEach((p, i) => row[i].part = p);
-      else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
+  // ---------- understanding the form: labels, values, sections ----------
+  const pageText = []; // per page: { items, lines }
+  let sections = [];
+  const rowY = (o) => (o.fy ?? o.y) + (o.fh ?? o.h) / 2;
+  const SEX_M = /^(m|mr|m\.|monsieur|homme|masculin|male|herr|sr)\b/, SEX_F = /^(mme|madame|mlle|mademoiselle|femme|feminin|female|frau|sra)\b/;
+
+  function analyze() {
+    const fieldsAll = objs.filter(o => o.field);
+    // 1. what each field expects, from its printed label when the name says nothing
+    for (const o of fieldsAll) {
+      if (o.type === 'text' && !o.match && (o.label || o.caption)) o.match = matchField({ name: '', alt: (o.label || '') + ' ' + (o.caption || '') });
+      if (o.type === 'check' && o.label) {
+        const l = norm(o.label);
+        if (SEX_M.test(l)) { o.match = 'sex'; o.val = 'M'; }
+        else if (SEX_F.test(l)) { o.match = 'sex'; o.val = 'F'; }
+        else if (/personne physique|natural person/.test(l)) { o.match = 'physical'; o.val = 'P'; }
+      }
+    }
+    refineByRow(fieldsAll);
+    const textFields = fieldsAll.filter(o => o.type === 'text');
+    // 2. dates typed in several boxes on one row (dd | mm | yyyy)
+    for (const key of ['birthDate', 'today']) {
+      const used = new Set();
+      for (const o of textFields.filter(x => x.match === key)) {
+        if (used.has(o) || o.part) continue;
+        const row = textFields.filter(x => x.match === key && !x.part && x.page === o.page && Math.abs(rowY(x) - rowY(o)) < 5).sort((a, c) => a.x - c.x);
+        row.forEach(x => used.add(x));
+        if (row.length === 3) ['d', 'm', 'y'].forEach((p, i) => row[i].part = p);
+        else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
+      }
+    }
+    // 3. radio / tick boxes named by the form (cerfa): which value each box stands for
+    const checks = fieldsAll.filter(o => o.type === 'check' && o.match && o.val === undefined);
+    for (const g of new Set(checks.map(o => o.page + '|' + o.group))) {
+      const grp = checks.filter(o => o.page + '|' + o.group === g);
+      if (grp[0].match === 'sex') {
+        const byX = [...grp].sort((a, c) => a.x - c.x);
+        grp.forEach(o => { const v = norm(o.bval); o.val = /^(m|h|homme|male|masc)/.test(v) ? 'M' : /^(f|femme|female|fem)/.test(v) ? 'F' : (byX.indexOf(o) === 0 ? 'M' : 'F'); });
+      } else { const byY = [...grp].sort((a, c) => a.y - c.y); grp.forEach(o => o.val = byY.indexOf(o) === 0 ? 'P' : ''); }
+    }
+    // 4. seller / buyer from the field names (cerfa), unmarked fields take the section they sit in
+    for (let pi = 0; pi < pagesInfo.length; pi++) {
+      const onPage = fieldsAll.filter(o => o.page === pi);
+      const buyers = onPage.filter(o => o.role === 'buyer' && o.match);
+      if (!buyers.length) continue;
+      const top = Math.min(...buyers.map(o => o.fy ?? o.y)) - 30;
+      for (const o of onPage) if (!o.role) o.role = (o.fy ?? o.y) >= top ? 'buyer' : 'seller';
+    }
+    const hasStreetType = new Set(textFields.filter(o => o.match === 'streetType').map(o => o.page));
+    for (const o of textFields) if (o.match === 'streetName' && hasStreetType.has(o.page)) o.part = 'nameOnly';
+    computeSections();
+  }
+
+  /** one section per person: a new one starts when a value repeats, the role changes or a heading separates fields */
+  function computeSections() {
+    const SKIP = new Set(['today', 'hour', 'minute', 'signCity']);
+    const list = objs.filter(o => o.field && o.match).sort((a, b) => a.page - b.page || Math.round(rowY(a) / 6) - Math.round(rowY(b) / 6) || a.x - b.x);
+    sections = []; let cur = null;
+    const headingBetween = (pg, y0, y1) => (pageText[pg]?.lines || []).some(l => l.cy > y0 + 2 && l.cy < y1 - 2 && l.text.length >= 12 &&
+      !objs.some(o => o.field && o.page === pg && Math.abs(rowY(o) - l.cy) < 6));
+    for (const o of list) {
+      if (SKIP.has(o.match)) continue;
+      const key = o.match + (o.part || '') + (o.match === 'sex' ? o.val : '');
+      const top = o.fy ?? o.y;
+      const brk = !cur || cur.keys.has(key) || (o.role && cur.role && o.role !== cur.role) ||
+        (cur.n >= 3 && (o.page !== cur.page || headingBetween(o.page, cur.last, top)));
+      if (brk) { cur = { id: sections.length, keys: new Set(), role: o.role || null, page: o.page, top, n: 0, last: top }; sections.push(cur); }
+      cur.keys.add(key); cur.n++; cur.last = Math.max(cur.last, top + (o.fh ?? o.h)); cur.page = o.page;
+      if (!cur.role && o.role) cur.role = o.role;
+      o.section = cur.id;
+    }
+    // date / "done at" fields go to the section of the same role, else to the main (first) person of the page
+    for (const o of list) {
+      if (!SKIP.has(o.match)) continue;
+      const cand = sections.filter(s => (o.role ? s.role === o.role : true) && list.some(x => x.section === s.id && x.page === o.page));
+      o.section = (cand[0] || sections[0] || {}).id;
+    }
+    // titles and groups (the same person on a duplicate page = same group)
+    sections.forEach((sct, i) => {
+      const first = list.find(o => o.section === sct.id && !SKIP.has(o.match));
+      let title = '';
+      if (sct.role) title = t(sct.role === 'seller' ? 'roleA' : 'roleB');
+      else if (first) {
+        const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 &&
+          !objs.some(o => o.field && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
+        const l = lines.sort((a, b) => b.cy - a.cy)[0];
+        if (l) title = l.text.replace(/[:\s]+$/, '');
+      }
+      if (!title) title = `${t('profile')} ${i + 1}`;
+      if (title.length > 48) title = title.slice(0, 46) + '…';
+      sct.title = title; sct.group = sct.role || norm(title);
+    });
+  }
+
+  async function readLabels() {
+    for (let pi = 0; pi < pagesInfo.length; pi++) {
+      const items = await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp);
+      pageText[pi] = { items, lines: textLines(items), ocr: false };
+      if (items.length) attachLabels(objs.filter(o => o.field && o.page === pi), items);
     }
   }
-  // radio / tick boxes: which value each box stands for (sex M/F, natural person)
-  const checks = objs.filter(o => o.field && o.type === 'check' && o.match);
-  for (const g of new Set(checks.map(o => o.page + '|' + o.group))) {
-    const grp = checks.filter(o => o.page + '|' + o.group === g);
-    if (grp[0].match === 'sex') {
-      const byX = [...grp].sort((a, c) => a.x - c.x);
-      grp.forEach(o => {
-        const v = norm(o.bval);
-        o.val = /^(m|h|homme|male|masc)/.test(v) ? 'M' : /^(f|femme|female|fem)/.test(v) ? 'F' : (byX.indexOf(o) === 0 ? 'M' : 'F');
-      });
-    } else {
-      const byY = [...grp].sort((a, c) => a.y - c.y);
-      grp.forEach(o => o.val = byY.indexOf(o) === 0 ? 'P' : '');
-    }
+  let ocrState = '';
+  async function runOcr() {
+    const todo = pagesInfo.map((p, i) => i).filter(i => !pageText[i]?.items.length && objs.some(o => o.zone && o.page === i));
+    if (!todo.length) return;
+    ocrState = 'run'; showFieldsBanner();
+    try {
+      for (const pi of todo) {
+        const items = await ocrTextItems(pagesInfo[pi].page, objs.filter(o => o.zone && o.page === pi).map(o => ({ x: o.x, y: o.fy, w: o.fw, h: o.fh })));
+        pageText[pi] = { items, lines: textLines(items), ocr: true };
+        attachLabels(objs.filter(o => o.field && o.page === pi), items);
+      }
+      analyze();
+    } catch (e) { console.warn('ocr', e); }
+    ocrState = ''; showFieldsBanner();
   }
-  // fields without a role marker belong to the section they sit in (seller above the first buyer field)
-  if (!initialObjs) for (let pi = 0; pi < pagesInfo.length; pi++) {
-    const onPage = objs.filter(o => o.field && o.page === pi);
-    const buyers = onPage.filter(o => o.role === 'buyer' && o.match);
-    if (!buyers.length) continue;
-    const top = Math.min(...buyers.map(o => o.fy)) - 30;
-    for (const o of onPage) if (!o.role) o.role = (o.fy ?? o.y) >= top ? 'buyer' : 'seller';
-  }
-  const hasStreetType = new Set(textFields.filter(o => o.match === 'streetType').map(o => o.page));
-  for (const o of textFields) if (o.match === 'streetName' && hasStreetType.has(o.page)) o.part = 'nameOnly';
+  if (!initialObjs) { await readLabels(); analyze(); }
+  else computeSectionsSafe();
+  function computeSectionsSafe() { try { computeSections(); } catch { } }
 
   // ---------- helpers ----------
   const snap = () => { undoStack.push(JSON.stringify(objs)); if (undoStack.length > 40) undoStack.shift(); dirty = true; };
@@ -208,8 +292,10 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     const m = sname.match(STREET_TYPES);
     return m ? { type: m[1], name: sname.slice(m[0].length) } : { type: '', name: sname };
   }
+  function profValFor(P, key, o) { const keep = profile; profile = P; try { return profVal(key, o); } finally { profile = keep; } }
   function profVal(key, o) {
     const part = o && o.part;
+    if (key === 'signCity') return profile.city || '';
     if (key === 'today' || key === 'birthDate') {
       const d = dateParts(key); if (!d) return '';
       const dd = pad(d.getDate()), mm = pad(d.getMonth() + 1), yy = String(d.getFullYear());
@@ -246,56 +332,65 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     o.y = o.fy + (o.multiline ? 1 : Math.max(0, (o.fh - o.fontSize * 1.2) / 2));
   }
 
-  let autoWarned = false;
+  let autoWarned = 0;
   function showFieldsBanner() {
-    if (autoWarned && !viewing) {
-      banner.classList.remove('hidden'); banner.classList.add('warn');
-      banner.innerHTML = `<span>⚠️ ${t('autoWarn')}</span><button class="icon-btn x">${ICON.cross}</button>`;
-      banner.querySelector('.x').onclick = () => { autoWarned = false; banner.classList.remove('warn'); showFieldsBanner(); };
+    if (viewing) { banner.classList.add('hidden'); return; }
+    banner.classList.remove('hidden', 'warn');
+    if (autoWarned) {
+      banner.classList.add('warn');
+      banner.innerHTML = `<span>⚠️ <b>${t('filled', { n: autoWarned })}</b> · ${t('autoWarn')}</span><button class="icon-btn x">${ICON.cross}</button>`;
+      banner.querySelector('.x').onclick = () => { autoWarned = 0; showFieldsBanner(); };
       return;
     }
-    banner.classList.remove('warn');
     const real = objs.filter(o => o.field && !o.zone).length, zn = objs.filter(o => o.zone).length;
-    if (!real && zn && !viewing) {
-      banner.classList.remove('hidden');
-      banner.innerHTML = `<span>${t('zonesFound', { n: zn })}</span>`;
-      return;
-    }
-    if (!real || viewing) { banner.classList.add('hidden'); return; }
-    banner.classList.remove('hidden');
-    banner.innerHTML = `<span>${t('fieldsFound', { n: real })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
-    banner.querySelector('.af').onclick = autofill;
+    if (!real && !zn) { banner.classList.add('hidden'); return; }
+    const txt = ocrState === 'run' ? `<span class="spin-s"></span>${t('ocrRunning')}` : real ? t('fieldsFound', { n: real }) : t('zonesFound', { n: zn });
+    banner.innerHTML = `<span>${txt}</span>${ocrState === 'run' ? '' : `<button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`}`;
+    const af = banner.querySelector('.af'); if (af) af.onclick = autofill;
   }
   showFieldsBanner();
 
+  /** one profile per person section ("seller" / "buyer", "host" / "guest"…) */
   function autofill() {
     commitEdit();
-    const roles = new Set(objs.filter(o => o.field && o.match && o.role && o.type === 'text').map(o => o.role));
-    if (roles.has('buyer') && roles.has('seller')) {
-      const m = modal(`<h2>${t('roleQ')}</h2><div class="col gap">
-        <button class="btn ghost big" data-r="seller">${t('roleA')}</button>
-        <button class="btn ghost big" data-r="buyer">${t('roleB')}</button>
-        <button class="btn ghost big" data-r="both">${t('roleBoth')}</button></div>
-        <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
-      m.el.querySelector('.c').onclick = m.close;
-      m.el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { m.close(); doAutofill(b.dataset.r); });
-      return;
-    }
-    doAutofill('both');
+    const groups = []; for (const sct of sections) if (!groups.find(g => g.group === sct.group)) groups.push(sct);
+    if (groups.length <= 1) return doAutofill({ [groups[0]?.group]: profile });
+    const choice = {}; groups.forEach((g, i) => choice[g.group] = i === 0 ? profile.id : (profiles[i] && profiles.length > 2 ? '' : ''));
+    const m = modal(`<h2>${t('autofillTitle')}</h2><div class="sec-list">${groups.map(g => `
+      <div class="sec" data-g="${esc(g.group)}"><b>${esc(g.title)}</b><div class="chips">
+        ${profiles.map(p => `<button class="chip${choice[g.group] === p.id ? ' on' : ''}" data-p="${p.id}">${esc(pn(p))}</button>`).join('')}
+        <button class="chip${!choice[g.group] ? ' on' : ''}" data-p="">${t('skipSection')}</button></div></div>`).join('')}</div>
+      <p class="muted small">⚠️ ${t('autoWarn')}</p>
+      <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary go">${ICON.magic}<span>${t('fill')}</span></button></div>`, 'sheet');
+    m.el.querySelectorAll('.sec').forEach(sec => sec.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+      choice[sec.dataset.g] = c.dataset.p; sec.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
+    }));
+    m.el.querySelector('.c').onclick = m.close;
+    m.el.querySelector('.go').onclick = () => {
+      m.close();
+      const map = {}; for (const g in choice) map[g] = profiles.find(p => p.id === choice[g]) || null;
+      doAutofill(map);
+    };
   }
-  function doAutofill(role) {
+  function doAutofill(map) {
     snap(); let n = 0;
+    const single = Object.keys(map).length === 1 ? Object.values(map)[0] : null;
     for (const o of objs) {
-      if (o.type === 'text' && o.field && o.match && !o.text && (role === 'both' || !o.role || o.role === role)) {
-        const v = profVal(o.match, o);
-        if (v) { o.text = o.maxLen ? v.slice(0, o.maxLen) : v; o.bind = o.match; o.color = color; fit(o); n++; }
+      if (!o.field || !o.match) continue;
+      const sct = sections[o.section];
+      const P = sct ? map[sct.group] : (single || profile);
+      if (!P) continue;
+      if (o.type === 'text' && !o.text) {
+        const v = profValFor(P, o.match, o);
+        if (v) { o.text = o.maxLen ? v.slice(0, o.maxLen) : v; o.bind = o.match; o.bindSec = true; o.color = color; fit(o); n++; }
       }
-      if (o.type === 'check' && o.field && o.match && o.val !== undefined && (role === 'both' || !o.role || o.role === role)) {
-        const want = o.match === 'sex' ? (profile.sex && o.val === profile.sex) : o.val === 'P';
+      if (o.type === 'check' && o.val !== undefined) {
+        const want = o.match === 'sex' ? (P.sex && o.val === P.sex) : o.val === 'P';
         if (want && !o.on) { setRadio(o, true); o.color = color; n++; }
       }
     }
-    toast(t('filled', { n })); autoWarned = n > 0; showFieldsBanner(); renderObjs();
+    autoWarned = n; showFieldsBanner(); renderObjs();
+    if (!n) toast(t('filled', { n }));
   }
 
   // ---------- page rendering ----------
@@ -461,6 +556,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     ta.addEventListener('input', autosize);
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (o.field && !o.multiline)) { e.preventDefault(); commitEdit(); } });
     ta.addEventListener('blur', () => setTimeout(() => { if (editing && editing.ta === ta && document.activeElement !== ta) commitEdit(); }, 150));
+    root.querySelector('.editor').classList.add('typing');
     ta.focus({ preventScroll: true });
     try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch { }
     setTimeout(() => ta.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
@@ -472,6 +568,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (!editing) return;
     const { o, ta, before } = editing;
     editing = null;
+    root.querySelector('.editor').classList.remove('typing');
     o.text = ta.value.replace(/\r/g, '');
     // remember values typed in fields that the profile cannot fill (plate, car brand…)
     if (o.field && !o.zone && !o.match && o.text.trim()) { const k = memKey(o); memory[k] = [o.text, ...(memory[k] || []).filter(v => v !== o.text)].slice(0, 5); remember(k, o.text); }
@@ -737,7 +834,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     color = profile.color || color; syncColorInput();
     let changed = false;
     for (const o of objs) {
-      if (!o.bind) continue;
+      if (!o.bind || o.bindSec) continue;
       if (o.type === 'text') { o.text = profVal(o.bind, o); fit(o); changed = true; }
       if (o.type === 'image' && profile[o.bind]) {
         const { h } = await imageSize(profile[o.bind], o.w);
@@ -748,7 +845,21 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     toast(`${t('profile')} : ${profile.name || t('unnamed')}`);
   };
 
-  const cleanup = () => { window.removeEventListener('resize', onResize); document.removeEventListener('gesturestart', noGesture); };
+  // keep the suggestion bar above the on-screen keyboard
+  const edEl = root.querySelector('.editor');
+  const setKb = (h) => { edEl.style.paddingBottom = h > 0 ? h + 'px' : ''; if (editing) setTimeout(() => editing && editing.ta.scrollIntoView({ block: 'center' }), 50); };
+  const kbListeners = [];
+  const h0 = window.innerHeight;
+  if (Capacitor.isNativePlatform()) {
+    import('@capacitor/keyboard').then(async ({ Keyboard }) => {
+      kbListeners.push(await Keyboard.addListener('keyboardDidShow', (info) => setKb(window.innerHeight < h0 - 80 ? 0 : info.keyboardHeight)));
+      kbListeners.push(await Keyboard.addListener('keyboardWillHide', () => setKb(0)));
+    }).catch(() => { });
+  } else if (window.visualViewport) {
+    const vvf = () => { const gap = window.innerHeight - visualViewport.height - visualViewport.offsetTop; setKb(gap > 80 ? gap : 0); };
+    visualViewport.addEventListener('resize', vvf); kbListeners.push({ remove: () => visualViewport.removeEventListener('resize', vvf) });
+  }
+  const cleanup = () => { window.removeEventListener('resize', onResize); document.removeEventListener('gesturestart', noGesture); kbListeners.forEach(l => { try { l.remove(); } catch { } }); };
   $('.back').onclick = async () => {
     commitEdit();
     if (dirty && !(await confirmBox(t('discard'), t('home'), t('cancel')))) return;
@@ -810,4 +921,5 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   };
   window.addEventListener('resize', onResize);
   layoutPages();
+  if (!initialObjs) setTimeout(runOcr, 300);
 }

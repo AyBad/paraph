@@ -160,5 +160,13 @@ export default {
  "tutoScan": "Tap “Scan”, take a photo: the sheet is cropped and straightened, writing areas and tick boxes are detected.",
  "tutoDocs": "Search your documents, sort them into folders and use ⋮ to rename, move, share or delete.",
  "tutoSettings": "Language, light or dark theme, and a PIN code to lock the app.",
- "tutoOpenWith": "You can also open a PDF from another app (Gmail, WhatsApp, Files…) with “Open with” or “Share” → Paraph."
+ "tutoOpenWith": "You can also open a PDF from another app (Gmail, WhatsApp, Files…) with “Open with” or “Share” → Paraph.",
+ "autofillTitle": "Auto-fill: one profile per person",
+ "skipSection": "Do not fill",
+ "fill": "Fill in",
+ "ocrRunning": "Reading the text (OCR)…",
+ "pinOffer": "Protect your documents",
+ "pinOfferD": "Set a 4-digit code to lock Paraph. You can change it later in Settings.",
+ "later": "Later",
+ "signCity": "City (signature)"
 };

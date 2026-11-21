@@ -157,5 +157,13 @@ export default {
  "tutoScan": "Tippen Sie auf „Scannen“ und machen Sie ein Foto: Das Blatt wird zugeschnitten und begradigt, Schreibbereiche und Kästchen werden erkannt.",
  "tutoDocs": "Durchsuchen Sie Ihre Dokumente, ordnen Sie sie in Ordner und nutzen Sie ⋮ zum Umbenennen, Verschieben, Teilen oder Löschen.",
  "tutoSettings": "Sprache, helles oder dunkles Design und PIN-Code zum Sperren der App.",
- "tutoOpenWith": "Sie können ein PDF auch aus einer anderen App (Gmail, WhatsApp, Dateien…) über „Öffnen mit“ oder „Teilen“ → Paraph öffnen."
+ "tutoOpenWith": "Sie können ein PDF auch aus einer anderen App (Gmail, WhatsApp, Dateien…) über „Öffnen mit“ oder „Teilen“ → Paraph öffnen.",
+ "autofillTitle": "Automatisch ausfüllen: ein Profil pro Person",
+ "skipSection": "Nicht ausfüllen",
+ "fill": "Ausfüllen",
+ "ocrRunning": "Text wird gelesen (OCR)…",
+ "pinOffer": "Schützen Sie Ihre Dokumente",
+ "pinOfferD": "Legen Sie einen 4-stelligen Code fest, um Paraph zu sperren. Änderbar in den Einstellungen.",
+ "later": "Später",
+ "signCity": "Ort (Unterschrift)"
 };

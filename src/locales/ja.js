@@ -157,5 +157,13 @@ export default {
  "tutoScan": "「スキャン」をタップして撮影すると、用紙が切り抜き・補正され、記入欄とチェック欄が検出されます。",
  "tutoDocs": "書類を検索し、フォルダに整理し、⋮ から名前変更・移動・共有・削除ができます。",
  "tutoSettings": "言語、ライト／ダークテーマ、アプリをロックするパスコード。",
- "tutoOpenWith": "他のアプリ（Gmail、WhatsApp、ファイル…）から「アプリで開く」または「共有」→ Paraph で PDF を開くこともできます。"
+ "tutoOpenWith": "他のアプリ（Gmail、WhatsApp、ファイル…）から「アプリで開く」または「共有」→ Paraph で PDF を開くこともできます。",
+ "autofillTitle": "自動入力：1人につき1つのプロフィール",
+ "skipSection": "入力しない",
+ "fill": "入力する",
+ "ocrRunning": "文字を読み取り中（OCR）…",
+ "pinOffer": "書類を保護しましょう",
+ "pinOfferD": "Paraph をロックする4桁のコードを設定します。設定で変更できます。",
+ "later": "あとで",
+ "signCity": "市区町村（署名地）"
 };

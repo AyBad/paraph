@@ -157,5 +157,13 @@ export default {
  "tutoScan": "'스캔'을 눌러 촬영하면 용지가 잘리고 반듯하게 펴지며 작성 영역과 체크 칸이 감지됩니다.",
  "tutoDocs": "문서를 검색하고 폴더로 정리하며 ⋮로 이름 변경, 이동, 공유, 삭제를 할 수 있습니다.",
  "tutoSettings": "언어, 라이트/다크 테마, 앱 잠금 비밀번호.",
- "tutoOpenWith": "다른 앱(Gmail, WhatsApp, 파일…)에서 '다음으로 열기' 또는 '공유' → Paraph로 PDF를 열 수도 있습니다."
+ "tutoOpenWith": "다른 앱(Gmail, WhatsApp, 파일…)에서 '다음으로 열기' 또는 '공유' → Paraph로 PDF를 열 수도 있습니다.",
+ "autofillTitle": "자동 채우기: 사람마다 프로필 하나",
+ "skipSection": "채우지 않기",
+ "fill": "채우기",
+ "ocrRunning": "텍스트 읽는 중(OCR)…",
+ "pinOffer": "문서를 보호하세요",
+ "pinOfferD": "Paraph를 잠글 4자리 비밀번호를 설정하세요. 설정에서 변경할 수 있습니다.",
+ "later": "나중에",
+ "signCity": "도시(서명지)"
 };

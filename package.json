@@ -1,11 +1,11 @@
 {
   "name": "paraph",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/copy-ocr.mjs && vite build",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -16,13 +16,17 @@
     "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.10",
     "@capacitor/filesystem": "^7.1.9",
+    "@capacitor/keyboard": "^7.0.6",
     "@capacitor/share": "^7.0.4",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/fra": "^1.0.0",
     "docx-preview": "^0.4.1",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.3.0",
     "jszip": "^3.10.2",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.10.38"
+    "pdfjs-dist": "^4.10.38",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^7.6.10",
