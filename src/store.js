@@ -50,7 +50,7 @@ export async function getActiveProfileId() { return get('activeProfile'); }
 export async function setActiveProfileId(id) { return set('activeProfile', id); }
 
 export async function getDocs() { return (await get('docs')) || []; }
-export async function saveDoc(name, bytes, id) {
+export async function saveDoc(name, bytes, id, extra = {}) {
   const docs = await getDocs();
   id = id || uid();
   const meta = { id, name, date: Date.now(), size: bytes.length };
@@ -58,14 +58,22 @@ export async function saveDoc(name, bytes, id) {
   if (i >= 0) docs.splice(i, 1);
   docs.unshift(meta);
   await set('doc:' + id, bytes);
+  // keep the original + editable objects so the document can be edited again later
+  if (extra.src) await set('src:' + id, extra.src);
+  if (extra.objs) await set('objs:' + id, extra.objs);
   await set('docs', docs);
   return meta;
 }
 export async function getDocBytes(id) { return get('doc:' + id); }
+export async function getDocSource(id) { return { src: await get('src:' + id), objs: await get('objs:' + id) }; }
 export async function deleteDoc(id) {
-  await del('doc:' + id);
+  await del('doc:' + id); await del('src:' + id); await del('objs:' + id);
   await set('docs', (await getDocs()).filter(d => d.id !== id));
 }
+
+/* ---- Pro (test mode: no real payment yet) ---- */
+export async function getPro() { return (await get('pro')) || null; }
+export async function setPro(v) { return v ? set('pro', v) : del('pro'); }
 
 export async function getLang() { return get('lang'); }
 export async function setLang(l) { return l ? set('lang', l) : del('lang'); }
@@ -79,8 +87,13 @@ function unb64(s) { const b = atob(s); const u = new Uint8Array(b.length); for (
 export async function exportBackup() {
   const docs = await getDocs();
   const files = {};
-  for (const d of docs) { const b = await getDocBytes(d.id); if (b) files[d.id] = b64(b); }
-  return JSON.stringify({ app: 'paraph', v: 1, date: new Date().toISOString(), profiles: await getProfiles(), docs, files });
+  const sources = {};
+  for (const d of docs) {
+    const b = await getDocBytes(d.id); if (b) files[d.id] = b64(b);
+    const { src, objs } = await getDocSource(d.id);
+    if (src) sources[d.id] = { src: b64(src), objs: objs || null };
+  }
+  return JSON.stringify({ app: 'paraph', v: 2, date: new Date().toISOString(), profiles: await getProfiles(), docs, files, sources });
 }
 export async function importBackup(text) {
   const data = JSON.parse(text);
@@ -92,6 +105,8 @@ export async function importBackup(text) {
   for (const d of data.docs || []) {
     if (!data.files[d.id]) continue;
     await set('doc:' + d.id, unb64(data.files[d.id]));
+    const so = (data.sources || {})[d.id];
+    if (so) { await set('src:' + d.id, unb64(so.src)); if (so.objs) await set('objs:' + d.id, so.objs); }
     if (!docs.find(x => x.id === d.id)) docs.push(d);
   }
   docs.sort((a, b) => b.date - a.date);

@@ -9,36 +9,49 @@ const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 const STREET_TYPES = /^(rue|avenue|av\.?|boulevard|bd|allee|allée|chemin|impasse|place|route|quai|cours|square|passage|voie|sentier|rond-point|residence|résidence|lotissement|hameau|lieu-dit|faubourg|esplanade|parvis|promenade|street|st\.?|road|rd\.?|lane|drive|way)\s+/i;
 const INSERT_KEYS = ['fullName', 'lastName', 'firstName', 'birthDate', 'birthPlace', 'fullAddress', 'streetNumber', 'streetName', 'addressExtra', 'postalCode', 'city', 'country', 'email', 'phone', 'today'];
 
-const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[_\-.]+/g, ' ');
+const norm = (s) => (s || '').replace(/([a-zà-ÿ])([A-ZÀ-Þ])/g, '$1 $2').replace(/([A-Za-z])(\d)/g, '$1 $2').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[_\-.]+/g, ' ');
 
 /** Guess which profile value a form field expects, from its name and tooltip */
 function matchField(f) {
-  const n = norm(f.name + ' ' + f.alt);
+  const short = (f.name || '').split('.').pop().replace(/\[\d+\]/g, '');
+  const n = norm(short + ' ' + f.alt);
   const has = (re) => re.test(n);
-  if (has(/signature|siret|siren|immatric|identification du vehicule|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule/)) return null;
+  if (has(/signature|siret|siren|immatric|identification|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule|certificat|vehicule|variante/)) return null;
   const birth = has(/naiss|birth|dob\b|geburt|nacim|nasc|born|\bne ?\(?e?\)? le\b|\bnee? le\b/);
   if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune|\ba\b/)) return 'birthPlace';
   if (birth) return 'birthDate';
   if (has(/code postal|postal|\bzip\b|\bcp\b|\bplz\b|postcode/)) return 'postalCode';
-  if (has(/type de (la )?voie|street type/)) return 'streetType';
+  if (has(/type (de )?(la )?voie|street type/)) return 'streetType';
   if (has(/extension|bis ter|\bbis\b/)) return null;
-  if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie/)) return 'streetNumber';
-  if (has(/nom de (la )?voie|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
+  if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie|numero voie/)) return 'streetNumber';
+  if (has(/nom (de )?(la )?voie|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
   if (has(/complement/)) return 'addressExtra';
-  if (has(/fait a\b|signed at|lieu de signature/)) return 'city';
+  if (has(/fait a\b|signed at|lieu (de )?(la )?(signature|declaration)/)) return 'city';
   if (has(/commune|ville|\bcity\b|localite|\btown\b|\bort\b|ciudad|citta|municipal/)) return 'city';
   if (has(/\bpays\b|country|\bpais\b/)) return 'country';
   if (has(/adress|address|domicile|anschrift|direcc|indirizzo|demeurant/)) return 'fullAddress';
-  if (has(/nom.*prenom|full ?name|nom complet|soussigne|undersigned/)) return 'fullName';
+  if (has(/nom.*prenom|full ?name|nom complet|soussigne|undersigned|identite|identity/)) return 'fullName';
   if (has(/pre ?nom|first|given|vorname|nombre|prenome|forename/)) return 'firstName';
   if (has(/mail|courriel/)) return 'email';
   if (has(/phone|\btel\b|telephone|mobile|portable|telef|gsm/)) return 'phone';
+  if (has(/horaire/)) return /2$/.test(n.trim()) ? 'minute' : 'hour';
   if (has(/heure|\bhour/)) return 'hour';
   if (has(/minute/)) return 'minute';
   if (has(/(^|[^a-z])(nom|name|surname|last|family|apellido|cognome|nachname|naam)([^a-z]|$)/)) return 'lastName';
-  if (has(/(^|[^a-z])date([^a-z]|$)|fait le|signed on|datum|fecha/)) return 'today';
+  if (has(/(^|[^a-z])date([^a-z]|$)|fait le|signed on|datum|fecha|declaration/)) return 'today';
   return null;
 }
+
+/** day / month / year box, from the field name suffix (…Jour, …Mois, …Année, …J/M/A) */
+function datePart(f) {
+  const short = norm((f.name || '').split('.').pop().replace(/\[\d+\]/g, ''));
+  if (/(jour|day|tag|dia|\bj|\bd)$/.test(short)) return 'd';
+  if (/(mois|month|monat|mes|\bm)$/.test(short)) return 'm';
+  if (/(annee|year|jahr|ano|\ba|\by)$/.test(short)) return 'y';
+  return null;
+}
+const BUYER = /acheteur|acquereur|buyer|purchaser|nouveau proprietaire|new owner|kaufer|comprador/;
+const SELLER = /vendeur|cedant|seller|ancien proprietaire|former owner|verkaufer|vendedor/;
 
 let measureCtx;
 function textWidth(txt, fs) {
@@ -47,26 +60,29 @@ function textWidth(txt, fs) {
   return measureCtx.measureText(txt).width / 100 * fs;
 }
 
-export async function openEditor({ bytes, name, docId, profiles, profileId, onExit }) {
+export async function openEditor({ bytes, name, docId, profiles, profileId, onExit, initialObjs, viewOnly, chooseProfile, onSaved }) {
   let profile = profiles.find(p => p.id === profileId) || profiles[0];
   let color = profile.color || '#1a237e';
-  let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false, pinching = false;
+  let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false, pinching = false, viewing = !!viewOnly;
   const undoStack = [];
   const pagesInfo = [];
 
   const root = document.getElementById('app');
   root.innerHTML = `
-  <div class="editor">
+  <div class="editor${viewing ? ' viewing' : ''}">
     <header class="ed-top">
       <button class="icon-btn back" aria-label="back">${ICON.back}</button>
       <div class="ed-title">${esc(name)}</div>
       <select class="prof-sel" aria-label="${t('profile')}">${profiles.map(p => `<option value="${p.id}" ${p.id === profile.id ? 'selected' : ''}>${esc(p.name || [p.firstName, p.lastName].join(' ').trim() || t('unnamed'))}</option>`).join('')}</select>
       <label class="color-dot" title="${t('color')}"><input type="color" class="col" value="${color}"><span style="background:${color}"></span></label>
       <button class="btn primary small finish" aria-label="${t('save')}">${ICON.save}<span>${t('save')}</span></button>
+      <button class="icon-btn v-sh" aria-label="${t('share')}">${ICON.share}</button>
+      <button class="icon-btn v-dl" aria-label="${t('download')}">${ICON.download}</button>
     </header>
     <div class="ed-banner hidden"></div>
     <div class="ed-scroll"><div class="pages" dir="ltr"></div></div>
     <div class="ed-selbar hidden"></div>
+    <div class="view-bar"><button class="btn primary big start-edit">${ICON.edit}<span>${t('startEdit')}</span></button></div>
     <nav class="ed-tools">
       ${[['text', 'text'], ['check', 'check'], ['cross', 'cross'], ['strike', 'strike'], ['sign', 'signature'], ['initials', 'initials'], ['date', 'date'], ['id', 'insert'], ['pen', 'pen']]
       .map(([ic, k]) => `<button class="tool" data-tool="${k}">${ICON[ic]}<span>${t(k)}</span></button>`).join('')}
@@ -104,14 +120,16 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
   b.close();
 
-  // fields -> objects
-  for (const f of fields) {
+  // fields -> objects (or restore the objects of a document saved earlier)
+  if (initialObjs && initialObjs.length) objs = JSON.parse(JSON.stringify(initialObjs));
+  else for (const f of fields) {
     if (f.kind === 'text') {
       const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
       objs.push({
         id: uid(), page: f.page, type: 'text', field: f.name || true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y,
         y: f.y + (f.multiline ? 1 : Math.max(0, (f.h - fs * 1.2) / 2)), fontSize: fs, baseFs: fs, multiline: f.multiline,
-        comb: f.comb || 0, maxLen: f.maxLen || 0, text: f.value || '', color, match: matchField(f)
+        comb: f.comb || 0, maxLen: f.maxLen || 0, text: f.value || '', color, match: matchField(f), part: datePart(f),
+        role: BUYER.test(norm(f.name + ' ' + f.alt)) ? 'buyer' : SELLER.test(norm(f.name + ' ' + f.alt)) ? 'seller' : null
       });
     } else {
       const s = Math.min(f.w, f.h);
@@ -123,12 +141,20 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   for (const key of ['birthDate', 'today']) {
     const used = new Set();
     for (const o of textFields.filter(x => x.match === key)) {
-      if (used.has(o)) continue;
+      if (used.has(o) || o.part) continue;
       const row = textFields.filter(x => x.match === key && x.page === o.page && Math.abs(x.fy - o.fy) < 4).sort((a, c) => a.x - c.x);
       row.forEach(x => used.add(x));
       if (row.length === 3) ['d', 'm', 'y'].forEach((p, i) => row[i].part = p);
       else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
     }
+  }
+  // fields without a role marker belong to the section they sit in (seller above the first buyer field)
+  if (!initialObjs) for (let pi = 0; pi < pagesInfo.length; pi++) {
+    const onPage = textFields.filter(o => o.page === pi);
+    const buyers = onPage.filter(o => o.role === 'buyer' && o.match);
+    if (!buyers.length) continue;
+    const top = Math.min(...buyers.map(o => o.fy)) - 30;
+    for (const o of onPage) if (!o.role) o.role = o.fy >= top ? 'buyer' : 'seller';
   }
   const hasStreetType = new Set(textFields.filter(o => o.match === 'streetType').map(o => o.page));
   for (const o of textFields) if (o.match === 'streetName' && hasStreetType.has(o.page)) o.part = 'nameOnly';
@@ -141,8 +167,14 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (key === 'birthDate' && profile.birthDate) return new Date(profile.birthDate + 'T12:00:00');
     return null;
   }
+  function streetOnly() {
+    let s = (profile.streetName || '').trim();
+    const num = (profile.streetNumber || '').trim();
+    if (num && s.toLowerCase().startsWith(num.toLowerCase() + ' ')) s = s.slice(num.length).trim();
+    return s;
+  }
   function splitStreet() {
-    const sname = (profile.streetName || '').trim();
+    const sname = streetOnly();
     const m = sname.match(STREET_TYPES);
     return m ? { type: m[1], name: sname.slice(m[0].length) } : { type: '', name: sname };
   }
@@ -162,6 +194,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (key === 'fullName') return [profile.firstName, profile.lastName].filter(Boolean).join(' ');
     if (key === 'streetType') return splitStreet().type;
     if (key === 'streetName' && part === 'nameOnly') return splitStreet().name;
+    if (key === 'streetName') return streetOnly();
     if (key === 'fullAddress') {
       const l1 = [profile.streetNumber, profile.streetName].filter(Boolean).join(' ');
       const l2 = [profile.postalCode, profile.city].filter(Boolean).join(' ');
@@ -184,7 +217,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
 
   function showFieldsBanner() {
-    if (!fields.length) { banner.classList.add('hidden'); return; }
+    if (!fields.length || viewing || (initialObjs && initialObjs.length)) { banner.classList.add('hidden'); return; }
     banner.classList.remove('hidden');
     banner.innerHTML = `<span>${t('fieldsFound', { n: fields.length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
     banner.querySelector('.af').onclick = autofill;
@@ -193,9 +226,23 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
 
   function autofill() {
     commitEdit();
+    const roles = new Set(objs.filter(o => o.field && o.match && o.role).map(o => o.role));
+    if (roles.has('buyer') && roles.has('seller')) {
+      const m = modal(`<h2>${t('roleQ')}</h2><div class="col gap">
+        <button class="btn ghost big" data-r="seller">${t('roleA')}</button>
+        <button class="btn ghost big" data-r="buyer">${t('roleB')}</button>
+        <button class="btn ghost big" data-r="both">${t('roleBoth')}</button></div>
+        <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
+      m.el.querySelector('.c').onclick = m.close;
+      m.el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { m.close(); doAutofill(b.dataset.r); });
+      return;
+    }
+    doAutofill('both');
+  }
+  function doAutofill(role) {
     snap(); let n = 0;
     for (const o of objs) {
-      if (o.type === 'text' && o.field && o.match && !o.text) {
+      if (o.type === 'text' && o.field && o.match && !o.text && (role === 'both' || !o.role || o.role === role)) {
         const v = profVal(o.match, o);
         if (v) { o.text = o.maxLen ? v.slice(0, o.maxLen) : v; o.bind = o.match; o.color = color; fit(o); n++; }
       }
@@ -445,7 +492,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
 
   // ---------- pointer interactions ----------
   pagesEl.addEventListener('pointerdown', (e) => {
-    if (pinching) return;
+    if (pinching || viewing) return;
     if (e.target.classList.contains('ed-input')) return; // typing / moving the caret
     const pEl = e.target.closest('.page'); if (!pEl) return;
     const pi = pagesInfo.findIndex(p => p.el === pEl); const p = pagesInfo[pi];
@@ -661,9 +708,11 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       let out;
       try {
         out = await exportPdf(bytes, objs, pagesInfo.map(p => ({ vp: p.vp, rotate: p.rotate })));
-        await saveDoc(fname, out, docId);
+        const meta = await saveDoc(fname, out, docId, { src: bytes, objs: JSON.parse(JSON.stringify(objs)) });
+        docId = meta.id;
       } catch (err) { console.error(err); bz.close(); toast(t('err') + ' (' + err.message + ')'); return; }
       bz.close(); dirty = false;
+      if (onSaved) await onSaved();
       const r = modal(`<div class="done-ic">${ICON.done}</div><h2>${t('saved')}</h2><p class="muted">${esc(fname)}</p>
         <div class="col gap">
           <button class="btn primary big sh">${ICON.share}<span>${t('share')}</span><small>${t('shareHint')}</small></button>
@@ -675,6 +724,20 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       r.el.querySelector('.hm').onclick = () => { r.close(); cleanup(); onExit(); };
     };
   };
+
+  // ---------- view mode ----------
+  async function startEditing() {
+    if (chooseProfile && profiles.length > 1) {
+      const id = await chooseProfile(profile.id);
+      if (!id) return;
+      if (id !== profile.id) { const sel2 = $('.prof-sel'); sel2.value = id; sel2.dispatchEvent(new Event('change')); }
+    }
+    viewing = false; root.querySelector('.editor').classList.remove('viewing'); showFieldsBanner();
+  }
+  $('.start-edit').onclick = startEditing;
+  const currentPdf = async () => (initialObjs && initialObjs.length) || objs.some(o => !o.field || o.text || o.on) ? exportPdf(bytes, objs, pagesInfo.map(p => ({ vp: p.vp, rotate: p.rotate }))) : bytes;
+  $('.v-sh').onclick = async () => { try { await shareFile(await currentPdf(), name); } catch (e) { toast(e.message); } };
+  $('.v-dl').onclick = async () => { const w = await downloadPdf(await currentPdf(), name); if (w) toast(t('downloaded') + ' : ' + w); };
 
   let rt; const onResize = () => {
     clearTimeout(rt);
