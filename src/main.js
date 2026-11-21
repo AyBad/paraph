@@ -1,5 +1,5 @@
 import './style.css';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { t, LANGS, setLanguage, detectLang, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import * as store from './store.js';
@@ -8,6 +8,8 @@ import { fileToPdfBytes } from './docs.js';
 import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
 import { showBanner, hideBanner, showInterstitial, removeBannerForPro } from './ads.js';
+import { scanDocument } from './scan.js';
+const IncomingFile = registerPlugin('IncomingFile');
 
 const app = document.getElementById('app');
 const native = Capacitor.isNativePlatform();
@@ -20,13 +22,15 @@ const FREE_PROFILES = 2;
 const PLANS = [
   { id: 'monthly', price: 1.99, per: 'perMonth' },
   { id: 'yearly', price: 11.99, per: 'perYear', badge: '-50%' },
-  { id: 'lifetime', price: 24.99, per: 'oneTime' }
+  { id: 'lifetime', price: 18.99, per: 'oneTime' }
 ];
 const money = (v) => { try { return new Intl.NumberFormat(document.documentElement.lang, { style: 'currency', currency: 'EUR' }).format(v); } catch { return v + ' €'; } };
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
 async function init() {
   await setLanguage((await store.getLang()) || detectLang());
+  applyTheme(await store.getSetting('theme', 'auto'));
+  if (await store.getSetting('pin')) await lockScreen();
   if ('serviceWorker' in navigator && !native && location.protocol === 'https:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { });
   }
@@ -38,8 +42,84 @@ async function init() {
       const b = document.querySelector('#app .back');
       if (b) b.click(); else App.exitApp();
     })).catch(() => { });
+    // lock again when coming back after a while; pick up files sent with "Open with / Share"
+    let away = 0;
+    import('@capacitor/app').then(({ App }) => {
+      App.addListener('pause', () => { away = Date.now(); });
+      App.addListener('resume', async () => {
+        if (away && Date.now() - away > 60000 && await store.getSetting('pin') && !document.querySelector('.lock')) await lockScreen();
+        checkIncoming();
+      });
+    }).catch(() => { });
+    try { IncomingFile.addListener('incoming', () => checkIncoming()); } catch { }
   }
   if (!(await store.isOnboarded())) onboarding(); else home();
+  checkIncoming();
+}
+
+async function checkIncoming() {
+  if (!native) return;
+  try {
+    const r = await IncomingFile.consume();
+    if (!r || !r.data) return;
+    const bin = atob(r.data); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    startFile(new File([u], r.name || 'document.pdf', { type: r.mime || 'application/pdf' }));
+  } catch (e) { console.warn('incoming', e); }
+}
+
+// ---------------- THEME / LOCK ----------------
+const darkMq = window.matchMedia('(prefers-color-scheme: dark)');
+let themeMode = 'auto';
+function applyTheme(mode) {
+  themeMode = mode || 'auto';
+  const dark = themeMode === 'dark' || (themeMode === 'auto' && darkMq.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#12131a' : '#1a237e';
+}
+darkMq.addEventListener?.('change', () => applyTheme(themeMode));
+
+function pinPad({ title, onCode, cancellable }) {
+  const el = document.createElement('div');
+  el.className = 'lock';
+  el.innerHTML = `<div class="lock-box">${LOGO}<h2>${esc(title)}</h2><div class="pin-dots">${'<i></i>'.repeat(4)}</div><p class="pin-err"></p>
+    <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => `<button class="key" data-k="${k}" ${k === '' ? 'disabled' : ''}>${k}</button>`).join('')}</div>
+    ${cancellable ? `<button class="link pin-cancel">${t('cancel')}</button>` : ''}</div>`;
+  document.body.appendChild(el);
+  let code = '';
+  const dots = () => el.querySelectorAll('.pin-dots i').forEach((d, i) => d.classList.toggle('on', i < code.length));
+  const api = {
+    error(msg) { code = ''; dots(); el.querySelector('.pin-err').textContent = msg; el.querySelector('.pin-dots').classList.add('shake'); setTimeout(() => el.querySelector('.pin-dots').classList.remove('shake'), 400); },
+    setTitle(tt) { el.querySelector('h2').textContent = tt; code = ''; dots(); el.querySelector('.pin-err').textContent = ''; },
+    close() { el.remove(); }
+  };
+  el.querySelectorAll('.key').forEach(b => b.onclick = () => {
+    const k = b.dataset.k;
+    if (k === '⌫') code = code.slice(0, -1); else if (code.length < 4) code += k;
+    dots();
+    if (code.length === 4) { const c = code; setTimeout(() => onCode(c, api), 120); }
+  });
+  const cc = el.querySelector('.pin-cancel'); if (cc) cc.onclick = () => { api.close(); onCode(null, api); };
+  return api;
+}
+function lockScreen() {
+  return new Promise(res => pinPad({
+    title: t('pinEnter'),
+    onCode: async (c, api) => { if ((await store.sha256(c)) === (await store.getSetting('pin'))) { api.close(); res(); } else api.error(t('pinWrong')); }
+  }));
+}
+function setPinFlow() {
+  return new Promise(res => {
+    let first = null;
+    pinPad({
+      title: t('pinSet'), cancellable: true,
+      onCode: async (c, api) => {
+        if (c === null) return res(false);
+        if (!first) { first = c; api.setTitle(t('pinConfirm')); return; }
+        if (c !== first) { first = null; api.setTitle(t('pinSet')); api.error(t('pinWrong')); return; }
+        await store.setSetting('pin', await store.sha256(c)); api.close(); res(true);
+      }
+    });
+  });
 }
 
 // ---------------- ONBOARDING ----------------
@@ -94,7 +174,7 @@ function openMenu() {
   back.innerHTML = `<aside class="drawer">
     <div class="drawer-h">${LOGO}<div><b>Paraph</b><span>${t('tagline')}</span></div></div>
     <button class="d-item" data-a="profiles">${ICON.user}<span>${t('profiles')}</span></button>
-    <button class="d-item" data-a="settings">${ICON.globe}<span>${t('language')}</span></button>
+    <button class="d-item" data-a="settings">${ICON.gear}<span>${t('settings')}</span></button>
     <button class="d-item" data-a="backup">${ICON.cloud}<span>${t('backup')}</span></button>
     <hr>
     <button class="d-item" data-a="tutorial">${ICON.book}<span>${t('tutorial')}</span></button>
@@ -105,28 +185,70 @@ function openMenu() {
   requestAnimationFrame(() => back.classList.add('in'));
   const close = () => { back.classList.remove('in'); setTimeout(() => back.remove(), 200); };
   back.onclick = (e) => { if (e.target === back) close(); };
-  const acts = { profiles: profilesScreen, settings, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen };
+  const acts = { profiles: profilesScreen, settings: settingsScreen, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen };
   back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); hideBanner(); acts[b.dataset.a](); });
 }
 
 const header = (title) => `<header class="top"><button class="icon-btn back">${ICON.back}</button><h1 class="h">${title}</h1><span></span></header>`;
 
 // ---------------- HOME ----------------
+let docQuery = '', docFolder = '';
+
+function docActions(d, folders) {
+  const m = modal(`<h2 class="ellipsis">${esc(d.name)}</h2><div class="list">
+    <button class="list-item a-open">${ICON.file}<b>${t('openDoc')}</b></button>
+    <button class="list-item a-ren">${ICON.edit}<b>${t('rename')}</b></button>
+    <button class="list-item a-mv">${ICON.folder}<b>${t('moveTo')}</b><span>${esc(d.folder || t('noFolder'))}</span></button>
+    <button class="list-item a-sh">${ICON.share}<b>${t('share')}</b></button>
+    <button class="list-item a-dl">${ICON.download}<b>${t('download')}</b></button>
+    <button class="list-item a-del danger-t">${ICON.trash}<b>${t('delete')}</b></button>
+  </div><div class="row end"><button class="btn ghost c">${t('close')}</button></div>`, 'sheet');
+  const on = (c, f) => m.el.querySelector(c).onclick = () => { m.close(); f(); };
+  m.el.querySelector('.c').onclick = m.close;
+  on('.a-open', () => openSaved(d));
+  on('.a-ren', () => askText(t('rename'), d.name.replace(/\.pdf$/i, ''), async (v) => { await store.renameDoc(d.id, v + '.pdf'); home(); }));
+  on('.a-mv', () => {
+    const mm = modal(`<h2>${t('moveTo')}</h2><div class="list">
+      <button class="list-item" data-f="">${ICON.file}<b>${t('noFolder')}</b></button>
+      ${folders.map(f => `<button class="list-item" data-f="${esc(f)}">${ICON.folder}<b>${esc(f)}</b></button>`).join('')}
+      <button class="list-item nf">${ICON.plus}<b>${t('newFolder')}</b></button></div>
+      <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
+    mm.el.querySelector('.c').onclick = mm.close;
+    mm.el.querySelectorAll('[data-f]').forEach(b => b.onclick = async () => { mm.close(); await store.moveDoc(d.id, b.dataset.f); home(); });
+    mm.el.querySelector('.nf').onclick = () => { mm.close(); askText(t('folderName'), '', async (v) => { await store.moveDoc(d.id, v); docFolder = v; home(); }); };
+  });
+  on('.a-sh', async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } });
+  on('.a-dl', async () => { const w = await downloadPdf(await store.getDocBytes(d.id), d.name); if (w) toast(t('downloaded') + ' : ' + w); });
+  on('.a-del', async () => { if (await confirmBox(t('confirmDelete'), t('delete'), t('cancel'))) { await store.deleteDoc(d.id); home(); } });
+}
+
+function askText(title, value, cb) {
+  const m = modal(`<h2>${esc(title)}</h2><div class="name-row"><input class="tv" value="${esc(value)}"></div>
+    <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary ok">${t('save')}</button></div>`, 'sheet');
+  const i = m.el.querySelector('.tv'); setTimeout(() => i.focus(), 50);
+  m.el.querySelector('.c').onclick = m.close;
+  m.el.querySelector('.ok').onclick = () => { const v = i.value.trim(); if (!v) return; m.close(); cb(v); };
+}
 async function home() {
   hideBanner();
   const [docs, profiles, activeId] = await Promise.all([store.getDocs(), store.getProfiles(), store.getActiveProfileId()]);
   const active = profiles.find(p => p.id === activeId) || profiles[0];
+  const folders = [...new Set(docs.map(d => d.folder).filter(Boolean))].sort();
+  if (docFolder && !folders.includes(docFolder)) docFolder = '';
   app.innerHTML = `
   <div class="screen home">
     <header class="top">
       <div class="brand">${LOGO}<div><h1>Paraph</h1><p>${t('tagline')}</p></div></div>
       <button class="icon-btn menu" aria-label="${t('menu')}">${ICON.menu}</button>
     </header>
-    <label class="open-card">
-      <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" hidden class="file">
-      <div class="open-ic">${ICON.plus}</div>
-      <div><b>${t('open')}</b><span>${t('openHint')}</span></div>
-    </label>
+    <div class="open-row">
+      <label class="open-card">
+        <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" hidden class="file">
+        <div class="open-ic">${ICON.plus}</div>
+        <div><b>${t('open')}</b><span>${t('openHint')}</span></div>
+      </label>
+      <button class="scan-card">${ICON.camera}<span>${t('scan')}</span></button>
+    </div>
     <section class="card prof-card">
       <div class="card-h"><h2>${ICON.user}${t('profiles')}</h2><button class="link manage">${t('edit')}</button></div>
       <div class="chips">${profiles.map(p => `<button class="chip${p.id === active.id ? ' on' : ''}" data-id="${p.id}">
@@ -135,14 +257,10 @@ async function home() {
     </section>
     <section class="card">
       <div class="card-h"><h2>${ICON.file}${t('myDocs')}</h2></div>
-      ${docs.length ? `<div class="docs">${docs.map(d => `
-        <div class="doc" data-id="${d.id}">
-          <div class="doc-ic">PDF</div>
-          <div class="doc-m"><b>${esc(d.name)}</b><span>${fmtDate(new Date(d.date))} ${fmtTime(new Date(d.date))} · ${(d.size / 1024).toFixed(0)} Ko</span></div>
-          <button class="icon-btn d-sh" aria-label="${t('share')}">${ICON.share}</button>
-          <button class="icon-btn d-dl" aria-label="${t('download')}">${ICON.download}</button>
-          <button class="icon-btn d-del" aria-label="${t('delete')}">${ICON.trash}</button>
-        </div>`).join('')}</div>` : `<p class="empty">${t('noDocs')}</p>`}
+      ${docs.length ? `
+        <div class="search">${ICON.search}<input class="q" type="search" placeholder="${t('search')}" value="${esc(docQuery)}"></div>
+        ${folders.length ? `<div class="chips folders"><button class="chip${!docFolder ? ' on' : ''}" data-f="">${t('allDocs')}</button>${folders.map(f => `<button class="chip${docFolder === f ? ' on' : ''}" data-f="${esc(f)}">${ICON.folder}<span>${esc(f)}</span></button>`).join('')}</div>` : ''}
+        <div class="docs"></div>` : `<p class="empty">${t('noDocs')}</p>`}
     </section>
     ${isIOS && !standalone && !native ? `<p class="hint-ios">${t('iosInstall')}</p>` : ''}
     <p class="privacy">${t('privacy')}</p>
@@ -153,16 +271,29 @@ async function home() {
   $('.chip.add').onclick = newProfile;
   app.querySelectorAll('.chip[data-id]').forEach(c => c.onclick = async () => { await store.setActiveProfileId(c.dataset.id); home(); });
   $('.file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) startFile(f); };
-  app.querySelectorAll('.doc').forEach(el => {
-    const d = docs.find(x => x.id === el.dataset.id);
-    el.querySelector('.doc-m').onclick = async () => {
-      const { src, objs } = await store.getDocSource(d.id);
-      startBytes(src || await store.getDocBytes(d.id), d.name, d.id, src ? objs : null);
-    };
-    el.querySelector('.d-sh').onclick = async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } };
-    el.querySelector('.d-dl').onclick = async () => { const w = await downloadPdf(await store.getDocBytes(d.id), d.name); if (w) toast(t('downloaded') + ' : ' + w); };
-    el.querySelector('.d-del').onclick = async () => { if (await confirmBox(t('confirmDelete'), t('delete'), t('cancel'))) { await store.deleteDoc(d.id); home(); } };
-  });
+  $('.scan-card').onclick = async () => { hideBanner(); const r = await scanDocument(); if (r) openNew(r.bytes, r.name); else home(); };
+  const list = $('.docs');
+  const renderDocs = () => {
+    if (!list) return;
+    const q = docQuery.trim().toLowerCase();
+    const shown = docs.filter(d => (!docFolder || d.folder === docFolder) && (!q || d.name.toLowerCase().includes(q)));
+    list.innerHTML = shown.length ? shown.map(d => `
+      <div class="doc" data-id="${d.id}">
+        <div class="doc-ic">PDF</div>
+        <div class="doc-m"><b>${esc(d.name)}</b><span>${fmtDate(new Date(d.date))} ${fmtTime(new Date(d.date))} · ${(d.size / 1024).toFixed(0)} Ko${d.folder && !docFolder ? ` · ${esc(d.folder)}` : ''}</span></div>
+        <button class="icon-btn d-sh" aria-label="${t('share')}">${ICON.share}</button>
+        <button class="icon-btn d-more" aria-label="${t('menu')}">${ICON.dots}</button>
+      </div>`).join('') : `<p class="empty">—</p>`;
+    list.querySelectorAll('.doc').forEach(el => {
+      const d = docs.find(x => x.id === el.dataset.id);
+      el.querySelector('.doc-m').onclick = () => openSaved(d);
+      el.querySelector('.d-sh').onclick = async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } };
+      el.querySelector('.d-more').onclick = () => docActions(d, folders);
+    });
+  };
+  renderDocs();
+  const q = $('.q'); if (q) q.oninput = () => { docQuery = q.value; renderDocs(); };
+  app.querySelectorAll('.folders .chip').forEach(c => c.onclick = () => { docFolder = c.dataset.f; home(); });
   showBanner(app.querySelector('.screen'));
 }
 
@@ -196,19 +327,31 @@ async function startFile(file) {
   try {
     const bytes = await fileToPdfBytes(file, (s) => b.set(t(s)));
     b.close();
-    startBytes(bytes, file.name.replace(/\.[^.]+$/, '') + '.pdf');
+    openNew(bytes, file.name.replace(/\.[^.]+$/, '') + '.pdf');
   } catch (e) {
     b.close(); console.error(e);
     toast(e.message === 'doc' ? t('errDoc') : t('err'));
   }
 }
 
-async function startBytes(bytes, name, docId, initialObjs) {
+/** a newly imported file opens directly in edit mode */
+async function openNew(bytes, name) {
   hideBanner();
   const profiles = await store.getProfiles();
-  const activeId = (await store.getActiveProfileId()) || profiles[0].id;
+  let id = (await store.getActiveProfileId()) || profiles[0].id;
+  if (profiles.length > 1) { id = await chooseProfile(profiles, id); if (!id) return home(); }
+  openEditor({ bytes: new Uint8Array(bytes), name, profiles, profileId: id, onExit: home, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: showInterstitial });
+}
+
+/** a saved document opens for viewing, with a button to edit it */
+async function openSaved(d) {
+  hideBanner();
+  const { src, objs } = await store.getDocSource(d.id);
+  const bytes = src || await store.getDocBytes(d.id);
+  const profiles = await store.getProfiles();
+  const id = (await store.getActiveProfileId()) || profiles[0].id;
   openEditor({
-    bytes: new Uint8Array(bytes), name, docId, profiles, profileId: activeId, onExit: home, initialObjs,
+    bytes: new Uint8Array(bytes), name: d.name, docId: d.id, profiles, profileId: id, onExit: home, initialObjs: src ? objs : null,
     viewOnly: true, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: showInterstitial
   });
 }
@@ -255,6 +398,7 @@ async function editProfile(p, isNew) {
       <label class="field-l">${t('profileName')}<input data-k="name" type="text" value="${esc(p.name)}" placeholder="${t('profileName')}"></label>
       <div class="two">${F('lastName', 'text', 'autocomplete="family-name"')}${F('firstName', 'text', 'autocomplete="given-name"')}</div>
       <div class="two">${F('birthDate', 'date')}${F('birthPlace')}</div>
+      <label class="field-l">${t('sex')}<div class="seg sex">${[['', '—'], ['M', t('male')], ['F', t('female')]].map(([v, l]) => `<button class="seg-b${(p.sex || '') === v ? ' on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></label>
       <fieldset class="addr"><legend>${t('address')}</legend>
         <div class="addr1">${F('streetNumber', 'text', 'autocomplete="off"')}${F('streetName', 'text', 'autocomplete="address-line1"')}</div>
         ${F('addressExtra', 'text', 'autocomplete="address-line2"')}
@@ -272,6 +416,7 @@ async function editProfile(p, isNew) {
   </div>`;
   const $ = s => app.querySelector(s);
   app.querySelectorAll('input[data-k]').forEach(i => i.oninput = () => p[i.dataset.k] = i.value);
+  app.querySelectorAll('.sex .seg-b').forEach(b => b.onclick = (e) => { e.preventDefault(); p.sex = b.dataset.v; app.querySelectorAll('.sex .seg-b').forEach(x => x.classList.toggle('on', x === b)); });
   app.querySelectorAll('.sw').forEach(b => b.onclick = () => { p.color = b.dataset.c; $('.cc').value = p.color; app.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x === b)); });
   $('.cc').oninput = e => { p.color = e.target.value; app.querySelectorAll('.sw').forEach(x => x.classList.remove('on')); };
   app.querySelectorAll('.sig-box').forEach(box => box.onclick = async () => {
@@ -290,6 +435,28 @@ async function editProfile(p, isNew) {
   if (!isNew) $('.del').onclick = () => removeProfile(p, count);
 }
 
+// ---------------- SETTINGS ----------------
+async function settingsScreen() {
+  hideBanner();
+  const [lang, theme, pin] = [await store.getLang(), await store.getSetting('theme', 'auto'), await store.getSetting('pin')];
+  app.innerHTML = `
+  <div class="screen">
+    ${header(t('settings'))}
+    <section class="card"><button class="row-btn lang">${ICON.globe}<b>${t('language')}</b><span>${lang ? LANGS[lang] : t('auto')}</span></button></section>
+    <section class="card"><div class="card-h"><h2>${ICON.moon}${t('theme')}</h2></div>
+      <div class="seg theme">${[['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]].map(([v, l]) => `<button class="seg-b${theme === v ? ' on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></section>
+    <section class="card"><div class="card-h"><h2>${ICON.shield}${t('security')}</h2></div>
+      <label class="switch-row"><span>${t('pinLock')}</span><input type="checkbox" class="pin-t" ${pin ? 'checked' : ''}><i class="sw-ui"></i></label></section>
+  </div>`;
+  app.querySelector('.back').onclick = home;
+  app.querySelector('.lang').onclick = settings;
+  app.querySelectorAll('.theme .seg-b').forEach(b => b.onclick = async () => { await store.setSetting('theme', b.dataset.v); applyTheme(b.dataset.v); settingsScreen(); });
+  app.querySelector('.pin-t').onchange = async (e) => {
+    if (e.target.checked) { const ok = await setPinFlow(); if (!ok) e.target.checked = false; else toast('✓'); }
+    else { await store.setSetting('pin', null); toast('✓'); }
+  };
+}
+
 // ---------------- LANGUAGE ----------------
 async function settings() {
   hideBanner();
@@ -302,7 +469,7 @@ async function settings() {
       ${Object.entries(LANGS).map(([c, n]) => `<button class="list-item lg${saved === c ? ' on' : ''}" data-l="${c}"><b>${n}</b><span>${c.toUpperCase()}</span></button>`).join('')}
     </div>
   </div>`;
-  app.querySelector('.back').onclick = home;
+  app.querySelector('.back').onclick = settingsScreen;
   app.querySelectorAll('.lg').forEach(b => b.onclick = async () => {
     await store.setLang(b.dataset.l || null);
     await setLanguage(b.dataset.l || detectLang());

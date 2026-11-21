@@ -9,7 +9,7 @@ export function emptyProfile() {
   return {
     id: uid(), name: '', lastName: '', firstName: '', birthDate: '', birthPlace: '',
     streetNumber: '', streetName: '', addressExtra: '', postalCode: '', city: '', country: '',
-    email: '', phone: '', color: '#1a237e', signature: '', initials: ''
+    email: '', phone: '', sex: '', color: '#1a237e', signature: '', initials: ''
   };
 }
 
@@ -31,6 +31,7 @@ function migrate(p) {
   }
   delete p.address;
   for (const k of PROFILE_FIELDS) if (p[k] == null) p[k] = '';
+  if (p.sex == null) p.sex = '';
   return p;
 }
 export async function saveProfile(profile) {
@@ -55,6 +56,7 @@ export async function saveDoc(name, bytes, id, extra = {}) {
   id = id || uid();
   const meta = { id, name, date: Date.now(), size: bytes.length };
   const i = docs.findIndex(d => d.id === id);
+  if (i >= 0 && docs[i].folder) meta.folder = docs[i].folder;
   if (i >= 0) docs.splice(i, 1);
   docs.unshift(meta);
   await set('doc:' + id, bytes);
@@ -111,4 +113,27 @@ export async function importBackup(text) {
   }
   docs.sort((a, b) => b.date - a.date);
   await set('docs', docs);
+}
+
+/* ---- values typed in form fields, suggested again next time ---- */
+export async function getMemory() { return (await get('memory')) || {}; }
+export async function remember(key, value) {
+  if (!key || !value) return;
+  const m = await getMemory();
+  m[key] = [value, ...(m[key] || []).filter(v => v !== value)].slice(0, 5);
+  await set('memory', m);
+}
+
+/* ---- settings: theme, PIN lock ---- */
+export async function getSetting(k, d) { const v = await get('set:' + k); return v === undefined ? d : v; }
+export async function setSetting(k, v) { return v == null ? del('set:' + k) : set('set:' + k, v); }
+export async function sha256(txt) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('paraph:' + txt));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+export async function renameDoc(id, name) {
+  const docs = await getDocs(); const d = docs.find(x => x.id === id); if (d) { d.name = name; await set('docs', docs); }
+}
+export async function moveDoc(id, folder) {
+  const docs = await getDocs(); const d = docs.find(x => x.id === id); if (d) { d.folder = folder || ''; await set('docs', docs); }
 }

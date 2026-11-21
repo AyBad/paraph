@@ -98,7 +98,7 @@ export async function detectFields(page, vp, tips = {}) {
     if (a.fieldType === 'Tx') out.push({ kind: 'text', name: a.fieldName || '', alt: a.alternativeText || tips[a.fieldName] || '', value: typeof a.fieldValue === 'string' ? a.fieldValue : '', multiline: !!a.multiLine, comb: a.comb ? a.maxLen : 0, maxLen: a.maxLen || 0, ...r });
     else if (a.fieldType === 'Btn' && (a.checkBox || a.radioButton)) {
       const on = a.checkBox ? (a.fieldValue && a.fieldValue !== 'Off' && a.fieldValue === a.exportValue) : (a.fieldValue === a.buttonValue);
-      out.push({ kind: 'check', name: a.fieldName || '', alt: a.alternativeText || tips[a.fieldName] || '', value: !!on, ...r });
+      out.push({ kind: 'check', name: a.fieldName || '', alt: a.alternativeText || tips[a.fieldName] || '', value: !!on, radio: !!a.radioButton, bval: String(a.buttonValue || a.exportValue || ''), ...r });
     }
   }
   return out;
