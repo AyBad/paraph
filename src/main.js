@@ -8,7 +8,7 @@ import { fileToPdfBytes } from './docs.js';
 import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
 import { exportAs } from './convert.js';
-import { showBanner, hideBanner, showInterstitial, removeBannerForPro } from './ads.js';
+import { showBanner, hideBanner, showInterstitial, removeBannerForPro, prepareInterstitial } from './ads.js';
 import { scanDocument } from './scan.js';
 const IncomingFile = registerPlugin('IncomingFile');
 
@@ -352,6 +352,7 @@ async function startFile(file) {
 
 /** a newly imported file opens directly in edit mode */
 async function openNew(bytes, name) {
+  prepareInterstitial();
   hideBanner();
   const profiles = await store.getProfiles();
   let id = (await store.getActiveProfileId()) || profiles[0].id;

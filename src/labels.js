@@ -1,3 +1,4 @@
+import { Capacitor, registerPlugin } from '@capacitor/core';
 /* Reading the text printed on a page (pdf.js text layer, or OCR for scans) to know what each field is for. */
 
 const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -17,13 +18,15 @@ export async function pdfTextItems(page, vp) {
 }
 
 // "Nom : ............" / "Ville : ________": the run of dots or underscores is the place to write
-const LEADER = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}/g;
+const LEADER = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}/g;
+const leaderOk = (m) => m.replace(/\s/g, '').replace(/…/g, '...').length >= 4 || /_{3,}/.test(m);
 const cw = (c) => /[.,:;·' ]/.test(c) ? 0.28 : c === '_' ? 0.556 : c === '…' ? 1 : /[A-ZÀ-ÖØ-Þ]/.test(c) ? 0.68 : /[il|!]/.test(c) ? 0.24 : 0.53;
 export function splitLeaders(items) {
   const text = [], leaders = [];
   for (const it of items) {
     const s = it.str;
-    if (!/[.·…_]{4,}|_{3,}|(\. ?){4,}/.test(s)) { text.push(it); continue; }
+    LEADER.lastIndex = 0;
+    if (![...s.matchAll(LEADER)].some(m => leaderOk(m[0]))) { text.push(it); continue; }
     const ch = [...s], acc = [0];
     for (const c of ch) acc.push(acc[acc.length - 1] + cw(c));
     // regex indices are UTF-16: map them to characters
@@ -31,6 +34,7 @@ export function splitLeaders(items) {
     const k = it.w / (acc[ch.length] || 1), xAt = (u) => it.x + acc[idx[u] ?? ch.length] * k;
     let last = 0, m; LEADER.lastIndex = 0;
     while ((m = LEADER.exec(s))) {
+      if (!leaderOk(m[0])) continue;
       const pre = s.slice(last, m.index);
       if (pre.trim()) text.push({ ...it, str: pre.trim(), x: xAt(last), w: xAt(m.index) - xAt(last) });
       leaders.push({ ...it, str: m[0], x: xAt(m.index), w: xAt(m.index + m[0].length) - xAt(m.index), leader: true });
@@ -44,8 +48,10 @@ export function splitLeaders(items) {
 
 let workerP = null;
 const simd = () => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch { return false; } };
-let progressCb = null;
-export function warmOcr() { ocrWorker().catch(() => { }); }
+let progressCb = null, lastOcrError = '';
+export const ocrError = () => lastOcrError;
+const TextOcr = registerPlugin('TextOcr');
+export function warmOcr() { if (!nativeOcr()) ocrWorker().catch(() => { }); }
 export function resetOcr() { const w = workerP; workerP = null; if (w) w.then(x => x.terminate()).catch(() => { }); }
 async function ocrWorker() {
   if (!workerP) workerP = (async () => {
@@ -55,6 +61,7 @@ async function ocrWorker() {
       workerPath: base + 'worker.min.js',
       corePath: simd() ? base + 'tesseract-core-simd-lstm.wasm.js' : 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-lstm.wasm.js',
       langPath: base, gzip: true, workerBlobURL: false, cacheMethod: 'none',
+      errorHandler: (e) => { console.warn('ocr worker', e); lastOcrError = String(e && e.message || e); },
       logger: (m) => {
         if (!progressCb) return;
         const st = { 'loading tesseract core': [0, .08], 'initializing tesseract': [.08, .04], 'loading language traineddata': [.12, .1], 'initializing api': [.22, .05], 'recognizing text': [.27, .73] }[m.status];
@@ -65,6 +72,24 @@ async function ocrWorker() {
   return workerP;
 }
 
+// Android app: Google ML Kit text recognition on the phone itself (fast, offline, no web worker)
+const nativeOcr = () => { try { return Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('TextOcr'); } catch { return false; } };
+async function nativeRecognize(c, S, onProgress) {
+  if (onProgress) onProgress(0.3);
+  const data = c.toDataURL('image/jpeg', 0.92).split(',')[1];
+  const r = await TextOcr.recognize({ data });
+  if (onProgress) onProgress(1);
+  const out = [], ink = [];
+  for (const w of r.words || []) {
+    const str = (w.t || '').trim(); if (!str) continue;
+    const it = { str, x: w.x / S, y: w.y / S, w: w.w / S, h: w.h / S, conf: 90, ocr: true };
+    if ((str.match(/[\p{L}\p{N}]/gu) || []).length >= 2 && !/^[|_lLIiJj1!\/\\\[\]{}()'".,:;~-]+$/.test(str)) ink.push(it);
+    out.push(it);
+  }
+  out.ink = ink; out.quality = out.length ? 90 : 0;
+  return out;
+}
+
 /** OCR of a scanned page: words as [{str,x,y,w,h}] in viewport units */
 export async function ocrTextItems(page, masks = [], onProgress) {
   progressCb = onProgress || null;
@@ -73,6 +98,11 @@ export async function ocrTextItems(page, masks = [], onProgress) {
   const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: v }).promise;
+  if (nativeOcr()) {
+    ctx.fillStyle = '#fff';
+    for (const m of masks) ctx.fillRect(m.x * S, m.y * S, m.w * S, m.h * S);
+    return nativeRecognize(c, S, onProgress);
+  }
   // erase the writing lines found in the picture: glued to the words, they make them unreadable
   ctx.fillStyle = '#fff';
   for (const m of masks) ctx.fillRect(m.x * S, m.y * S, m.w * S, m.h * S);
@@ -124,6 +154,24 @@ export function attachLabels(fields, items) {
     const row = rowOf(o).filter(f => f !== o);
     const sameRow = items.filter(it => Math.abs(it.y + it.h / 2 - cy) < (o.zone ? 5 : Math.max(4, fh * 0.75)));
     if (o.fixedLabel) { o.label = o.fixedLabel; o.labelGap = 0; continue; }
+    if (o.zone && !o.pending) {
+      const fy0 = o.fy ?? o.y, fh0 = o.fh ?? o.h;
+      const leftOf = items.filter(it => Math.abs(it.y + it.h / 2 - (fy0 + fh0 - Math.min(5, fh0 / 2))) < 5 && it.x + it.w <= o.x + 12 && it.x + it.w > o.x - 230);
+      if (!leftOf.length) {
+        // nothing on the left: "Nom :" written just above, starting about where the line starts
+        const above = items.filter(it => it.y + it.h <= fy0 + fh0 * 0.5 && it.y + it.h > fy0 - 20);
+        if (above.length) {
+          const yb = Math.max(...above.map(i => i.y + i.h));
+          let row = above.filter(i => i.y + i.h > yb - 4).sort((a, b) => a.x - b.x);
+          // that line has its own places to write ("Né(e) le : …/…/… à"): only the words after the last one name this line
+          const onRow = fields.filter(f => f !== o && f.zone && Math.abs(((f.fy ?? f.y) + (f.fh ?? f.h)) - yb) < 8);
+          if (onRow.length) { const end = Math.max(...onRow.map(f => f.x + (f.fw ?? f.w))); row = row.filter(i => i.x >= end - 2); }
+          else if (!row.length || row[0].x < o.x - 15 || row[0].x > o.x + 60) row = [];
+          const txt = row.map(i => i.str).join(' ');
+          if (txt && (/:\s*$/.test(txt) || txt.split(/\s+/).length <= 4)) { o.label = txt; o.labelGap = 0; o.labelAbove = true; continue; }
+        }
+      }
+    }
     if (o.type === 'check') {
       // the closest text on either side ("F [ ] M [ ]" or "[ ] Oui")
       let best = null, side = '';
@@ -153,6 +201,11 @@ export function attachLabels(fields, items) {
 
 /** contextual rules for short labels ("/", "à", "le", "h") from the field before on the same row */
 export function refineByRow(fields) {
+  // "Né(e) le : …/…/… à" + the dotted line under it = place of birth
+  for (const o of fields) if (o.labelAbove && !o.match && /^(a|à)\s*:?$/i.test((o.label || '').trim())) {
+    const yb = (o.fy ?? o.y);
+    if (fields.some(f => f.match === 'birthDate' && f.page === o.page && yb - ((f.fy ?? f.y) + (f.fh ?? f.h)) < 30 && yb - ((f.fy ?? f.y) + (f.fh ?? f.h)) > -4)) o.match = 'birthPlace';
+  }
   const byRow = new Map();
   for (const o of fields.filter(f => f.type === 'text')) {
     const k = o.page + ':' + Math.round(((o.fy ?? o.y) + (o.fh ?? o.h) / 2) / 6);

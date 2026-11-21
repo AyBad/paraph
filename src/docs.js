@@ -44,7 +44,7 @@ async function imageToPdf(file) {
 }
 
 const WINANSI = /[\x20-\x7e\xa0-\xff€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
-const LEAD_RE = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}/g;
+const LEAD_RE = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}/g;
 /** positions (px, relative to the page) of the words, the dotted / underlined places and the empty table cells of a rendered Word page */
 function docxLayout(sec) {
   const base = sec.getBoundingClientRect(), words = [], zones = [], boxes = [];
@@ -53,13 +53,13 @@ function docxLayout(sec) {
   const range = document.createRange();
   for (let n = tw.nextNode(); n; n = tw.nextNode()) {
     const s = n.nodeValue; if (!s || !s.trim()) continue;
-    const re = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}|[☐□❑▢◻]|[^\s.·…_☐□❑▢◻]+|\S/g; let m;
+    const re = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}|[☐□❑▢◻]|[^\s.·…_☐□❑▢◻]+|\S/g; let m;
     while ((m = re.exec(s))) {
       range.setStart(n, m.index); range.setEnd(n, m.index + m[0].length);
       const rects = [...range.getClientRects()].filter(r => r.width > 0.5 && r.height > 0.5);
       if (/^[☐□❑▢◻]$/.test(m[0])) { for (const r of rects) { const [x, y, w, h] = rel(r); const sz = Math.min(w, h) * 0.8; boxes.push([x + (w - sz) / 2, y + (h - sz) / 2, sz, sz]); } continue; }
       LEAD_RE.lastIndex = 0;
-      if (LEAD_RE.test(m[0]) && m[0].replace(/\s/g, '').length >= 3) { for (const r of rects) if (r.width > 18) zones.push(rel(r)); continue; }
+      if (LEAD_RE.test(m[0]) && (m[0].replace(/\s/g, '').replace(/…/g, '...').length >= 4 || /_{3,}/.test(m[0]))) { for (const r of rects) if (r.width > 18) zones.push(rel(r)); continue; }
       for (const r of rects) { const [x, y, w, h] = rel(r); words.push({ t: m[0], x, y, w, h }); }
     }
   }

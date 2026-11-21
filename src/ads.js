@@ -61,13 +61,27 @@ export async function removeBannerForPro() {
   document.querySelectorAll('.fake-ad').forEach(e => e.remove());
 }
 
+let interReady = false;
+/** load the full-screen ad in advance (when a document is opened) so that it shows at once after saving */
+export async function prepareInterstitial() {
+  if (!native || !(await adsAllowed())) return;
+  try { await initAds(); if (!ready) return; await admob.prepareInterstitial({ adId: TEST.interstitial, isTesting: true }); interReady = true; } catch (e) { interReady = false; console.warn('prepare interstitial', e); }
+}
 /** full-screen ad, shown after a document is saved */
 export async function showInterstitial() {
   if (!(await adsAllowed())) return;
   if (native) {
-    await initAds(); if (!ready) return;
-    try { await admob.prepareInterstitial({ adId: TEST.interstitial, isTesting: true }); await admob.showInterstitial(); } catch (e) { console.warn('interstitial', e); }
-    return;
+    await initAds();
+    if (ready) {
+      try {
+        if (!interReady) await prepareInterstitial();
+        interReady = false;
+        await admob.showInterstitial();
+        prepareInterstitial(); // next one ready in advance
+        return;
+      } catch (e) { console.warn('interstitial', e); interReady = false; }
+    }
+    // no AdMob ad available (no network, no fill…): our own full-screen promotion instead
   }
   await new Promise(resolve => {
     const back = document.createElement('div');
