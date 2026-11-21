@@ -1,4 +1,4 @@
-import { pdfjs, detectFields, exportPdf } from './docs.js';
+import { pdfjs, detectFields, detectBoxes, exportPdf, fieldTooltips } from './docs.js';
 import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
@@ -6,27 +6,51 @@ import { saveProfile, saveDoc, uid } from './store.js';
 import { downloadPdf, shareFile } from './share.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
+const STREET_TYPES = /^(rue|avenue|av\.?|boulevard|bd|allee|allée|chemin|impasse|place|route|quai|cours|square|passage|voie|sentier|rond-point|residence|résidence|lotissement|hameau|lieu-dit|faubourg|esplanade|parvis|promenade|street|st\.?|road|rd\.?|lane|drive|way)\s+/i;
+const INSERT_KEYS = ['fullName', 'lastName', 'firstName', 'birthDate', 'birthPlace', 'fullAddress', 'streetNumber', 'streetName', 'addressExtra', 'postalCode', 'city', 'country', 'email', 'phone', 'today'];
 
+const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[_\-.]+/g, ' ');
+
+/** Guess which profile value a form field expects, from its name and tooltip */
 function matchField(f) {
-  const n = (f.name + ' ' + f.alt).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const n = norm(f.name + ' ' + f.alt);
   const has = (re) => re.test(n);
-  const birth = has(/naiss|birth|dob|geburt|nacim|nasc|born/);
-  if (birth && has(/lieu|place|ort\b|lugar|luogo|city|ville|town/)) return 'birthPlace';
+  if (has(/signature|siret|siren|immatric|identification du vehicule|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule/)) return null;
+  const birth = has(/naiss|birth|dob\b|geburt|nacim|nasc|born|\bne ?\(?e?\)? le\b|\bnee? le\b/);
+  if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune|\ba\b/)) return 'birthPlace';
   if (birth) return 'birthDate';
-  if (has(/nom.*prenom|full.?name|nom.?complet|nom et prenom|name.*first/)) return 'fullName';
-  if (has(/pre.?nom|first|given|vorname|nombre|prenome|forename/)) return 'firstName';
+  if (has(/code postal|postal|\bzip\b|\bcp\b|\bplz\b|postcode/)) return 'postalCode';
+  if (has(/type de (la )?voie|street type/)) return 'streetType';
+  if (has(/extension|bis ter|\bbis\b/)) return null;
+  if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie/)) return 'streetNumber';
+  if (has(/nom de (la )?voie|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
+  if (has(/complement/)) return 'addressExtra';
+  if (has(/fait a\b|signed at|lieu de signature/)) return 'city';
+  if (has(/commune|ville|\bcity\b|localite|\btown\b|\bort\b|ciudad|citta|municipal/)) return 'city';
+  if (has(/\bpays\b|country|\bpais\b/)) return 'country';
+  if (has(/adress|address|domicile|anschrift|direcc|indirizzo|demeurant/)) return 'fullAddress';
+  if (has(/nom.*prenom|full ?name|nom complet|soussigne|undersigned/)) return 'fullName';
+  if (has(/pre ?nom|first|given|vorname|nombre|prenome|forename/)) return 'firstName';
   if (has(/mail|courriel/)) return 'email';
-  if (has(/phone|tel|mobile|portable|telef|gsm/)) return 'phone';
-  if (has(/adress|address|street|strasse|direcc|indirizzo|domicile|\brue\b/)) return 'address';
+  if (has(/phone|\btel\b|telephone|mobile|portable|telef|gsm/)) return 'phone';
+  if (has(/heure|\bhour/)) return 'hour';
+  if (has(/minute/)) return 'minute';
   if (has(/(^|[^a-z])(nom|name|surname|last|family|apellido|cognome|nachname|naam)([^a-z]|$)/)) return 'lastName';
   if (has(/(^|[^a-z])date([^a-z]|$)|fait le|signed on|datum|fecha/)) return 'today';
   return null;
 }
 
+let measureCtx;
+function textWidth(txt, fs) {
+  measureCtx = measureCtx || document.createElement('canvas').getContext('2d');
+  measureCtx.font = '100px Helvetica, Arial, sans-serif';
+  return measureCtx.measureText(txt).width / 100 * fs;
+}
+
 export async function openEditor({ bytes, name, docId, profiles, profileId, onExit }) {
   let profile = profiles.find(p => p.id === profileId) || profiles[0];
   let color = profile.color || '#1a237e';
-  let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false;
+  let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false, pinching = false;
   const undoStack = [];
   const pagesInfo = [];
 
@@ -38,7 +62,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       <div class="ed-title">${esc(name)}</div>
       <select class="prof-sel" aria-label="${t('profile')}">${profiles.map(p => `<option value="${p.id}" ${p.id === profile.id ? 'selected' : ''}>${esc(p.name || [p.firstName, p.lastName].join(' ').trim() || t('unnamed'))}</option>`).join('')}</select>
       <label class="color-dot" title="${t('color')}"><input type="color" class="col" value="${color}"><span style="background:${color}"></span></label>
-      <button class="btn primary small finish">${ICON.done}<span>${t('finish')}</span></button>
+      <button class="btn primary small finish" aria-label="${t('save')}">${ICON.save}<span>${t('save')}</span></button>
     </header>
     <div class="ed-banner hidden"></div>
     <div class="ed-scroll"><div class="pages" dir="ltr"></div></div>
@@ -61,98 +85,166 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     pdf = await pdfjs.getDocument({ data: bytes.slice(0), isEvalSupported: false }).promise;
   } catch (e) { b.close(); toast(t('err')); onExit(); return; }
   const fields = [];
+  const tips = await fieldTooltips(bytes);
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const vp = page.getViewport({ scale: 1 });
     const el = document.createElement('div'); el.className = 'page';
     el.innerHTML = `<canvas></canvas><div class="layer"></div><div class="pno">${i}/${pdf.numPages}</div>`;
     pagesEl.appendChild(el);
-    pagesInfo.push({ page, vp, rotate: page.rotate || 0, el, canvas: el.querySelector('canvas'), layer: el.querySelector('.layer'), s: 1 });
-    for (const f of await detectFields(page, vp)) fields.push({ ...f, page: i - 1 });
+    const pf = await detectFields(page, vp, tips);
+    for (const f of pf) fields.push({ ...f, page: i - 1 });
+    let boxes = [];
+    if (!pf.length) {
+      boxes = await detectBoxes(page, vp);
+      // a run of adjacent squares is a comb (character boxes), not a tick box
+      boxes = boxes.filter(bx => !boxes.some(o => o !== bx && Math.abs(o.y - bx.y) < 2 && (Math.abs(o.x - (bx.x + bx.w)) < 2.5 || Math.abs(bx.x - (o.x + o.w)) < 2.5)));
+    }
+    pagesInfo.push({ page, vp, rotate: page.rotate || 0, el, canvas: el.querySelector('canvas'), layer: el.querySelector('.layer'), s: 1, boxes });
   }
   b.close();
 
   // fields -> objects
   for (const f of fields) {
     if (f.kind === 'text') {
-      const fs = Math.max(6, Math.min(11, f.multiline ? 10 : f.h * 0.68));
-      objs.push({ id: uid(), page: f.page, type: 'text', field: f.name || true, x: f.x, y: f.y + Math.max(0, (f.multiline ? 1 : (f.h - fs * 1.2) / 2)), w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y, fontSize: fs, text: f.value || '', color, match: matchField(f) });
+      const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
+      objs.push({
+        id: uid(), page: f.page, type: 'text', field: f.name || true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y,
+        y: f.y + (f.multiline ? 1 : Math.max(0, (f.h - fs * 1.2) / 2)), fontSize: fs, baseFs: fs, multiline: f.multiline,
+        comb: f.comb || 0, maxLen: f.maxLen || 0, text: f.value || '', color, match: matchField(f)
+      });
     } else {
       const s = Math.min(f.w, f.h);
-      objs.push({ id: uid(), page: f.page, type: 'check', field: f.name || true, on: f.value, x: f.x + (f.w - s) / 2, y: f.y + (f.h - s) / 2, w: s, h: s, color });
+      objs.push({ id: uid(), page: f.page, type: 'check', field: f.name || true, on: f.value, mark: 'check', x: f.x + (f.w - s) / 2, y: f.y + (f.h - s) / 2, w: s, h: s, color });
     }
   }
-  if (fields.length) {
+  // split dates typed in several boxes on one row (dd | mm | yyyy)
+  const textFields = objs.filter(o => o.field && o.type === 'text');
+  for (const key of ['birthDate', 'today']) {
+    const used = new Set();
+    for (const o of textFields.filter(x => x.match === key)) {
+      if (used.has(o)) continue;
+      const row = textFields.filter(x => x.match === key && x.page === o.page && Math.abs(x.fy - o.fy) < 4).sort((a, c) => a.x - c.x);
+      row.forEach(x => used.add(x));
+      if (row.length === 3) ['d', 'm', 'y'].forEach((p, i) => row[i].part = p);
+      else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
+    }
+  }
+  const hasStreetType = new Set(textFields.filter(o => o.match === 'streetType').map(o => o.page));
+  for (const o of textFields) if (o.match === 'streetName' && hasStreetType.has(o.page)) o.part = 'nameOnly';
+
+  // ---------- helpers ----------
+  const snap = () => { undoStack.push(JSON.stringify(objs)); if (undoStack.length > 40) undoStack.shift(); dirty = true; };
+  const pad = (n) => String(n).padStart(2, '0');
+  function dateParts(key) {
+    if (key === 'today') return new Date();
+    if (key === 'birthDate' && profile.birthDate) return new Date(profile.birthDate + 'T12:00:00');
+    return null;
+  }
+  function splitStreet() {
+    const sname = (profile.streetName || '').trim();
+    const m = sname.match(STREET_TYPES);
+    return m ? { type: m[1], name: sname.slice(m[0].length) } : { type: '', name: sname };
+  }
+  function profVal(key, o) {
+    const part = o && o.part;
+    if (key === 'today' || key === 'birthDate') {
+      const d = dateParts(key); if (!d) return '';
+      const dd = pad(d.getDate()), mm = pad(d.getMonth() + 1), yy = String(d.getFullYear());
+      if (part === 'd') return dd; if (part === 'm') return mm; if (part === 'y') return yy;
+      if (part === 'dm') return dd + mm; if (part === 'my') return mm + yy;
+      if (o && o.comb === 8) return dd + mm + yy;
+      if (o && o.comb === 10) return `${dd}/${mm}/${yy}`;
+      return fmtDate(d);
+    }
+    if (key === 'hour') return pad(new Date().getHours());
+    if (key === 'minute') return pad(new Date().getMinutes());
+    if (key === 'fullName') return [profile.firstName, profile.lastName].filter(Boolean).join(' ');
+    if (key === 'streetType') return splitStreet().type;
+    if (key === 'streetName' && part === 'nameOnly') return splitStreet().name;
+    if (key === 'fullAddress') {
+      const l1 = [profile.streetNumber, profile.streetName].filter(Boolean).join(' ');
+      const l2 = [profile.postalCode, profile.city].filter(Boolean).join(' ');
+      return [l1, profile.addressExtra, l2, profile.country].filter(Boolean).join(', ');
+    }
+    return profile[key] || '';
+  }
+
+  /** shrink font so the value fits in its form field */
+  function fit(o) {
+    if (!o.field || o.type !== 'text') return;
+    const base = o.baseFs || o.fontSize;
+    if (o.comb) {
+      o.fontSize = Math.max(5, Math.min(base, (o.fw / o.comb) * 1.05, o.fh * 0.72));
+    } else if (!o.multiline) {
+      const w1 = textWidth(o.text || '', 1);
+      o.fontSize = w1 > 0 ? Math.max(4, Math.min(base, (o.fw - 3) / w1)) : base;
+    }
+    o.y = o.fy + (o.multiline ? 1 : Math.max(0, (o.fh - o.fontSize * 1.2) / 2));
+  }
+
+  function showFieldsBanner() {
+    if (!fields.length) { banner.classList.add('hidden'); return; }
     banner.classList.remove('hidden');
     banner.innerHTML = `<span>${t('fieldsFound', { n: fields.length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
     banner.querySelector('.af').onclick = autofill;
   }
-
-  // ---------- helpers ----------
-  const snap = () => { undoStack.push(JSON.stringify(objs)); if (undoStack.length > 40) undoStack.shift(); dirty = true; };
-  const profVal = (key) => {
-    if (key === 'today') return fmtDate(new Date());
-    if (key === 'fullName') return [profile.firstName, profile.lastName].filter(Boolean).join(' ');
-    if (key === 'birthDate') return profile.birthDate ? fmtDate(new Date(profile.birthDate + 'T12:00:00')) : '';
-    return profile[key] || '';
-  };
+  showFieldsBanner();
 
   function autofill() {
-    if (editing) editing.blur();
+    commitEdit();
     snap(); let n = 0;
     for (const o of objs) {
       if (o.type === 'text' && o.field && o.match && !o.text) {
-        const v = profVal(o.match);
-        if (v) { o.text = v; o.bind = o.match; o.color = color; n++; }
+        const v = profVal(o.match, o);
+        if (v) { o.text = o.maxLen ? v.slice(0, o.maxLen) : v; o.bind = o.match; o.color = color; fit(o); n++; }
       }
     }
     toast(t('filled', { n })); renderObjs();
   }
 
   // ---------- page rendering ----------
-  let renderToken = 0;
-  async function layoutPages() {
-    const token = ++renderToken;
+  let renderToken = 0, lastWidth = 0;
+  function sizePages() {
     const avail = Math.min(scrollEl.clientWidth - 24, 1000);
+    lastWidth = scrollEl.clientWidth;
     for (const p of pagesInfo) {
       const w = Math.max(200, avail * zoom);
       p.s = w / p.vp.width;
-      const h = p.vp.height * p.s;
-      p.el.style.width = w + 'px'; p.el.style.height = h + 'px';
+      p.el.style.width = w + 'px'; p.el.style.height = p.vp.height * p.s + 'px';
     }
+  }
+  async function layoutPages() {
+    commitEdit();
+    const token = ++renderToken;
+    sizePages();
     renderObjs();
     for (const p of pagesInfo) {
       if (token !== renderToken) return;
       const dpr = Math.min(2.5, window.devicePixelRatio || 1);
       let scale = p.s * dpr;
-      const maxPx = 4096;
-      if (p.vp.width * scale > maxPx) scale = maxPx / p.vp.width;
+      if (p.vp.width * scale > 4096) scale = 4096 / p.vp.width;
       if (p.vp.width * scale * p.vp.height * scale > 16e6) scale = Math.sqrt(16e6 / (p.vp.width * p.vp.height));
       const vp = p.page.getViewport({ scale });
       const c = document.createElement('canvas');
       c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
-      try {
-        await p.page.render({ canvasContext: c.getContext('2d'), viewport: vp, annotationMode: pdfjs.AnnotationMode.ENABLE_FORMS }).promise;
-      } catch { }
+      try { await p.page.render({ canvasContext: c.getContext('2d'), viewport: vp, annotationMode: pdfjs.AnnotationMode.ENABLE_FORMS }).promise; } catch { }
       if (token !== renderToken) return;
       p.canvas.replaceWith(c); p.canvas = c;
     }
   }
 
   // ---------- objects rendering ----------
+  const markPath = (m) => m === 'cross' ? 'M20 20L80 80M80 20L20 80' : 'M18 52L42 78L84 22';
   function objHtml(o, s) {
-    if (o.type === 'text') {
-      return `<div class="tx" dir="auto" style="font-size:${o.fontSize * s}px;color:${o.color}">${esc(o.text)}</div>`;
-    }
+    if (o.type === 'text') return `<div class="tx" dir="auto" style="font-size:${o.fontSize * s}px;color:${o.color}">${esc(o.text)}</div>`;
     if (o.type === 'check' || o.type === 'cross') {
-      const d = o.type === 'check' ? 'M18 52L42 78L84 22' : 'M20 20L80 80M80 20L20 80';
-      return (o.field && !o.on) ? '' : `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${d}" stroke="${o.color}" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const m = o.type === 'cross' ? 'cross' : o.mark;
+      return (o.field && !o.on) ? '' : `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${markPath(m)}" stroke="${o.color}" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
     if (o.type === 'strike') return `<div class="stk" style="height:${Math.max(1, (o.lw || 1.6) * s)}px;background:${o.color}"></div>`;
     if (o.type === 'image') return `<img src="${o.src}" draggable="false">`;
-    if (o.type === 'ink') {
-      return `<svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none">${o.strokes.map(st => `<polyline points="${st.map(p => p.join(',')).join(' ')}" stroke="${o.color}" stroke-width="${o.lw || 2}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
-    }
+    if (o.type === 'ink') return `<svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none">${o.strokes.map(st => `<polyline points="${st.map(p => p.join(',')).join(' ')}" stroke="${o.color}" stroke-width="${o.lw || 2}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
     return '';
   }
 
@@ -166,39 +258,76 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       el.dataset.id = o.id;
       if (o.type === 'text' && o.field) {
         Object.assign(el.style, { left: o.x * s + 'px', top: o.fy * s + 'px', width: o.fw * s + 'px', height: o.fh * s + 'px' });
-        el.innerHTML = `<div class="tx" dir="auto" style="font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${esc(o.text)}</div>`;
+        if (o.comb) {
+          const cw = o.fw / o.comb;
+          el.innerHTML = `<div class="comb" style="font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${[...(o.text || '')].slice(0, o.comb).map(c => `<span style="width:${cw * s}px">${esc(c)}</span>`).join('')}</div>`;
+        } else el.innerHTML = `<div class="tx" dir="auto" style="font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${esc(o.text)}</div>`;
       } else {
         Object.assign(el.style, { left: o.x * s + 'px', top: o.y * s + 'px' });
         if (o.type !== 'text') Object.assign(el.style, { width: o.w * s + 'px', height: o.h * s + 'px' });
         el.innerHTML = objHtml(o, s);
       }
-      if (sel === o && !(o.field && o.type === 'check')) el.insertAdjacentHTML('beforeend', '<div class="handle"></div>');
+      if (sel === o && !o.field) el.insertAdjacentHTML('beforeend', '<div class="handle"></div>');
       p.layer.appendChild(el);
       if (o.type === 'text' && !o.field) { o.w = el.offsetWidth / s; o.h = el.offsetHeight / s; }
     }
     renderSelbar();
   }
 
+  function scaleObj(o, k) {
+    if (o.type === 'text') { o.fontSize = Math.max(4, Math.min(96, o.fontSize * k)); if (o.field) { o.baseFs = o.fontSize; o.y = o.fy + Math.max(0, (o.fh - o.fontSize * 1.2) / 2); } return; }
+    if (o.field) return;
+    const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+    if (o.type === 'strike') { o.w = Math.max(8, o.w * k); }
+    else {
+      if (o.type === 'ink') { o.strokes = o.strokes.map(s => s.map(([a, c]) => [a * k, c * k])); o.lw = (o.lw || 2) * k; }
+      o.w *= k; o.h *= k;
+    }
+    o.x = cx - o.w / 2; if (o.type !== 'strike') o.y = cy - o.h / 2;
+  }
+
   function renderSelbar() {
+    if (editing) {
+      // suggestions from the current profile while typing
+      const o = editing.o;
+      const keys = [o.match, ...INSERT_KEYS].filter((k, i, a) => k && a.indexOf(k) === i);
+      const chips = keys.map(k => ({ k, v: profVal(k, k === o.match ? o : null) })).filter(c => c.v);
+      selbar.classList.remove('hidden');
+      selbar.innerHTML = chips.map(c => `<button class="chip-s" data-k="${c.k}" title="${esc(t(c.k))}">${esc(c.v)}</button>`).join('') +
+        `<span class="sep"></span><button class="icon-btn ok-b">${ICON.done}</button>`;
+      selbar.querySelectorAll('button').forEach(bt => bt.addEventListener('pointerdown', e => e.preventDefault()));
+      selbar.querySelectorAll('.chip-s').forEach(bt => bt.onclick = () => {
+        const k = bt.dataset.k; editing.ta.value = profVal(k, k === o.match ? o : null); o.bind = k; commitEdit(true);
+      });
+      selbar.querySelector('.ok-b').onclick = () => commitEdit();
+      return;
+    }
     if (!sel) { selbar.classList.add('hidden'); return; }
     selbar.classList.remove('hidden');
-    const isText = sel.type === 'text';
+    const canScale = !(sel.field && sel.type === 'check');
     selbar.innerHTML = `
       ${SWATCHES.map(c => `<button class="sw${c === sel.color ? ' on' : ''}" data-c="${c}" style="background:${c}"></button>`).join('')}
       <span class="sep"></span>
-      ${isText ? `<button class="icon-btn fm">${ICON.minus}</button><span class="fsz">${Math.round(sel.fontSize)}</span><button class="icon-btn fp">${ICON.plus}</button><button class="icon-btn ed">${ICON.edit}</button>` : ''}
-      ${sel.type === 'strike' || sel.type === 'ink' ? `<button class="icon-btn lm">${ICON.minus}</button><button class="icon-btn lp">${ICON.plus}</button>` : ''}
-      ${!sel.field ? `<button class="icon-btn dup">${ICON.copy}</button><button class="icon-btn del">${ICON.trash}</button>` : `<button class="icon-btn clr">${ICON.trash}</button>`}`;
+      ${canScale ? `<button class="icon-btn sm">${ICON.minus}</button><button class="icon-btn sp">${ICON.plus}</button>` : ''}
+      ${sel.type === 'text' ? `<button class="icon-btn ed">${ICON.edit}</button>` : ''}
+      ${sel.type === 'strike' || sel.type === 'ink' ? `<button class="icon-btn lp" title="${t('thickness')}">${ICON.thick}</button>` : ''}
+      ${!sel.field ? `<button class="icon-btn dup">${ICON.copy}</button>` : ''}
+      <button class="icon-btn del">${ICON.trash}</button>
+      <button class="icon-btn ok-b">${ICON.done}</button>`;
     selbar.querySelectorAll('.sw').forEach(b => b.onclick = () => setObjColor(sel, b.dataset.c));
     const on = (c, f) => { const e = selbar.querySelector(c); if (e) e.onclick = f; };
-    on('.fm', () => { snap(); sel.fontSize = Math.max(4, sel.fontSize - 1); renderObjs(); });
-    on('.fp', () => { snap(); sel.fontSize = Math.min(72, sel.fontSize + 1); renderObjs(); });
-    on('.lm', () => { snap(); sel.lw = Math.max(0.5, (sel.lw || (sel.type === 'ink' ? 2 : 1.6)) - 0.5); renderObjs(); });
-    on('.lp', () => { snap(); sel.lw = Math.min(10, (sel.lw || (sel.type === 'ink' ? 2 : 1.6)) + 0.5); renderObjs(); });
+    on('.sm', () => { snap(); scaleObj(sel, 1 / 1.15); renderObjs(); });
+    on('.sp', () => { snap(); scaleObj(sel, 1.15); renderObjs(); });
+    on('.lp', () => { snap(); const d = sel.type === 'ink' ? 2 : 1.6; sel.lw = ((sel.lw || d) >= 5 ? 0.8 : (sel.lw || d) + 0.8); renderObjs(); });
     on('.ed', () => startEdit(sel));
     on('.dup', () => { snap(); const c = JSON.parse(JSON.stringify(sel)); c.id = uid(); c.x += 10; c.y += 10; objs.push(c); sel = c; renderObjs(); });
-    on('.del', () => { snap(); objs = objs.filter(o => o !== sel); sel = null; renderObjs(); });
-    on('.clr', () => { snap(); sel.text = ''; delete sel.bind; renderObjs(); });
+    on('.del', () => {
+      snap();
+      if (sel.field) { if (sel.type === 'text') { sel.text = ''; delete sel.bind; fit(sel); } else sel.on = false; }
+      else objs = objs.filter(o => o !== sel);
+      sel = null; renderObjs();
+    });
+    on('.ok-b', () => { sel = null; renderObjs(); });
   }
 
   async function setObjColor(o, c) {
@@ -208,30 +337,51 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
   function syncColorInput() { $('.col').value = color; $('.color-dot span').style.background = color; }
 
-  // ---------- text editing ----------
+  // ---------- text editing (real textarea: reliable keyboard on phones) ----------
   function startEdit(o) {
-    const p = pagesInfo[o.page];
-    const el = p.layer.querySelector(`[data-id="${o.id}"] .tx`);
-    if (!el) return;
-    editing = el;
-    el.setAttribute('contenteditable', 'plaintext-only');
-    if (el.contentEditable !== 'plaintext-only') el.setAttribute('contenteditable', 'true');
-    el.focus();
-    const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
-    const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r);
-    const before = JSON.stringify(objs);
-    el.oninput = () => { o.text = el.innerText.replace(/\n$/, ''); delete o.bind; };
-    el.onblur = () => {
-      el.removeAttribute('contenteditable'); editing = null;
-      if (JSON.stringify(objs) !== before) { undoStack.push(before); dirty = true; }
-      if (!o.field && !o.text.trim()) { objs = objs.filter(x => x !== o); if (sel === o) sel = null; }
-      renderObjs();
-    };
+    commitEdit();
+    const p = pagesInfo[o.page], s = p.s;
+    const objEl = p.layer.querySelector(`[data-id="${o.id}"]`);
+    if (objEl) objEl.style.visibility = 'hidden';
+    const ta = document.createElement('textarea');
+    ta.className = 'ed-input'; ta.value = o.text || ''; ta.dir = 'auto'; ta.rows = 1;
+    ta.setAttribute('autocomplete', 'off'); ta.setAttribute('spellcheck', 'false');
+    if (o.maxLen) ta.maxLength = o.maxLen;
+    const top = (o.field ? o.fy : o.y) * s;
+    Object.assign(ta.style, {
+      left: o.x * s + 'px', top: top + 'px', fontSize: Math.max(o.fontSize * s, 14) + 'px', color: o.color,
+      width: (o.field ? Math.max(o.fw * s, 80) : Math.max((o.w || 0) * s + 30, 140)) + 'px'
+    });
+    p.layer.appendChild(ta);
+    const autosize = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+    autosize();
+    editing = { o, ta, before: JSON.stringify(objs) };
+    ta.addEventListener('input', autosize);
+    ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (o.field && !o.multiline)) { e.preventDefault(); commitEdit(); } });
+    ta.addEventListener('blur', () => setTimeout(() => { if (editing && editing.ta === ta && document.activeElement !== ta) commitEdit(); }, 150));
+    ta.focus({ preventScroll: true });
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch { }
+    setTimeout(() => ta.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
+    sel = o;
+    renderSelbar();
+  }
+  function commitEdit(fromChip) {
+    if (!editing) return;
+    const { o, ta, before } = editing;
+    editing = null;
+    o.text = ta.value.replace(/\r/g, '');
+    if (!fromChip && o.bind && o.text !== profVal(o.bind, o)) delete o.bind;
+    if (o.field) fit(o);
+    ta.remove();
+    if (JSON.stringify(objs) !== before) { undoStack.push(before); dirty = true; }
+    if (!o.field && !o.text.trim()) { objs = objs.filter(x => x !== o); sel = null; }
+    if (o.field) sel = null;
+    renderObjs();
   }
 
   // ---------- placing ----------
   function setHint(msg) {
-    if (!msg) { banner.classList.add('hidden'); if (fields.length) { banner.classList.remove('hidden'); banner.innerHTML = `<span>${t('fieldsFound', { n: fields.length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`; banner.querySelector('.af').onclick = autofill; } return; }
+    if (!msg) return showFieldsBanner();
     banner.classList.remove('hidden'); banner.innerHTML = `<span>${esc(msg)}</span><button class="icon-btn x">${ICON.cross}</button>`;
     banner.querySelector('.x').onclick = () => setTool(null);
   }
@@ -247,6 +397,19 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     return { w: targetW, h: targetW * im.naturalHeight / im.naturalWidth };
   }
 
+  function boxAt(pi, x, y, tol = 3) {
+    return pagesInfo[pi].boxes.find(bx => x >= bx.x - tol && x <= bx.x + bx.w + tol && y >= bx.y - tol && y <= bx.y + bx.h + tol);
+  }
+  /** tick or cross inside a detected square: toggles it */
+  function markBox(pi, bx, mark) {
+    snap();
+    const ex = objs.find(o => o.box && o.page === pi && Math.abs(o.box.x - bx.x) < .5 && Math.abs(o.box.y - bx.y) < .5);
+    if (ex) { objs = objs.filter(o => o !== ex); if (ex.type === mark) { sel = null; renderObjs(); return; } }
+    const inset = bx.w * 0.08;
+    objs.push({ id: uid(), page: pi, type: mark, x: bx.x + inset, y: bx.y + inset, w: bx.w - 2 * inset, h: bx.h - 2 * inset, color, box: { x: bx.x, y: bx.y } });
+    sel = null; renderObjs();
+  }
+
   async function place(pi, x, y) {
     const base = { id: uid(), page: pi, color };
     let o;
@@ -254,6 +417,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const text = tool === 'text' ? '' : tool === 'date' ? profVal('today') : profVal(pending);
       o = { ...base, type: 'text', x, y: y - 7, fontSize: 11, text, bind: tool === 'insert' ? pending : undefined };
     } else if (tool === 'check' || tool === 'cross') {
+      const bx = boxAt(pi, x, y);
+      if (bx) { markBox(pi, bx, tool); return; }
       o = { ...base, type: tool, x: x - 7, y: y - 7, w: 14, h: 14 };
     } else if (tool === 'strike') {
       o = { ...base, type: 'strike', x: x - 40, y: y - 5, w: 80, h: 10 };
@@ -264,21 +429,32 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     }
     if (!o) return;
     snap(); objs.push(o); sel = o;
-    const keep = tool === 'check' || tool === 'cross';
-    if (!keep) setTool(null);
+    if (!(tool === 'check' || tool === 'cross')) setTool(null);
     renderObjs();
     if (o.type === 'text' && !o.text) startEdit(o);
   }
 
+  /** which page is under a screen point */
+  function pageAtPoint(cx, cy) {
+    for (let i = 0; i < pagesInfo.length; i++) {
+      const r = pagesInfo[i].el.getBoundingClientRect();
+      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return i;
+    }
+    return -1;
+  }
+
   // ---------- pointer interactions ----------
   pagesEl.addEventListener('pointerdown', (e) => {
+    if (pinching) return;
+    if (e.target.classList.contains('ed-input')) return; // typing / moving the caret
     const pEl = e.target.closest('.page'); if (!pEl) return;
     const pi = pagesInfo.findIndex(p => p.el === pEl); const p = pagesInfo[pi];
     const rect = p.layer.getBoundingClientRect();
     const toVp = (ev) => [(ev.clientX - rect.left) / p.s, (ev.clientY - rect.top) / p.s];
+    const wasEditing = !!editing;
 
     if (tool === 'pen') {
-      e.preventDefault();
+      e.preventDefault(); commitEdit();
       pEl.setPointerCapture(e.pointerId);
       const pts = [toVp(e)];
       const svgNS = 'http://www.w3.org/2000/svg';
@@ -287,14 +463,15 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const pl = document.createElementNS(svgNS, 'polyline');
       pl.setAttribute('stroke', color); pl.setAttribute('stroke-width', '2'); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(pl); p.layer.appendChild(svg);
-      const mv = (ev) => { (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev]).forEach(c => pts.push(toVp(c))); pl.setAttribute('points', pts.map(q => q.join(',')).join(' ')); };
+      const mv = (ev) => { if (pinching) return; (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev]).forEach(c => pts.push(toVp(c))); pl.setAttribute('points', pts.map(q => q.join(',')).join(' ')); };
       const up = () => {
         pEl.removeEventListener('pointermove', mv); pEl.removeEventListener('pointerup', up); pEl.removeEventListener('pointercancel', up);
         svg.remove();
+        if (pinching) return;
         if (pts.length < 2) pts.push([pts[0][0] + 0.5, pts[0][1] + 0.5]);
         const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
-        const pad = 2, x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
-        const w = Math.max(...xs) - x0 + pad, h = Math.max(...ys) - y0 + pad;
+        const x0 = Math.min(...xs) - 2, y0 = Math.min(...ys) - 2;
+        const w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
         snap();
         objs.push({ id: uid(), page: pi, type: 'ink', x: x0, y: y0, w, h, color, lw: 2, strokes: [pts.map(q => [+(q[0] - x0).toFixed(2), +(q[1] - y0).toFixed(2)])] });
         renderObjs();
@@ -305,22 +482,27 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
 
     const oEl = e.target.closest('.obj');
     if (oEl) {
-      if (editing && oEl.contains(editing)) return; // caret moves inside text
       const o = objs.find(x => x.id === oEl.dataset.id); if (!o) return;
-      if (o.field && o.type === 'check') { snap(); o.on = !o.on; o.color = color; sel = null; renderObjs(); return; }
-      if (o.field && o.type === 'text') { if (editing) editing.blur(); sel = o; renderObjs(); startEdit(o); return; }
       e.preventDefault();
+      if (o.field && o.type === 'check') {
+        commitEdit(); snap();
+        const mark = tool === 'cross' ? 'cross' : 'check';
+        if (o.on && o.mark === mark) o.on = false; else { o.on = true; o.mark = mark; o.color = color; }
+        sel = null; renderObjs(); return;
+      }
+      if (o.field && o.type === 'text') { startEdit(o); return; }
+      commitEdit();
       const wasSel = sel === o;
       const isHandle = e.target.classList.contains('handle');
-      if (editing) editing.blur();
-      sel = o; if (!wasSel) renderObjs();
+      sel = o; if (!wasSel || wasEditing) renderObjs();
       const el = p.layer.querySelector(`[data-id="${o.id}"]`);
-      const start = toVp(e), o0 = { x: o.x, y: o.y, w: o.w, h: o.h, fontSize: o.fontSize };
+      const start = [e.clientX, e.clientY], o0 = { x: o.x, y: o.y, w: o.w, h: o.h, fontSize: o.fontSize };
       const before = JSON.stringify(objs);
       let moved = false;
       el.setPointerCapture(e.pointerId);
       const mv = (ev) => {
-        const [cx, cy] = toVp(ev); const dx = cx - start[0], dy = cy - start[1];
+        if (pinching) return;
+        const dx = (ev.clientX - start[0]) / p.s, dy = (ev.clientY - start[1]) / p.s;
         if (!moved && Math.hypot(dx, dy) * p.s < 4) return;
         moved = true;
         if (isHandle) {
@@ -328,7 +510,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
           else if (o.type === 'strike') { o.w = Math.max(8, o0.w + dx); el.style.width = o.w * p.s + 'px'; }
           else {
             const k = Math.max(0.1, (o0.w + dx) / o0.w);
-            o.w = o0.w * k; o.h = (o.type === 'image' || o.type === 'ink' || o.type === 'check' || o.type === 'cross') ? o0.h * k : Math.max(4, o0.h + dy);
+            o.w = o0.w * k; o.h = o0.h * k;
             el.style.width = o.w * p.s + 'px'; el.style.height = o.h * p.s + 'px';
           }
         } else {
@@ -339,7 +521,18 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const up = () => {
         el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
         if (moved) {
-          if (isHandle && o.type === 'ink') { const kx = o.w / o0.w, ky = o.h / o0.h; o.strokes = o.strokes.map(s => s.map(([a, c]) => [a * kx, c * ky])); o.lw = (o.lw || 2) * kx; }
+          if (isHandle && o.type === 'ink') { const kx = o.w / o0.w; o.strokes = o.strokes.map(s => s.map(([a, c]) => [a * kx, c * kx])); o.lw = (o.lw || 2) * kx; }
+          if (!isHandle) {
+            // dropped on another page: move it there
+            const r = el.getBoundingClientRect();
+            const np = pageAtPoint(r.left + r.width / 2, r.top + r.height / 2);
+            if (np >= 0 && np !== o.page) {
+              const q = pagesInfo[np], qr = q.layer.getBoundingClientRect();
+              o.page = np; o.x = (r.left - qr.left) / q.s; o.y = (r.top - qr.top) / q.s;
+              if (o.type !== 'text') { o.w = r.width / q.s; o.h = r.height / q.s; }
+              delete o.box;
+            }
+          }
           undoStack.push(before); dirty = true; renderObjs();
         } else if (wasSel && o.type === 'text') startEdit(o);
         else renderSelbar();
@@ -348,13 +541,50 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       return;
     }
 
-    if (editing) { editing.blur(); return; }
-    if (tool) { e.preventDefault(); const [x, y] = toVp(e); place(pi, x, y); return; }
+    if (wasEditing) { e.preventDefault(); commitEdit(); return; }
+    const [x, y] = toVp(e);
+    if (tool) { e.preventDefault(); place(pi, x, y); return; }
+    const bx = boxAt(pi, x, y, 1);
+    if (bx) { e.preventDefault(); markBox(pi, bx, 'check'); return; }
     if (sel) { sel = null; renderObjs(); }
   });
 
+  // ---------- pinch to zoom ----------
+  let pz = null;
+  const dist = (t1, t2) => Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+  scrollEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 2) return;
+    pinching = true; commitEdit();
+    const [a, c] = e.touches; const r = scrollEl.getBoundingClientRect();
+    const mx = (a.clientX + c.clientX) / 2 - r.left, my = (a.clientY + c.clientY) / 2 - r.top;
+    pz = { d0: dist(a, c), z0: zoom, k: 1, mx, my, cx: scrollEl.scrollLeft + mx, cy: scrollEl.scrollTop + my };
+    pagesEl.style.transformOrigin = `${pz.cx}px ${pz.cy}px`;
+  }, { passive: true });
+  scrollEl.addEventListener('touchmove', (e) => {
+    if (!pz || e.touches.length !== 2) return;
+    e.preventDefault();
+    const k = Math.max(0.5 / pz.z0, Math.min(4 / pz.z0, dist(e.touches[0], e.touches[1]) / pz.d0));
+    pz.k = k; pagesEl.style.transform = `scale(${k})`;
+  }, { passive: false });
+  const endPinch = () => {
+    if (!pz) { pinching = false; return; }
+    const { k, z0, cx, cy, mx, my } = pz; pz = null;
+    pagesEl.style.transform = ''; pagesEl.style.transformOrigin = '';
+    const oldW = pagesEl.scrollWidth, oldH = pagesEl.scrollHeight;
+    zoom = z0 * k;
+    layoutPages();
+    const fx = pagesEl.scrollWidth / oldW, fy = pagesEl.scrollHeight / oldH;
+    scrollEl.scrollLeft = cx * fx - mx; scrollEl.scrollTop = cy * fy - my;
+    setTimeout(() => { pinching = false; }, 50);
+  };
+  scrollEl.addEventListener('touchend', (e) => { if (e.touches.length < 2) endPinch(); });
+  scrollEl.addEventListener('touchcancel', endPinch);
+  const noGesture = (e) => e.preventDefault();
+  document.addEventListener('gesturestart', noGesture);
+
   // ---------- toolbar ----------
   root.querySelectorAll('.tool[data-tool]').forEach(btn => btn.onclick = async () => {
+    commitEdit();
     const k = btn.dataset.tool;
     if (tool === k) { setTool(null); return; }
     if (k === 'signature' || k === 'initials') {
@@ -365,8 +595,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       }
     }
     if (k === 'insert') {
-      const keys = ['fullName', 'lastName', 'firstName', 'birthDate', 'birthPlace', 'address', 'email', 'phone', 'today'];
-      const m = modal(`<h2>${t('insert')} · ${esc(profile.name || '')}</h2><div class="list">${keys.map(key => {
+      const m = modal(`<h2>${t('insert')} · ${esc(profile.name || '')}</h2><div class="list">${INSERT_KEYS.map(key => {
         const v = profVal(key);
         return `<button class="list-item" data-k="${key}" ${v ? '' : 'disabled'}><b>${t(key)}</b><span>${esc(v) || '—'}</span></button>`;
       }).join('')}</div><div class="row end"><button class="btn ghost c">${t('close')}</button></div>`, 'sheet');
@@ -374,17 +603,17 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       m.el.querySelectorAll('.list-item').forEach(li => li.onclick = () => {
         m.close();
         const key = li.dataset.k;
-        if (sel && sel.type === 'text' && sel.field) { snap(); sel.text = profVal(key); sel.bind = key; renderObjs(); return; }
+        if (sel && sel.type === 'text' && sel.field) { snap(); sel.text = profVal(key, sel); sel.bind = key; fit(sel); renderObjs(); return; }
         setTool('insert', key);
       });
       return;
     }
-    if (sel && sel.field && sel.type === 'text' && k === 'date') { snap(); sel.text = profVal('today'); renderObjs(); return; }
     setTool(k);
   });
-  $('.undo').onclick = () => { if (editing) editing.blur(); const s = undoStack.pop(); if (s) { objs = JSON.parse(s); sel = null; renderObjs(); } };
-  $('.zin').onclick = () => { zoom = Math.min(3, zoom * 1.25); layoutPages(); };
-  $('.zout').onclick = () => { zoom = Math.max(0.5, zoom / 1.25); layoutPages(); };
+  $('.undo').onclick = () => { commitEdit(); const s = undoStack.pop(); if (s) { objs = JSON.parse(s); sel = null; renderObjs(); } };
+  const zoomBy = (f) => { const c = scrollEl.scrollTop / Math.max(1, pagesEl.scrollHeight); zoom = Math.max(0.5, Math.min(4, zoom * f)); layoutPages(); scrollEl.scrollTop = c * pagesEl.scrollHeight; };
+  $('.zin').onclick = () => zoomBy(1.25);
+  $('.zout').onclick = () => zoomBy(1 / 1.25);
 
   $('.col').oninput = (e) => {
     color = e.target.value; syncColorInput();
@@ -392,13 +621,13 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   };
 
   $('.prof-sel').onchange = async (e) => {
+    commitEdit();
     profile = profiles.find(p => p.id === e.target.value) || profile;
     color = profile.color || color; syncColorInput();
-    // re-bind values inserted from the previous profile
     let changed = false;
     for (const o of objs) {
       if (!o.bind) continue;
-      if (o.type === 'text') { o.text = profVal(o.bind); changed = true; }
+      if (o.type === 'text') { o.text = profVal(o.bind, o); fit(o); changed = true; }
       if (o.type === 'image' && profile[o.bind]) {
         const { h } = await imageSize(profile[o.bind], o.w);
         o.orig = profile[o.bind]; o.src = o.tinted ? await tint(o.orig, o.color) : o.orig; o.h = h; changed = true;
@@ -408,20 +637,21 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     toast(`${t('profile')} : ${profile.name || t('unnamed')}`);
   };
 
+  const cleanup = () => { window.removeEventListener('resize', onResize); document.removeEventListener('gesturestart', noGesture); };
   $('.back').onclick = async () => {
-    if (editing) editing.blur();
+    commitEdit();
     if (dirty && !(await confirmBox(t('discard'), t('home'), t('cancel')))) return;
-    window.removeEventListener('resize', onResize); onExit();
+    cleanup(); onExit();
   };
 
-  // ---------- finish / save ----------
+  // ---------- save ----------
   $('.finish').onclick = async () => {
-    if (editing) editing.blur();
+    commitEdit();
     sel = null; renderObjs();
     const base = name.replace(/\.(pdf|docx|png|jpe?g|webp|heic)$/i, '');
     const m = modal(`<h2>${t('save')}</h2>
       <label class="field-l">${t('fileName')}<div class="name-row"><input class="fname" value="${esc(base)}"><span>.pdf</span></div></label>
-      <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary s">${t('save')}</button></div>`, 'sheet');
+      <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary s">${ICON.save}<span>${t('save')}</span></button></div>`, 'sheet');
     m.el.querySelector('.c').onclick = m.close;
     m.el.querySelector('.fname').select();
     m.el.querySelector('.s').onclick = async () => {
@@ -442,11 +672,15 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         </div>`, 'sheet center');
       r.el.querySelector('.sh').onclick = async () => { try { await shareFile(out, fname); } catch (e) { toast(e.message); } };
       r.el.querySelector('.dl').onclick = async () => { const where = await downloadPdf(out, fname); if (where) toast(t('downloaded') + ' : ' + where); };
-      r.el.querySelector('.hm').onclick = () => { r.close(); window.removeEventListener('resize', onResize); onExit(); };
+      r.el.querySelector('.hm').onclick = () => { r.close(); cleanup(); onExit(); };
     };
   };
 
-  let rt; const onResize = () => { clearTimeout(rt); rt = setTimeout(layoutPages, 200); };
+  let rt; const onResize = () => {
+    clearTimeout(rt);
+    // the keyboard opening changes only the height: keep the text being typed
+    rt = setTimeout(() => { if (scrollEl.clientWidth !== lastWidth) layoutPages(); }, 200);
+  };
   window.addEventListener('resize', onResize);
   layoutPages();
 }
