@@ -4,7 +4,7 @@ import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
 import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
-import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr } from './labels.js';
+import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr, warmOcr } from './labels.js';
 import { downloadPdf, shareFile } from './share.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
@@ -24,10 +24,10 @@ function matchField(f) {
   if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune/)) return 'birthPlace';
   if (birth) return 'birthDate';
   if (has(/code postal|postal|\bzip\b|\bcp\b|\bplz\b|postcode/)) return 'postalCode';
-  if (has(/type (de )?(la )?voie|street type/)) return 'streetType';
+  if (has(/typ[eo] (de )?(la )?vo[il]e?|street type/)) return 'streetType';
   if (has(/extension|bis ter|\bbis\b/)) return null;
   if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie|numero voie/)) return 'streetNumber';
-  if (has(/nom (de )?(la )?voie|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
+  if (has(/no[mn] (de )?(la )?vo[il][eos]?\b|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
   if (has(/complement/)) return 'addressExtra';
   if (has(/fait a\b|signed at|lieu (de )?(la )?(signature|declaration)/)) return 'signCity';
   if (has(/commune|ville|\bcity\b|localite|\btown\b|\bort\b|ciudad|citta|municipal/)) return 'city';
@@ -134,7 +134,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   else for (const f of fields) {
     if (f.kind === 'zone') {
       const fs = Math.max(6, Math.min(12, f.h * 0.65));
-      objs.push({ id: uid(), page: f.page, type: 'text', field: 'zone', zone: true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y, y: f.y + Math.max(0, f.h - fs * 1.25), fontSize: fs, baseFs: fs, text: '', color });
+      objs.push({ id: uid(), page: f.page, type: 'text', field: 'zone', zone: true, pending: true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y, y: f.y + Math.max(0, f.h - fs * 1.25), fontSize: fs, baseFs: fs, text: '', color });
     } else if (f.kind === 'text') {
       const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
       objs.push({
@@ -166,7 +166,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     // 1. what each field expects, from its printed label when the name says nothing
     for (const o of fieldsAll) {
       if (o.admin) continue;
-      if (o.type === 'text' && !o.match && (o.label || o.caption)) o.match = matchField({ name: '', alt: o.label || '' }) || matchField({ name: '', alt: o.caption || '' });
+      if (o.type === 'text' && !o.match && (o.label || o.caption)) o.match = matchField({ name: '', alt: o.label || '' }) || (/^\s*\([A-Z](\.\d+)?\)/.test(o.caption || '') ? null : matchField({ name: '', alt: o.caption || '' }));
       if (o.type === 'check' && o.label) {
         const l = norm(o.label);
         if (SEX_M.test(l)) { o.match = 'sex'; o.val = 'M'; }
@@ -242,7 +242,10 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       else if (first) {
         const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 && l.text.length > 3 &&
           !objs.some(o => o.field && o.type === 'text' && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
-        const l = lines.sort((a, b) => b.cy - a.cy)[0];
+        // a heading naming a person ("Ancien propriétaire", "Le demandeur"…) a bit higher wins over the nearest line
+        const roleLine = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 160 && roleOf(l.text))
+          .sort((a, b) => b.cy - a.cy)[0];
+        const l = roleLine || lines.sort((a, b) => b.cy - a.cy)[0];
         if (l) title = l.text.replace(/[:\s]+$/, '');
       }
       if (!title) title = `${t('profile')} ${i + 1}`;
@@ -255,34 +258,84 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     for (let pi = 0; pi < pagesInfo.length; pi++) {
       const items = await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp);
       pageText[pi] = { items, lines: textLines(items), ocr: false };
-      if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); }
+      if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); validateZones(pi, items); }
     }
   }
-  let ocrState = '', ocrPct = 0, ocrCancel = null;
+  let ocrState = '', ocrPct = 0, ocrCancel = null, unclear = false;
+  /**
+   * A detected line/box is kept only if it really looks like a place to write:
+   * nothing written inside it, and a printed label next to it (left) or under it (caption).
+   */
+  // what the OCR makes of the little ticks of a comb ("|_|_|") is not writing
+  const TICKS = /^[|_lLIiJj1!\/\\\[\]{}()'".,:;~-]+$/;
+  function validateZones(pi, items) {
+    const ink = items.ink || items;
+    const zs = objs.filter(o => o.zone && o.pending && o.page === pi);
+    for (const o of zs) {
+      const x0 = o.x + 2, x1 = o.x + o.fw - 2, y0 = o.fy + 1, y1 = o.fy + o.fh - 1;
+      // handwriting (low confidence) counts when it sits in the body of the zone, not on the comb ticks at the bottom
+      const filled = [...(items.ink || []), ...items].some(it => {
+        if (it.conf != null && it.conf < 70 && it.y + it.h / 2 > o.fy + o.fh * 0.7) return false;
+        if (it.conf != null && it.conf >= 70 && !/[\p{L}]{3,}/u.test(it.str)) return false;
+        const ix = Math.min(x1, it.x + it.w) - Math.max(x0, it.x), iy = Math.min(y1, it.y + it.h) - Math.max(y0, it.y);
+        const r = ix > Math.min(6, it.w * 0.3) && iy > it.h * 0.3 && !TICKS.test(it.str); return r;
+      });
+      // the "line" crosses a word: it was the edge of printed text
+      const ly = o.fy + o.fh;
+      const crossed = items.some(it => (it.conf == null || it.conf >= 60) && ly > it.y - 0.5 && ly < it.y + it.h + 0.5 && !TICKS.test(it.str) &&
+        Math.min(x1, it.x + it.w) - Math.max(x0, it.x) > it.w * 0.5 && /[\p{L}]{3,}/u.test(it.str));
+      const L = (o.label || '').trim();
+      const goodLabel = (o.labelGap ?? 0) <= 80 && L && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|la|à|a|h|du|au|de)\s*:?$/i.test(L));
+      const lab = (goodLabel ? L : '') + ' ' + (o.caption || '');
+      if (!filled && !crossed && o.fw >= 18 && !/[\p{L}]{2,}|[:/]/u.test(lab)) { o.maybe = true; continue; }
+      const ok = !filled && !crossed && o.fw >= 18;
+      if (ok) delete o.pending; else o.drop = true;
+    }
+    // no label of its own but right after another field on the same row ("Le |_|_| |_|_|", "Fait à ___ , le ___")
+    let more = true;
+    while (more) {
+      more = false;
+      for (const o of zs) if (o.maybe && objs.some(z => z.zone && !z.pending && z.page === pi && Math.abs((z.fy + z.fh) - (o.fy + o.fh)) < 2.5 &&
+        Math.min(Math.abs(o.x - (z.x + z.fw)), Math.abs(z.x - (o.x + o.fw))) < 30)) { delete o.maybe; delete o.pending; more = true; }
+    }
+    for (const o of zs) if (o.maybe) o.drop = true;
+    // most of what looked like lines was not: handwriting, a curved photo… nothing on this page can be trusted
+    const kept = zs.filter(o => !o.drop).length;
+    if (zs.length >= 8 && kept < zs.length * 0.4) for (const o of zs) o.drop = true;
+    objs = objs.filter(o => !o.drop);
+  }
+  function dropPending(pi) { objs = objs.filter(o => !(o.pending && (pi == null || o.page === pi))); }
   async function runOcr() {
-    const todo = pagesInfo.map((p, i) => i).filter(i => !pageText[i]?.items.length && objs.some(o => o.zone && o.page === i)).slice(0, 3);
-    if (!todo.length) return;
+    const todo = pagesInfo.map((p, i) => i).filter(i => objs.some(o => o.pending && o.page === i)).slice(0, 3);
+    objs = objs.filter(o => !(o.pending && !todo.includes(o.page)));
+    if (!todo.length) { ocrState = ''; renderObjs(); showFieldsBanner(); return; }
     ocrState = 'run'; ocrPct = 0; showFieldsBanner();
-    let cancelled = false;
+    let cancelled = false, good = 0;
     ocrCancel = () => { cancelled = true; };
     try {
       for (const pi of todo) {
         if (cancelled) break;
-        const masks = objs.filter(o => o.zone && o.page === pi).map(o => ({ x: o.x, y: o.fy, w: o.fw, h: o.fh }));
+        const k = todo.indexOf(pi);
         const items = await Promise.race([
-          ocrTextItems(pagesInfo[pi].page, masks, (p) => { ocrPct = Math.round(((todo.indexOf(pi) + p) / todo.length) * 100); updateOcrBanner(); }),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000)),
+          ocrTextItems(pagesInfo[pi].page, [], (p) => { ocrPct = Math.min(99, Math.round(((k + p) / todo.length) * 100)); updateOcrBanner(); }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000)),
           new Promise((_, rej) => { const iv = setInterval(() => { if (cancelled) { clearInterval(iv); rej(new Error('cancel')); } }, 300); })
         ]);
         pageText[pi] = { items, lines: textLines(items), ocr: true };
+        // too few readable words = blurry / dark photo: nothing can be trusted on this page
+        if (items.length < 12 || items.quality < 50) { dropPending(pi); continue; }
         attachLabels(objs.filter(o => o.field && o.page === pi), items);
         markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines);
+        validateZones(pi, items);
+        good += objs.filter(o => o.zone && o.page === pi).length;
       }
       analyze();
-    } catch (e) { console.warn('ocr', e); resetOcr(); if (e.message === 'timeout') toast(t('ocrFail')); }
-    ocrState = ''; ocrCancel = null; showFieldsBanner();
+    } catch (e) { console.warn('ocr', e); resetOcr(); }
+    dropPending(null);
+    unclear = !objs.some(o => o.field);
+    ocrState = ''; ocrCancel = null; renderObjs(); showFieldsBanner();
   }
-  function updateOcrBanner() { const s2 = banner.querySelector('.ocr-pct'); if (s2) s2.textContent = ocrPct ? ` ${ocrPct} %` : ''; }
+  function updateOcrBanner() { const s2 = banner.querySelector('.ocr-pct'); if (s2) s2.textContent = ` ${ocrPct} %`; }
   if (!initialObjs) { await readLabels(); analyze(); }
   else computeSectionsSafe();
   function computeSectionsSafe() { try { computeSections(); } catch { } }
@@ -356,9 +409,15 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       banner.querySelector('.x').onclick = () => { autoWarned = 0; showFieldsBanner(); };
       return;
     }
-    const real = objs.filter(o => o.field && !o.zone).length, zn = objs.filter(o => o.zone).length;
-    if (!real && !zn) { banner.classList.add('hidden'); return; }
-    const txt = ocrState === 'run' ? `<span class="spin-s"></span>${t('ocrRunning')}<span class="ocr-pct"></span>` : real ? t('fieldsFound', { n: real }) : t('zonesFound', { n: zn });
+    const real = objs.filter(o => o.field && !o.zone).length, zn = objs.filter(o => o.zone && !o.pending).length;
+    if (ocrState !== 'run' && !real && !zn) {
+      if (!unclear) { banner.classList.add('hidden'); return; }
+      banner.classList.add('warn');
+      banner.innerHTML = `<span>${t('noFieldsUnclear')}</span><button class="icon-btn x">${ICON.cross}</button>`;
+      banner.querySelector('.x').onclick = () => { unclear = false; showFieldsBanner(); };
+      return;
+    }
+    const txt = ocrState === 'run' ? `<span class="spin-s"></span>${t('ocrWait')}<span class="ocr-pct"></span>` : real ? t('fieldsFound', { n: real }) : t('zonesFound', { n: zn });
     banner.innerHTML = `<span>${txt}</span>${ocrState === 'run' ? `<button class="icon-btn x">${ICON.cross}</button>` : `<button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`}`;
     const af = banner.querySelector('.af'); if (af) af.onclick = autofill;
     const x = banner.querySelector('.x'); if (x && ocrState === 'run') x.onclick = () => { if (ocrCancel) ocrCancel(); };
@@ -470,7 +529,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const p = pagesInfo[o.page]; if (!p) continue;
       const s = p.s;
       const el = document.createElement('div');
-      el.className = `obj ${o.type}${o.field ? ' field' : ''}${o.zone ? ' zone' : ''}${sel === o ? ' sel' : ''}`;
+      el.className = `obj ${o.type}${o.field ? ' field' : ''}${o.zone ? ' zone' : ''}${o.pending ? ' pending' : ''}${sel === o ? ' sel' : ''}`;
       el.dataset.id = o.id;
       if (o.type === 'text' && o.field) {
         Object.assign(el.style, { left: o.x * s + 'px', top: o.fy * s + 'px', width: o.fw * s + 'px', height: o.fh * s + 'px' });
@@ -947,5 +1006,5 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   };
   window.addEventListener('resize', onResize);
   layoutPages();
-  if (!initialObjs) setTimeout(runOcr, 300);
+  if (!initialObjs) { if (objs.some(o => o.pending)) { warmOcr(); ocrState = 'run'; showFieldsBanner(); } setTimeout(runOcr, 300); }
 }

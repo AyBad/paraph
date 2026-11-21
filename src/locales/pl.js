@@ -167,5 +167,7 @@ export default {
  "later": "Później",
  "signCity": "Miejscowość (podpis)",
  "saveToPhone": "Zapisz w telefonie",
- "ocrFail": "Odczyt tekstu nie powiódł się. Możesz wypełnić ręcznie."
+ "ocrFail": "Odczyt tekstu nie powiódł się. Możesz wypełnić ręcznie.",
+ "ocrWait": "Proszę czekać: wykrywanie pól…",
+ "noFieldsUnclear": "Nie wykryto pól z pewnością: obraz jest nieostry lub już wypełniony. Wypełnij ręcznie za pomocą narzędzi."
 };

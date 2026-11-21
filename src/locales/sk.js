@@ -167,5 +167,7 @@ export default {
  "later": "Neskôr",
  "signCity": "Miesto (podpis)",
  "saveToPhone": "Uložiť do telefónu",
- "ocrFail": "Čítanie textu zlyhalo. Môžete vyplniť ručne."
+ "ocrFail": "Čítanie textu zlyhalo. Môžete vyplniť ručne.",
+ "ocrWait": "Čakajte prosím: rozpoznávanie polí…",
+ "noFieldsUnclear": "Žiadne pole nebolo spoľahlivo rozpoznané: obrázok nie je dosť ostrý alebo je už vyplnený. Vyplňte ručne pomocou nástrojov."
 };

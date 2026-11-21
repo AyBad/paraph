@@ -170,5 +170,7 @@ export default {
  "later": "Later",
  "signCity": "City (signature)",
  "saveToPhone": "Save to phone",
- "ocrFail": "Text reading failed. You can fill in manually."
+ "ocrFail": "Text reading failed. You can fill in manually.",
+ "ocrWait": "Please wait: detecting the fields…",
+ "noFieldsUnclear": "No field detected with certainty: the image is not sharp enough or already filled in. Fill it in manually with the tools (Text, Tick…)."
 };

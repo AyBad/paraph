@@ -167,5 +167,7 @@ export default {
  "later": "Kasnije",
  "signCity": "Mjesto (potpis)",
  "saveToPhone": "Spremi na telefon",
- "ocrFail": "Čitanje teksta nije uspjelo. Možete ispuniti ručno."
+ "ocrFail": "Čitanje teksta nije uspjelo. Možete ispuniti ručno.",
+ "ocrWait": "Pričekajte: prepoznavanje polja…",
+ "noFieldsUnclear": "Nijedno polje nije sigurno prepoznato: slika nije dovoljno oštra ili je već ispunjena. Ispunite ručno alatima."
 };

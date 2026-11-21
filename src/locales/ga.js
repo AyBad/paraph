@@ -167,5 +167,7 @@ export default {
  "later": "Ar ball",
  "signCity": "Áit (síniú)",
  "saveToPhone": "Sábháil ar an bhfón",
- "ocrFail": "Theip ar léamh an téacs. Is féidir líonadh de láimh."
+ "ocrFail": "Theip ar léamh an téacs. Is féidir líonadh de láimh.",
+ "ocrWait": "Fan, le do thoil: réimsí á mbrath…",
+ "noFieldsUnclear": "Níor aimsíodh aon réimse go cinnte: níl an íomhá soiléir go leor nó tá sí líonta cheana. Líon de láimh."
 };

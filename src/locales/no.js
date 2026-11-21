@@ -167,5 +167,7 @@ export default {
  "later": "Senere",
  "signCity": "Sted (signatur)",
  "saveToPhone": "Lagre på telefonen",
- "ocrFail": "Tekstlesing mislyktes. Du kan fylle ut manuelt."
+ "ocrFail": "Tekstlesing mislyktes. Du kan fylle ut manuelt.",
+ "ocrWait": "Vent: feltene oppdages…",
+ "noFieldsUnclear": "Ingen felt funnet med sikkerhet: bildet er ikke skarpt nok eller allerede utfylt. Fyll ut manuelt med verktøyene."
 };

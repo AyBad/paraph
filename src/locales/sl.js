@@ -167,5 +167,7 @@ export default {
  "later": "Pozneje",
  "signCity": "Kraj (podpis)",
  "saveToPhone": "Shrani v telefon",
- "ocrFail": "Branje besedila ni uspelo. Izpolnite ročno."
+ "ocrFail": "Branje besedila ni uspelo. Izpolnite ročno.",
+ "ocrWait": "Počakajte: zaznavanje polj…",
+ "noFieldsUnclear": "Nobeno polje ni bilo zanesljivo zaznano: slika ni dovolj ostra ali je že izpolnjena. Izpolnite ročno z orodji."
 };

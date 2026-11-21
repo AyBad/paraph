@@ -167,5 +167,7 @@ export default {
  "later": "Senere",
  "signCity": "By (underskrift)",
  "saveToPhone": "Gem på telefonen",
- "ocrFail": "Tekstlæsning mislykkedes. Du kan udfylde manuelt."
+ "ocrFail": "Tekstlæsning mislykkedes. Du kan udfylde manuelt.",
+ "ocrWait": "Vent venligst: felter registreres…",
+ "noFieldsUnclear": "Ingen felter fundet med sikkerhed: billedet er ikke skarpt nok eller allerede udfyldt. Udfyld manuelt med værktøjerne."
 };

@@ -167,5 +167,7 @@ export default {
  "later": "Vēlāk",
  "signCity": "Vieta (paraksts)",
  "saveToPhone": "Saglabāt tālrunī",
- "ocrFail": "Teksta nolasīšana neizdevās. Aizpildiet manuāli."
+ "ocrFail": "Teksta nolasīšana neizdevās. Aizpildiet manuāli.",
+ "ocrWait": "Lūdzu, uzgaidiet: lauku noteikšana…",
+ "noFieldsUnclear": "Neviens lauks netika droši atrasts: attēls nav pietiekami ass vai jau aizpildīts. Aizpildiet manuāli ar rīkiem."
 };

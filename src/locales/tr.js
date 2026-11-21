@@ -167,5 +167,7 @@ export default {
  "later": "Daha sonra",
  "signCity": "Şehir (imza)",
  "saveToPhone": "Telefona kaydet",
- "ocrFail": "Metin okunamadı. Elle doldurabilirsiniz."
+ "ocrFail": "Metin okunamadı. Elle doldurabilirsiniz.",
+ "ocrWait": "Lütfen bekleyin: alanlar algılanıyor…",
+ "noFieldsUnclear": "Hiçbir alan kesin olarak algılanamadı: görüntü yeterince net değil veya zaten doldurulmuş. Araçlarla elle doldurun."
 };

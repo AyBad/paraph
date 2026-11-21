@@ -167,5 +167,7 @@ export default {
  "later": "Vėliau",
  "signCity": "Vieta (parašas)",
  "saveToPhone": "Išsaugoti telefone",
- "ocrFail": "Teksto nuskaityti nepavyko. Užpildykite rankiniu būdu."
+ "ocrFail": "Teksto nuskaityti nepavyko. Užpildykite rankiniu būdu.",
+ "ocrWait": "Palaukite: aptinkami laukai…",
+ "noFieldsUnclear": "Laukai neaptikti patikimai: vaizdas nepakankamai ryškus arba jau užpildytas. Užpildykite rankiniu būdu."
 };

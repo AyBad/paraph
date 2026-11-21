@@ -167,5 +167,7 @@ export default {
  "later": "Senare",
  "signCity": "Ort (underskrift)",
  "saveToPhone": "Spara på telefonen",
- "ocrFail": "Textläsningen misslyckades. Du kan fylla i manuellt."
+ "ocrFail": "Textläsningen misslyckades. Du kan fylla i manuellt.",
+ "ocrWait": "Vänta: fälten identifieras…",
+ "noFieldsUnclear": "Inga fält hittades säkert: bilden är inte skarp nog eller redan ifylld. Fyll i manuellt med verktygen."
 };

@@ -167,5 +167,7 @@ export default {
  "later": "Más tarde",
  "signCity": "Ciudad (firma)",
  "saveToPhone": "Guardar en el teléfono",
- "ocrFail": "La lectura del texto falló. Puede rellenar manualmente."
+ "ocrFail": "La lectura del texto falló. Puede rellenar manualmente.",
+ "ocrWait": "Espere: detectando los campos…",
+ "noFieldsUnclear": "Ningún campo detectado con certeza: la imagen no es lo bastante nítida o ya está rellenada. Rellénela manualmente con las herramientas."
 };

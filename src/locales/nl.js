@@ -167,5 +167,7 @@ export default {
  "later": "Later",
  "signCity": "Plaats (ondertekening)",
  "saveToPhone": "Opslaan op telefoon",
- "ocrFail": "Tekst lezen mislukt. U kunt handmatig invullen."
+ "ocrFail": "Tekst lezen mislukt. U kunt handmatig invullen.",
+ "ocrWait": "Even geduld: velden worden gedetecteerd…",
+ "noFieldsUnclear": "Geen veld met zekerheid gevonden: de afbeelding is niet scherp genoeg of al ingevuld. Vul handmatig in met de hulpmiddelen."
 };
