@@ -7,6 +7,7 @@ import { signaturePad } from './sigpad.js';
 import { fileToPdfBytes } from './docs.js';
 import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
+import { showBanner, hideBanner, showInterstitial, removeBannerForPro } from './ads.js';
 
 const app = document.getElementById('app');
 const native = Capacitor.isNativePlatform();
@@ -14,6 +15,14 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 const pname = (p) => p.name || [p.firstName, p.lastName].filter(Boolean).join(' ') || t('unnamed');
 const LOGO = `<svg viewBox="0 0 64 64" class="logo"><rect width="64" height="64" rx="16" fill="#1a237e"/><path d="M14 44c6-2 8-14 12-20s6 0 2 8-4 12 2 8 6-8 10-6 2 6 6 4" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 51h36" stroke="#7aa2ff" stroke-width="3" stroke-linecap="round"/></svg>`;
+const fmtTime = (d) => { try { return new Intl.DateTimeFormat(document.documentElement.lang, { hour: '2-digit', minute: '2-digit' }).format(d); } catch { return d.toTimeString().slice(0, 5); } };
+const FREE_PROFILES = 2;
+const PLANS = [
+  { id: 'monthly', price: 1.99, per: 'perMonth' },
+  { id: 'yearly', price: 11.99, per: 'perYear', badge: '-50%' },
+  { id: 'lifetime', price: 24.99, per: 'oneTime' }
+];
+const money = (v) => { try { return new Intl.NumberFormat(document.documentElement.lang, { style: 'currency', currency: 'EUR' }).format(v); } catch { return v + ' €'; } };
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
 async function init() {
@@ -96,14 +105,15 @@ function openMenu() {
   requestAnimationFrame(() => back.classList.add('in'));
   const close = () => { back.classList.remove('in'); setTimeout(() => back.remove(), 200); };
   back.onclick = (e) => { if (e.target === back) close(); };
-  const acts = { profiles: profilesScreen, settings, backup: backupScreen, tutorial: () => onboarding(true), pro: proScreen, about: aboutScreen };
-  back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); acts[b.dataset.a](); });
+  const acts = { profiles: profilesScreen, settings, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen };
+  back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); hideBanner(); acts[b.dataset.a](); });
 }
 
 const header = (title) => `<header class="top"><button class="icon-btn back">${ICON.back}</button><h1 class="h">${title}</h1><span></span></header>`;
 
 // ---------------- HOME ----------------
 async function home() {
+  hideBanner();
   const [docs, profiles, activeId] = await Promise.all([store.getDocs(), store.getProfiles(), store.getActiveProfileId()]);
   const active = profiles.find(p => p.id === activeId) || profiles[0];
   app.innerHTML = `
@@ -128,7 +138,7 @@ async function home() {
       ${docs.length ? `<div class="docs">${docs.map(d => `
         <div class="doc" data-id="${d.id}">
           <div class="doc-ic">PDF</div>
-          <div class="doc-m"><b>${esc(d.name)}</b><span>${fmtDate(new Date(d.date))} · ${(d.size / 1024).toFixed(0)} Ko</span></div>
+          <div class="doc-m"><b>${esc(d.name)}</b><span>${fmtDate(new Date(d.date))} ${fmtTime(new Date(d.date))} · ${(d.size / 1024).toFixed(0)} Ko</span></div>
           <button class="icon-btn d-sh" aria-label="${t('share')}">${ICON.share}</button>
           <button class="icon-btn d-dl" aria-label="${t('download')}">${ICON.download}</button>
           <button class="icon-btn d-del" aria-label="${t('delete')}">${ICON.trash}</button>
@@ -140,15 +150,44 @@ async function home() {
   const $ = s => app.querySelector(s);
   $('.menu').onclick = openMenu;
   $('.manage').onclick = profilesScreen;
-  $('.chip.add').onclick = () => editProfile(store.emptyProfile(), true);
+  $('.chip.add').onclick = newProfile;
   app.querySelectorAll('.chip[data-id]').forEach(c => c.onclick = async () => { await store.setActiveProfileId(c.dataset.id); home(); });
   $('.file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) startFile(f); };
   app.querySelectorAll('.doc').forEach(el => {
     const d = docs.find(x => x.id === el.dataset.id);
-    el.querySelector('.doc-m').onclick = async () => startBytes(await store.getDocBytes(d.id), d.name, d.id);
+    el.querySelector('.doc-m').onclick = async () => {
+      const { src, objs } = await store.getDocSource(d.id);
+      startBytes(src || await store.getDocBytes(d.id), d.name, d.id, src ? objs : null);
+    };
     el.querySelector('.d-sh').onclick = async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } };
     el.querySelector('.d-dl').onclick = async () => { const w = await downloadPdf(await store.getDocBytes(d.id), d.name); if (w) toast(t('downloaded') + ' : ' + w); };
     el.querySelector('.d-del').onclick = async () => { if (await confirmBox(t('confirmDelete'), t('delete'), t('cancel'))) { await store.deleteDoc(d.id); home(); } };
+  });
+  showBanner(app.querySelector('.screen'));
+}
+
+async function newProfile() {
+  const n = (await store.getProfiles()).length;
+  if (n >= FREE_PROFILES && !(await store.getPro())) {
+    const m = modal(`<div class="done-ic pro">${ICON.star}</div><h2>${t('pro')}</h2><p class="lead">${t('freeLimit')}</p>
+      <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary g">${t('seePro')}</button></div>`, 'sheet center');
+    m.el.querySelector('.c').onclick = m.close;
+    m.el.querySelector('.g').onclick = () => { m.close(); proScreen(); };
+    return;
+  }
+  hideBanner();
+  editProfile(store.emptyProfile(), true);
+}
+
+function chooseProfile(profiles, activeId) {
+  return new Promise(res => {
+    const m = modal(`<h2>${t('choose')}</h2><div class="list">${profiles.map(p => `
+      <button class="list-item prof${p.id === activeId ? ' on' : ''}" data-id="${p.id}">
+        <i class="dot" style="background:${p.color}"></i><b>${esc(pname(p))}</b><span></span>
+        ${p.signature ? `<img src="${p.signature}">` : ''}</button>`).join('')}</div>
+      <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
+    m.el.querySelector('.c').onclick = () => { m.close(); res(null); };
+    m.el.querySelectorAll('.prof').forEach(b => b.onclick = async () => { m.close(); await store.setActiveProfileId(b.dataset.id); res(b.dataset.id); });
   });
 }
 
@@ -164,22 +203,19 @@ async function startFile(file) {
   }
 }
 
-async function startBytes(bytes, name, docId) {
+async function startBytes(bytes, name, docId, initialObjs) {
+  hideBanner();
   const profiles = await store.getProfiles();
   const activeId = (await store.getActiveProfileId()) || profiles[0].id;
-  const go = (id) => openEditor({ bytes: new Uint8Array(bytes), name, docId, profiles, profileId: id, onExit: home });
-  if (profiles.length < 2) return go(activeId);
-  const m = modal(`<h2>${t('choose')}</h2><div class="list">${profiles.map(p => `
-    <button class="list-item prof${p.id === activeId ? ' on' : ''}" data-id="${p.id}">
-      <i class="dot" style="background:${p.color}"></i><b>${esc(pname(p))}</b><span></span>
-      ${p.signature ? `<img src="${p.signature}">` : ''}</button>`).join('')}</div>
-    <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
-  m.el.querySelector('.c').onclick = m.close;
-  m.el.querySelectorAll('.prof').forEach(b => b.onclick = async () => { m.close(); await store.setActiveProfileId(b.dataset.id); go(b.dataset.id); });
+  openEditor({
+    bytes: new Uint8Array(bytes), name, docId, profiles, profileId: activeId, onExit: home, initialObjs,
+    viewOnly: true, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: showInterstitial
+  });
 }
 
 // ---------------- PROFILES ----------------
 async function profilesScreen() {
+  hideBanner();
   const profiles = await store.getProfiles();
   app.innerHTML = `
   <div class="screen">
@@ -193,7 +229,7 @@ async function profilesScreen() {
     <button class="btn primary big add">${ICON.plus}<span>${t('newProfile')}</span></button>
   </div>`;
   app.querySelector('.back').onclick = home;
-  app.querySelector('.add').onclick = () => editProfile(store.emptyProfile(), true);
+  app.querySelector('.add').onclick = newProfile;
   app.querySelectorAll('.prof-row').forEach(r => {
     const p = profiles.find(x => x.id === r.dataset.id);
     r.querySelector('.prof-open').onclick = () => editProfile(p);
@@ -207,6 +243,7 @@ async function removeProfile(p, count) {
 }
 
 async function editProfile(p, isNew) {
+  hideBanner();
   p = { ...p };
   const count = (await store.getProfiles()).length;
   const F = (k, type = 'text', extra = '') => `<label class="field-l">${t(k)}<input data-k="${k}" type="${type}" value="${esc(p[k])}" ${extra}></label>`;
@@ -255,6 +292,7 @@ async function editProfile(p, isNew) {
 
 // ---------------- LANGUAGE ----------------
 async function settings() {
+  hideBanner();
   const saved = await store.getLang();
   app.innerHTML = `
   <div class="screen">
@@ -274,6 +312,7 @@ async function settings() {
 
 // ---------------- BACKUP (Google Drive…) ----------------
 function backupScreen() {
+  hideBanner();
   app.innerHTML = `
   <div class="screen">
     ${header(t('backup'))}
@@ -304,21 +343,74 @@ function backupScreen() {
 }
 
 // ---------------- PRO / ABOUT ----------------
-function proScreen() {
-  const feats = ['s1t', 's2t', 's3t', 's4t', 'backup', 'language'];
+async function proScreen() {
+  hideBanner();
+  const pro = await store.getPro();
   app.innerHTML = `
   <div class="screen">
     ${header(t('pro'))}
-    <section class="card pro-card">
+    <section class="pro-hero">
       <div class="pro-badge">${ICON.star}<b>Paraph Pro</b></div>
-      <ul class="feats">${feats.map(k => `<li>${ICON.check}<span>${t(k)}</span></li>`).join('')}</ul>
-      <p class="lead">${t('proD')}</p>
+      <ul class="feats">
+        <li>${ICON.check}<span>${t('perkNoAds')}</span></li>
+        <li>${ICON.check}<span>${t('perkProfiles')}</span></li>
+        <li>${ICON.check}<span>${t('perkSupport')}</span></li>
+      </ul>
     </section>
+    ${pro ? `<section class="card pro-on">${ICON.done}<div><b>${t('proActive')}</b><span>${t(pro.plan)} · ${fmtDate(new Date(pro.date))}</span></div></section>` : ''}
+    <div class="plans">${PLANS.map(pl => `
+      <button class="plan${pl.id === 'yearly' ? ' best' : ''}${pro && pro.plan === pl.id ? ' on' : ''}" data-p="${pl.id}">
+        ${pl.badge ? `<em>${pl.badge}</em>` : ''}<b>${t(pl.id)}</b><span class="price">${money(pl.price)}</span><small>${t(pl.per)}</small>
+      </button>`).join('')}</div>
+    <button class="btn primary big buy">${ICON.star}<span>${t('buy')}</span></button>
+    <p class="test-note">${t('testMode')}</p>
+    <div class="row gap center">
+      <button class="link restore">${t('restorePurchase')}</button>
+      ${pro ? `<button class="link cancel-pro">${t('cancelPro')}</button>` : ''}
+    </div>
+  </div>`;
+  app.querySelector('.back').onclick = home;
+  let chosen = 'yearly';
+  const mark = () => app.querySelectorAll('.plan').forEach(b => b.classList.toggle('sel', b.dataset.p === chosen));
+  mark();
+  app.querySelectorAll('.plan').forEach(b => b.onclick = () => { chosen = b.dataset.p; mark(); });
+  app.querySelector('.buy').onclick = async () => {
+    const pl = PLANS.find(p => p.id === chosen);
+    const ok = await confirmBox(`${t(pl.id)} · ${money(pl.price)}\n${t('testMode')}`, t('buy'), t('cancel'));
+    if (!ok) return;
+    const b = busy(t('loading')); await new Promise(r => setTimeout(r, 900)); b.close();
+    await store.setPro({ plan: pl.id, date: Date.now(), test: true });
+    await removeBannerForPro();
+    toast(t('proActive')); proScreen();
+  };
+  app.querySelector('.restore').onclick = async () => toast((await store.getPro()) ? t('proActive') : t('noPurchase'));
+  const cp = app.querySelector('.cancel-pro');
+  if (cp) cp.onclick = async () => { await store.setPro(null); proScreen(); };
+}
+
+function tutorialScreen() {
+  hideBanner();
+  const tools = [['text', 'text'], ['check', 'check'], ['cross', 'cross'], ['strike', 'strike'], ['sign', 'signature'], ['initials', 'initials'], ['date', 'date'], ['id', 'insert'], ['pen', 'pen'], ['undo', 'undo']];
+  const step = (n, ic, title, text) => `<section class="tuto-step"><div class="tuto-n">${n}</div><div><h3>${ic}${title}</h3><p>${text}</p></div></section>`;
+  app.innerHTML = `
+  <div class="screen tuto">
+    ${header(t('tutorial'))}
+    ${step(1, ICON.user, t('profiles'), t('s2d'))}
+    ${step(2, ICON.file, t('s1t'), t('s1d'))}
+    ${step(3, ICON.edit, t('startEdit'), t('tutoEdit'))}
+    ${step(4, ICON.magic, t('autofill'), t('tutoAuto'))}
+    <section class="tuto-step"><div class="tuto-n">5</div><div><h3>${ICON.pen}${t('tutoTools')}</h3>
+      <div class="tool-grid">${tools.map(([ic, k]) => `<div>${ICON[ic]}<span>${t(k)}</span></div>`).join('')}</div>
+      <p>${t('tutoMove')}</p></div></section>
+    ${step(6, ICON.sign, t('s3t'), t('s3d'))}
+    ${step(7, ICON.save, t('s4t'), t('s4d'))}
+    ${step(8, ICON.cloud, t('backup'), t('backupHint'))}
   </div>`;
   app.querySelector('.back').onclick = home;
 }
 
 function aboutScreen() {
+  hideBanner();
   app.innerHTML = `
   <div class="screen">
     ${header(t('about'))}
