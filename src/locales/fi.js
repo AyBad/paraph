@@ -151,5 +151,11 @@ export default {
  "moveTo": "Siirrä kansioon",
  "rename": "Nimeä uudelleen",
  "noFolder": "Ei kansiota",
- "openDoc": "Avaa"
+ "openDoc": "Avaa",
+ "autoWarn": "Tarkista täytetyt kentät: automaattinen täyttö voi tehdä virheitä.",
+ "zonesFound": "{n} täytettävää aluetta löytyi: napauta kirjoittaaksesi",
+ "tutoScan": "Napauta ”Skannaa” ja ota kuva: arkki rajataan ja suoristetaan, kirjoitusalueet ja ruudut tunnistetaan.",
+ "tutoDocs": "Hae asiakirjoja, järjestä ne kansioihin ja käytä ⋮ nimeämiseen, siirtämiseen, jakamiseen tai poistamiseen.",
+ "tutoSettings": "Kieli, vaalea tai tumma teema sekä koodi sovelluksen lukitsemiseen.",
+ "tutoOpenWith": "Voit myös avata PDF:n toisesta sovelluksesta (Gmail, WhatsApp, Tiedostot…) valinnalla ”Avaa sovelluksella” tai ”Jaa” → Paraph."
 };

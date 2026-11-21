@@ -151,5 +151,11 @@ export default {
  "moveTo": "Perkelti į aplanką",
  "rename": "Pervadinti",
  "noFolder": "Be aplanko",
- "openDoc": "Atidaryti"
+ "openDoc": "Atidaryti",
+ "autoWarn": "Patikrinkite užpildytus laukus: automatinis pildymas gali klysti.",
+ "zonesFound": "Rasta pildomų sričių: {n}. Palieskite, kad rašytumėte",
+ "tutoScan": "Palieskite „Skenuoti“ ir nufotografuokite: lapas apkerpamas ir ištiesinamas, rašymo sritys ir langeliai aptinkami.",
+ "tutoDocs": "Ieškokite dokumentų, rūšiuokite juos į aplankus ir per ⋮ pervadinkite, perkelkite, bendrinkite ar ištrinkite.",
+ "tutoSettings": "Kalba, šviesi ar tamsi tema ir kodas programėlei užrakinti.",
+ "tutoOpenWith": "PDF galite atidaryti ir iš kitos programėlės (Gmail, WhatsApp, Failai…) per „Atidaryti naudojant“ arba „Bendrinti“ → Paraph."
 };

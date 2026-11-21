@@ -151,5 +151,11 @@ export default {
  "moveTo": "Teisalda kausta",
  "rename": "Nimeta ümber",
  "noFolder": "Kaustata",
- "openDoc": "Ava"
+ "openDoc": "Ava",
+ "autoWarn": "Kontrolli täidetud välju: automaatne täitmine võib eksida.",
+ "zonesFound": "Leiti {n} täidetavat ala: puuduta kirjutamiseks",
+ "tutoScan": "Puuduta „Skanni” ja tee foto: leht kärbitakse ja sirgestatakse, kirjutusalad ja ruudud tuvastatakse.",
+ "tutoDocs": "Otsi dokumente, jaota need kaustadesse ja kasuta ⋮ ümbernimetamiseks, teisaldamiseks, jagamiseks või kustutamiseks.",
+ "tutoSettings": "Keel, hele või tume teema ja kood rakenduse lukustamiseks.",
+ "tutoOpenWith": "PDF-i saab avada ka teisest rakendusest (Gmail, WhatsApp, Failid…) valikuga „Ava rakendusega” või „Jaga” → Paraph."
 };

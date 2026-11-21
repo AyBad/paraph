@@ -300,3 +300,16 @@ fieldset.addr legend{font-size:13px;color:var(--mut);font-weight:600;padding:0 4
 .scan-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:10px 10px calc(12px + var(--sab));background:#1b1b1b}
 .scan-bar .btn.ghost{background:#2b2b33;color:#fff}
 .scan-bar .btn.ghost.on{background:#3949ab}
+
+/* --- v5 --- */
+body.ad-on .screen{padding-bottom:calc(var(--ad,60px) + var(--sab) + 30px)}
+body.ad-on .modal-back{padding-bottom:calc(var(--ad,60px) + 16px)}
+body.ad-on .modal.sheet{margin-bottom:0}
+.ed-banner.warn{background:#fff3e0;color:#8d4e00}
+[data-theme=dark] .ed-banner.warn{background:#3a2a12;color:#ffcc80}
+.obj.field.zone{background:#fff59d40;outline:1px dashed #64b5f6}
+.editor.viewing .obj.field.zone{background:none;outline:none}
+/* dark theme: signatures are dark ink, show them on a light pad */
+[data-theme=dark] .chip img,[data-theme=dark] .prof-open img,[data-theme=dark] .list-item img,[data-theme=dark] .sig-box img{background:#f4f5fa;border-radius:6px;padding:2px 4px}
+[data-theme=dark] .dot{box-shadow:0 0 0 2px #fff6}
+[data-theme=dark] .color-dot span{box-shadow:0 0 0 1.5px #fff8}

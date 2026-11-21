@@ -151,5 +151,11 @@ export default {
  "moveTo": "移动到文件夹",
  "rename": "重命名",
  "noFolder": "无文件夹",
- "openDoc": "打开"
+ "openDoc": "打开",
+ "autoWarn": "请检查已填写的字段：自动填写可能出错。",
+ "zonesFound": "找到 {n} 个可填写区域：点击即可书写",
+ "tutoScan": "点击“扫描”并拍照：自动裁剪并拉直页面，识别书写区域和复选框。",
+ "tutoDocs": "搜索文档、分类到文件夹，并通过 ⋮ 重命名、移动、分享或删除。",
+ "tutoSettings": "语言、浅色或深色主题，以及用于锁定应用的密码。",
+ "tutoOpenWith": "也可以在其他应用（Gmail、WhatsApp、文件…）中通过“打开方式”或“分享”→ Paraph 打开 PDF。"
 };

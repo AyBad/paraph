@@ -154,5 +154,11 @@ export default {
  "moveTo": "Move to folder",
  "rename": "Rename",
  "noFolder": "No folder",
- "openDoc": "Open"
+ "openDoc": "Open",
+ "autoWarn": "Check the filled-in fields: auto-fill can make mistakes.",
+ "zonesFound": "{n} areas to fill in found: tap one to write",
+ "tutoScan": "Tap “Scan”, take a photo: the sheet is cropped and straightened, writing areas and tick boxes are detected.",
+ "tutoDocs": "Search your documents, sort them into folders and use ⋮ to rename, move, share or delete.",
+ "tutoSettings": "Language, light or dark theme, and a PIN code to lock the app.",
+ "tutoOpenWith": "You can also open a PDF from another app (Gmail, WhatsApp, Files…) with “Open with” or “Share” → Paraph."
 };

@@ -151,5 +151,11 @@ export default {
  "moveTo": "Pārvietot uz mapi",
  "rename": "Pārdēvēt",
  "noFolder": "Bez mapes",
- "openDoc": "Atvērt"
+ "openDoc": "Atvērt",
+ "autoWarn": "Pārbaudiet aizpildītos laukus: automātiskā aizpilde var kļūdīties.",
+ "zonesFound": "Atrastas {n} aizpildāmas zonas: pieskarieties, lai rakstītu",
+ "tutoScan": "Pieskarieties “Skenēt” un nofotografējiet: lapa tiek apgriezta un iztaisnota, rakstīšanas zonas un rūtiņas tiek noteiktas.",
+ "tutoDocs": "Meklējiet dokumentus, kārtojiet tos mapēs un ar ⋮ pārdēvējiet, pārvietojiet, kopīgojiet vai dzēsiet.",
+ "tutoSettings": "Valoda, gaišs vai tumšs motīvs un kods lietotnes bloķēšanai.",
+ "tutoOpenWith": "PDF var atvērt arī no citas lietotnes (Gmail, WhatsApp, Faili…) ar “Atvērt ar” vai “Kopīgot” → Paraph."
 };

@@ -10,7 +10,8 @@ const TEST = {
 };
 
 const native = Capacitor.isNativePlatform();
-let admob = null, ready = false, bannerShown = false;
+let admob = null, ready = false, bannerShown = false, wanted = false;
+const setAdSpace = (h) => { document.documentElement.style.setProperty('--ad', (h || 0) + 'px'); document.body.classList.toggle('ad-on', !!h); };
 
 async function adsAllowed() { return !(await getPro()); }
 
@@ -19,37 +20,43 @@ export async function initAds() {
   try {
     admob = (await import('@capacitor-community/admob')).AdMob;
     await admob.initialize({ initializeForTesting: true });
+    admob.addListener('bannerAdSizeChanged', (info) => { if (wanted) setAdSpace(info && info.height ? info.height : 60); });
     ready = true;
   } catch (e) { console.warn('ads', e); }
 }
 
 /** banner at the bottom of the home screen */
 export async function showBanner(container) {
+  wanted = true;
   if (!(await adsAllowed())) { hideBanner(); return; }
   if (native) {
-    await initAds(); if (!ready) return;
+    await initAds(); if (!ready || !wanted) return;
     try {
       if (!bannerShown) await admob.showBanner({ adId: TEST.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: true });
       else await admob.resumeBanner();
       bannerShown = true;
+      if (!wanted) { await admob.hideBanner(); return; } // the user left the home screen meanwhile
+      setAdSpace(60);
       container && container.classList.add('with-ad');
     } catch (e) { console.warn('banner', e); }
-  } else if (container) {
+  } else if (container && wanted) {
     // web / iPhone: simulated test banner
     const el = document.createElement('div');
     el.className = 'fake-ad';
     el.innerHTML = `<span class="ad-tag">${t('ad')}</span><b>Paraph</b> · Test ad banner`;
     container.appendChild(el);
-    container.classList.add('with-ad');
+    container.classList.add('with-ad'); setAdSpace(56);
   }
 }
 
 export async function hideBanner() {
+  wanted = false; setAdSpace(0);
   if (native && ready && bannerShown) { try { await admob.hideBanner(); } catch { } }
   document.querySelectorAll('.fake-ad').forEach(e => e.remove());
 }
 
 export async function removeBannerForPro() {
+  wanted = false; setAdSpace(0);
   if (native && ready && bannerShown) { try { await admob.removeBanner(); } catch { } bannerShown = false; }
   document.querySelectorAll('.fake-ad').forEach(e => e.remove());
 }

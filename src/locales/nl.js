@@ -151,5 +151,11 @@ export default {
  "moveTo": "Naar map verplaatsen",
  "rename": "Hernoemen",
  "noFolder": "Geen map",
- "openDoc": "Openen"
+ "openDoc": "Openen",
+ "autoWarn": "Controleer de ingevulde velden: automatisch invullen kan fouten maken.",
+ "zonesFound": "{n} invulzones gevonden: tik erop om te schrijven",
+ "tutoScan": "Tik op „Scannen” en maak een foto: het blad wordt bijgesneden en rechtgezet, schrijfzones en vakjes worden herkend.",
+ "tutoDocs": "Zoek je documenten, orden ze in mappen en gebruik ⋮ om te hernoemen, verplaatsen, delen of verwijderen.",
+ "tutoSettings": "Taal, licht of donker thema en een code om de app te vergrendelen.",
+ "tutoOpenWith": "Je kunt ook een pdf openen vanuit een andere app (Gmail, WhatsApp, Bestanden…) via „Openen met” of „Delen” → Paraph."
 };

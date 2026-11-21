@@ -151,5 +151,11 @@ export default {
  "moveTo": "Przenieś do folderu",
  "rename": "Zmień nazwę",
  "noFolder": "Bez folderu",
- "openDoc": "Otwórz"
+ "openDoc": "Otwórz",
+ "autoWarn": "Sprawdź wypełnione pola: autouzupełnianie może się mylić.",
+ "zonesFound": "Znaleziono obszary do wypełnienia: {n}. Dotknij, aby pisać",
+ "tutoScan": "Dotknij „Skanuj” i zrób zdjęcie: kartka zostanie przycięta i wyprostowana, a pola i kratki wykryte.",
+ "tutoDocs": "Wyszukuj dokumenty, porządkuj je w folderach i używaj ⋮, by zmienić nazwę, przenieść, udostępnić lub usunąć.",
+ "tutoSettings": "Język, jasny lub ciemny motyw oraz kod blokady aplikacji.",
+ "tutoOpenWith": "Możesz też otworzyć PDF z innej aplikacji (Gmail, WhatsApp, Pliki…) przez „Otwórz za pomocą” lub „Udostępnij” → Paraph."
 };

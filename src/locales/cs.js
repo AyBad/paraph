@@ -151,5 +151,11 @@ export default {
  "moveTo": "Přesunout do složky",
  "rename": "Přejmenovat",
  "noFolder": "Bez složky",
- "openDoc": "Otevřít"
+ "openDoc": "Otevřít",
+ "autoWarn": "Zkontrolujte vyplněná pole: automatické vyplnění se může mýlit.",
+ "zonesFound": "Nalezené oblasti k vyplnění: {n}. Klepnutím začnete psát",
+ "tutoScan": "Klepněte na „Skenovat“ a vyfoťte: list se ořízne a narovná, rozpoznají se oblasti k psaní i políčka.",
+ "tutoDocs": "Vyhledávejte dokumenty, třiďte je do složek a pomocí ⋮ je přejmenujte, přesuňte, sdílejte nebo smažte.",
+ "tutoSettings": "Jazyk, světlý nebo tmavý motiv a kód pro zamknutí aplikace.",
+ "tutoOpenWith": "PDF můžete otevřít i z jiné aplikace (Gmail, WhatsApp, Soubory…) přes „Otevřít v“ nebo „Sdílet“ → Paraph."
 };
