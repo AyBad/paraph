@@ -165,5 +165,7 @@ export default {
  "pinOffer": "문서를 보호하세요",
  "pinOfferD": "Paraph를 잠글 4자리 비밀번호를 설정하세요. 설정에서 변경할 수 있습니다.",
  "later": "나중에",
- "signCity": "도시(서명지)"
+ "signCity": "도시(서명지)",
+ "saveToPhone": "휴대폰에 저장",
+ "ocrFail": "텍스트 인식에 실패했습니다. 직접 입력할 수 있습니다."
 };

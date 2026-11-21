@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Suojaa asiakirjasi",
  "pinOfferD": "Aseta 4-numeroinen koodi Paraphin lukitsemiseksi. Voit vaihtaa sen asetuksista.",
  "later": "Myöhemmin",
- "signCity": "Paikka (allekirjoitus)"
+ "signCity": "Paikka (allekirjoitus)",
+ "saveToPhone": "Tallenna puhelimeen",
+ "ocrFail": "Tekstin luku epäonnistui. Voit täyttää käsin."
 };

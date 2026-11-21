@@ -165,5 +165,7 @@ export default {
  "pinOffer": "保护您的文档",
  "pinOfferD": "设置 4 位密码锁定 Paraph，之后可在设置中更改。",
  "later": "稍后",
- "signCity": "城市（签署地）"
+ "signCity": "城市（签署地）",
+ "saveToPhone": "保存到手机",
+ "ocrFail": "文字识别失败，您可以手动填写。"
 };

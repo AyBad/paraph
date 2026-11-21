@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Belgelerinizi koruyun",
  "pinOfferD": "Paraph'ı kilitlemek için 4 haneli kod belirleyin. Ayarlar'dan değiştirebilirsiniz.",
  "later": "Daha sonra",
- "signCity": "Şehir (imza)"
+ "signCity": "Şehir (imza)",
+ "saveToPhone": "Telefona kaydet",
+ "ocrFail": "Metin okunamadı. Elle doldurabilirsiniz."
 };

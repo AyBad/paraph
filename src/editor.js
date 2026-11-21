@@ -4,7 +4,7 @@ import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
 import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
-import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow } from './labels.js';
+import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr } from './labels.js';
 import { downloadPdf, shareFile } from './share.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
@@ -18,7 +18,8 @@ function matchField(f) {
   const short = (f.name || '').split('.').pop().replace(/\[\d+\]/g, '');
   const n = norm(short + ' ' + f.alt);
   const has = (re) => re.test(n);
-  if (has(/signature|siret|siren|immatric|identification|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule|certificat|vehicule|variante/)) return null;
+  if (has(/signature|siret|siren|immatric|identification|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule|certificat|vehicule|variante|autorite|administration|electeur|election|consulaire|departement|premier tour|second tour|\btour\b|jusqu/)) return null;
+  if (has(/nom de naissance|nom de jeune fille|birth ?name|maiden name|geburtsname/)) return 'lastName';
   const birth = has(/naiss|birth|dob\b|geburt|nacim|nasc|born|\bne ?\(?e?\)? le\b|\bnee? le\b/);
   if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune/)) return 'birthPlace';
   if (birth) return 'birthDate';
@@ -157,13 +158,15 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   const pageText = []; // per page: { items, lines }
   let sections = [];
   const rowY = (o) => (o.fy ?? o.y) + (o.fh ?? o.h) / 2;
-  const SEX_M = /^(m|mr|m\.|monsieur|homme|masculin|male|herr|sr)\b/, SEX_F = /^(mme|madame|mlle|mademoiselle|femme|feminin|female|frau|sra)\b/;
+  const SEX_M = /^(m|mr|m\.|monsieur|homme|masculin|male|herr|sr|h)\b/, SEX_F = /^(f|mme|madame|mlle|mademoiselle|femme|feminin|female|frau|sra)\b/;
 
   function analyze() {
     const fieldsAll = objs.filter(o => o.field);
+    for (const o of fieldsAll) if (o.admin) o.match = null;
     // 1. what each field expects, from its printed label when the name says nothing
     for (const o of fieldsAll) {
-      if (o.type === 'text' && !o.match && (o.label || o.caption)) o.match = matchField({ name: '', alt: (o.label || '') + ' ' + (o.caption || '') });
+      if (o.admin) continue;
+      if (o.type === 'text' && !o.match && (o.label || o.caption)) o.match = matchField({ name: '', alt: o.label || '' }) || matchField({ name: '', alt: o.caption || '' });
       if (o.type === 'check' && o.label) {
         const l = norm(o.label);
         if (SEX_M.test(l)) { o.match = 'sex'; o.val = 'M'; }
@@ -171,7 +174,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         else if (/personne physique|natural person/.test(l)) { o.match = 'physical'; o.val = 'P'; }
       }
     }
-    refineByRow(fieldsAll);
+    refineByRow(fieldsAll.filter(o => !o.admin));
     const textFields = fieldsAll.filter(o => o.type === 'text');
     // 2. dates typed in several boxes on one row (dd | mm | yyyy)
     for (const key of ['birthDate', 'today']) {
@@ -209,6 +212,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   /** one section per person: a new one starts when a value repeats, the role changes or a heading separates fields */
   function computeSections() {
     const SKIP = new Set(['today', 'hour', 'minute', 'signCity']);
+    const IDENT = new Set(['lastName', 'firstName', 'fullName', 'sex', 'physical']);
     const list = objs.filter(o => o.field && o.match).sort((a, b) => a.page - b.page || Math.round(rowY(a) / 6) - Math.round(rowY(b) / 6) || a.x - b.x);
     sections = []; let cur = null;
     const headingBetween = (pg, y0, y1) => (pageText[pg]?.lines || []).some(l => l.cy > y0 + 2 && l.cy < y1 - 2 && l.text.length >= 12 &&
@@ -218,7 +222,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const key = o.match + (o.part || '') + (o.match === 'sex' ? o.val : '');
       const top = o.fy ?? o.y;
       const brk = !cur || cur.keys.has(key) || (o.role && cur.role && o.role !== cur.role) ||
-        (cur.n >= 3 && (o.page !== cur.page || headingBetween(o.page, cur.last, top)));
+        (IDENT.has(o.match) && cur.n >= 3 && (o.page !== cur.page || headingBetween(o.page, cur.last, top)));
       if (brk) { cur = { id: sections.length, keys: new Set(), role: o.role || null, page: o.page, top, n: 0, last: top }; sections.push(cur); }
       cur.keys.add(key); cur.n++; cur.last = Math.max(cur.last, top + (o.fh ?? o.h)); cur.page = o.page;
       if (!cur.role && o.role) cur.role = o.role;
@@ -236,14 +240,14 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       let title = '';
       if (sct.role) title = t(sct.role === 'seller' ? 'roleA' : 'roleB');
       else if (first) {
-        const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 &&
-          !objs.some(o => o.field && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
+        const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 && l.text.length > 3 &&
+          !objs.some(o => o.field && o.type === 'text' && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
         const l = lines.sort((a, b) => b.cy - a.cy)[0];
         if (l) title = l.text.replace(/[:\s]+$/, '');
       }
       if (!title) title = `${t('profile')} ${i + 1}`;
       if (title.length > 48) title = title.slice(0, 46) + '…';
-      sct.title = title; sct.group = sct.role || norm(title);
+      sct.title = title; sct.group = sct.role || roleOf(title) || norm(title);
     });
   }
 
@@ -251,24 +255,34 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     for (let pi = 0; pi < pagesInfo.length; pi++) {
       const items = await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp);
       pageText[pi] = { items, lines: textLines(items), ocr: false };
-      if (items.length) attachLabels(objs.filter(o => o.field && o.page === pi), items);
+      if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); }
     }
   }
-  let ocrState = '';
+  let ocrState = '', ocrPct = 0, ocrCancel = null;
   async function runOcr() {
-    const todo = pagesInfo.map((p, i) => i).filter(i => !pageText[i]?.items.length && objs.some(o => o.zone && o.page === i));
+    const todo = pagesInfo.map((p, i) => i).filter(i => !pageText[i]?.items.length && objs.some(o => o.zone && o.page === i)).slice(0, 3);
     if (!todo.length) return;
-    ocrState = 'run'; showFieldsBanner();
+    ocrState = 'run'; ocrPct = 0; showFieldsBanner();
+    let cancelled = false;
+    ocrCancel = () => { cancelled = true; };
     try {
       for (const pi of todo) {
-        const items = await ocrTextItems(pagesInfo[pi].page, objs.filter(o => o.zone && o.page === pi).map(o => ({ x: o.x, y: o.fy, w: o.fw, h: o.fh })));
+        if (cancelled) break;
+        const masks = objs.filter(o => o.zone && o.page === pi).map(o => ({ x: o.x, y: o.fy, w: o.fw, h: o.fh }));
+        const items = await Promise.race([
+          ocrTextItems(pagesInfo[pi].page, masks, (p) => { ocrPct = Math.round(((todo.indexOf(pi) + p) / todo.length) * 100); updateOcrBanner(); }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000)),
+          new Promise((_, rej) => { const iv = setInterval(() => { if (cancelled) { clearInterval(iv); rej(new Error('cancel')); } }, 300); })
+        ]);
         pageText[pi] = { items, lines: textLines(items), ocr: true };
         attachLabels(objs.filter(o => o.field && o.page === pi), items);
+        markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines);
       }
       analyze();
-    } catch (e) { console.warn('ocr', e); }
-    ocrState = ''; showFieldsBanner();
+    } catch (e) { console.warn('ocr', e); resetOcr(); if (e.message === 'timeout') toast(t('ocrFail')); }
+    ocrState = ''; ocrCancel = null; showFieldsBanner();
   }
+  function updateOcrBanner() { const s2 = banner.querySelector('.ocr-pct'); if (s2) s2.textContent = ocrPct ? ` ${ocrPct} %` : ''; }
   if (!initialObjs) { await readLabels(); analyze(); }
   else computeSectionsSafe();
   function computeSectionsSafe() { try { computeSections(); } catch { } }
@@ -344,9 +358,11 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     }
     const real = objs.filter(o => o.field && !o.zone).length, zn = objs.filter(o => o.zone).length;
     if (!real && !zn) { banner.classList.add('hidden'); return; }
-    const txt = ocrState === 'run' ? `<span class="spin-s"></span>${t('ocrRunning')}` : real ? t('fieldsFound', { n: real }) : t('zonesFound', { n: zn });
-    banner.innerHTML = `<span>${txt}</span>${ocrState === 'run' ? '' : `<button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`}`;
+    const txt = ocrState === 'run' ? `<span class="spin-s"></span>${t('ocrRunning')}<span class="ocr-pct"></span>` : real ? t('fieldsFound', { n: real }) : t('zonesFound', { n: zn });
+    banner.innerHTML = `<span>${txt}</span>${ocrState === 'run' ? `<button class="icon-btn x">${ICON.cross}</button>` : `<button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`}`;
     const af = banner.querySelector('.af'); if (af) af.onclick = autofill;
+    const x = banner.querySelector('.x'); if (x && ocrState === 'run') x.onclick = () => { if (ocrCancel) ocrCancel(); };
+    updateOcrBanner();
   }
   showFieldsBanner();
 
@@ -355,16 +371,26 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     commitEdit();
     const groups = []; for (const sct of sections) if (!groups.find(g => g.group === sct.group)) groups.push(sct);
     if (groups.length <= 1) return doAutofill({ [groups[0]?.group]: profile });
-    const choice = {}; groups.forEach((g, i) => choice[g.group] = i === 0 ? profile.id : (profiles[i] && profiles.length > 2 ? '' : ''));
+    const selfIdx = Math.max(0, groups.findIndex(g => g.group === 'self'));
+    const choice = {}; groups.forEach((g, i) => choice[g.group] = i === selfIdx ? profile.id : '');
+    const label = (id) => id ? esc(pn(profiles.find(p => p.id === id))) : t('skipSection');
     const m = modal(`<h2>${t('autofillTitle')}</h2><div class="sec-list">${groups.map(g => `
-      <div class="sec" data-g="${esc(g.group)}"><b>${esc(g.title)}</b><div class="chips">
-        ${profiles.map(p => `<button class="chip${choice[g.group] === p.id ? ' on' : ''}" data-p="${p.id}">${esc(pn(p))}</button>`).join('')}
-        <button class="chip${!choice[g.group] ? ' on' : ''}" data-p="">${t('skipSection')}</button></div></div>`).join('')}</div>
+      <div class="sec" data-g="${esc(g.group)}"><b>${esc(g.title)}</b>
+        <button class="dd" data-g="${esc(g.group)}"><span>${label(choice[g.group])}</span><svg viewBox="0 0 24 24" class="ic"><path d="M7 10l5 5 5-5"/></svg></button></div>`).join('')}</div>
       <p class="muted small">⚠️ ${t('autoWarn')}</p>
       <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary go">${ICON.magic}<span>${t('fill')}</span></button></div>`, 'sheet');
-    m.el.querySelectorAll('.sec').forEach(sec => sec.querySelectorAll('.chip').forEach(c => c.onclick = () => {
-      choice[sec.dataset.g] = c.dataset.p; sec.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
-    }));
+    m.el.querySelectorAll('.dd').forEach(btn => btn.onclick = (e) => {
+      e.stopPropagation();
+      m.el.querySelectorAll('.dd-menu').forEach(x => x.remove());
+      const menu = document.createElement('div'); menu.className = 'dd-menu';
+      menu.innerHTML = [...profiles.map(p => [p.id, esc(pn(p))]), ['', t('skipSection')]]
+        .map(([id, l]) => `<button data-p="${id}" class="${choice[btn.dataset.g] === id ? 'on' : ''}">${l}</button>`).join('');
+      btn.after(menu); menu.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      menu.querySelectorAll('button').forEach(o => o.onclick = (ev) => {
+        ev.stopPropagation(); choice[btn.dataset.g] = o.dataset.p; btn.querySelector('span').innerHTML = label(o.dataset.p); menu.remove();
+      });
+    });
+    m.el.addEventListener('click', () => m.el.querySelectorAll('.dd-menu').forEach(x => x.remove()));
     m.el.querySelector('.c').onclick = m.close;
     m.el.querySelector('.go').onclick = () => {
       m.close();
@@ -891,7 +917,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const r = modal(`<div class="done-ic">${ICON.done}</div><h2>${t('saved')}</h2><p class="muted">${esc(fname)}</p>
         <div class="col gap">
           <button class="btn primary big sh">${ICON.share}<span>${t('share')}</span><small>${t('shareHint')}</small></button>
-          <button class="btn ghost big dl">${ICON.download}<span>${t('download')}</span></button>
+          <button class="btn ghost big dl">${ICON.download}<span>${t('saveToPhone')}</span></button>
           <button class="btn ghost hm">${t('home')}</button>
         </div>`, 'sheet center');
       r.el.querySelector('.sh').onclick = async () => { try { await shareFile(out, fname); } catch (e) { toast(e.message); } };

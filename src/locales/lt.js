@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Apsaugokite dokumentus",
  "pinOfferD": "Nustatykite 4 skaitmenų kodą Paraph užrakinti. Jį pakeisite nustatymuose.",
  "later": "Vėliau",
- "signCity": "Vieta (parašas)"
+ "signCity": "Vieta (parašas)",
+ "saveToPhone": "Išsaugoti telefone",
+ "ocrFail": "Teksto nuskaityti nepavyko. Užpildykite rankiniu būdu."
 };

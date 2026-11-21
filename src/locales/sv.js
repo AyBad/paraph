@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Skydda dina dokument",
  "pinOfferD": "Ange en fyrsiffrig kod för att låsa Paraph. Kan ändras i Inställningar.",
  "later": "Senare",
- "signCity": "Ort (underskrift)"
+ "signCity": "Ort (underskrift)",
+ "saveToPhone": "Spara på telefonen",
+ "ocrFail": "Textläsningen misslyckades. Du kan fylla i manuellt."
 };

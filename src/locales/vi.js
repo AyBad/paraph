@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Bảo vệ tài liệu của bạn",
  "pinOfferD": "Đặt mã 4 chữ số để khóa Paraph. Có thể đổi trong Cài đặt.",
  "later": "Để sau",
- "signCity": "Thành phố (nơi ký)"
+ "signCity": "Thành phố (nơi ký)",
+ "saveToPhone": "Lưu vào điện thoại",
+ "ocrFail": "Đọc văn bản thất bại. Bạn có thể điền thủ công."
 };

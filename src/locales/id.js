@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Lindungi dokumen Anda",
  "pinOfferD": "Atur kode 4 digit untuk mengunci Paraph. Bisa diubah di Pengaturan.",
  "later": "Nanti",
- "signCity": "Kota (tanda tangan)"
+ "signCity": "Kota (tanda tangan)",
+ "saveToPhone": "Simpan ke ponsel",
+ "ocrFail": "Gagal membaca teks. Anda dapat mengisi manual."
 };

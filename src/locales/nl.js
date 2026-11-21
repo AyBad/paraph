@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Bescherm je documenten",
  "pinOfferD": "Stel een code van 4 cijfers in om Paraph te vergrendelen. Wijzigbaar in Instellingen.",
  "later": "Later",
- "signCity": "Plaats (ondertekening)"
+ "signCity": "Plaats (ondertekening)",
+ "saveToPhone": "Opslaan op telefoon",
+ "ocrFail": "Tekst lezen mislukt. U kunt handmatig invullen."
 };
