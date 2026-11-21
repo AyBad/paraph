@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Paraph</string>
+    <string name="title_activity_main">Paraph</string>
+    <string name="package_name">com.aybad.paraph</string>
+    <string name="custom_url_scheme">com.aybad.paraph</string>
+</resources>
