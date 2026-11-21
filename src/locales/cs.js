@@ -167,5 +167,7 @@ export default {
  "later": "Později",
  "signCity": "Místo (podpis)",
  "saveToPhone": "Uložit do telefonu",
- "ocrFail": "Čtení textu selhalo. Můžete vyplnit ručně."
+ "ocrFail": "Čtení textu selhalo. Můžete vyplnit ručně.",
+ "ocrWait": "Čekejte prosím: rozpoznávání polí…",
+ "noFieldsUnclear": "Žádné pole nebylo spolehlivě rozpoznáno: obrázek není dost ostrý nebo je již vyplněn. Vyplňte ručně pomocí nástrojů."
 };

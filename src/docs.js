@@ -163,6 +163,8 @@ export async function detectZones(page) {
   for (let i = 0; i < W * H; i++) { const l = (px[i * 4] * 299 + px[i * 4 + 1] * 587 + px[i * 4 + 2] * 114) / 1000; lum[i] = l; sum += l; }
   const mean = sum / (W * H), thr = Math.min(150, mean - 45);
   const dark = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) dark[i] = lum[i] < thr ? 1 : 0;
+  // thin printed lines come out light grey once scaled: a softer threshold to find them
+  const lthr = Math.min(215, mean - 22), ldark = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) ldark[i] = lum[i] < lthr ? 1 : 0;
   const darkRatio = (x0, y0, x1, y1) => {
     x0 = Math.max(0, x0 | 0); y0 = Math.max(0, y0 | 0); x1 = Math.min(W, x1 | 0); y1 = Math.min(H, y1 | 0);
     if (x1 <= x0 || y1 <= y0) return 1; let n = 0;
@@ -170,37 +172,94 @@ export async function detectZones(page) {
     return n / ((x1 - x0) * (y1 - y0));
   };
   // 1. horizontal segments (allow 2px gaps)
-  const minLen = 40 * S, segs = [];
+  const minLen = 20 * S, segs = [];
   for (let y = 0; y < H; y++) {
     let x = 0;
     while (x < W) {
-      if (!dark[y * W + x]) { x++; continue; }
+      if (!ldark[y * W + x]) { x++; continue; }
       let e = x, gap = 0;
-      while (e < W && gap <= 2) { if (dark[y * W + e]) gap = 0; else gap++; e++; }
+      while (e < W && gap <= 2) { if (ldark[y * W + e]) gap = 0; else gap++; e++; }
       const x1 = e - gap;
       if (x1 - x >= minLen) segs.push({ x0: x, x1, y0: y, y1: y });
       x = e;
     }
   }
+  const DBG = [];
   // merge rows belonging to the same line
   const lines = [];
   for (const sg of segs) {
     const l = lines.find(L => sg.y0 - L.y1 <= 1 && sg.y0 >= L.y0 && Math.min(L.x1, sg.x1) - Math.max(L.x0, sg.x0) > 0.8 * Math.min(L.x1 - L.x0, sg.x1 - sg.x0));
     if (l) { l.y1 = sg.y1; l.x0 = Math.min(l.x0, sg.x0); l.x1 = Math.max(l.x1, sg.x1); } else lines.push({ ...sg });
   }
-  const thin = lines.filter(l => l.y1 - l.y0 <= 4 * S).sort((a, b) => a.y0 - b.y0);
+  // a slightly tilted line (photo) is cut into a staircase of short pieces: join them, and
+  // drop the whole line if it really slopes (its pieces would give dozens of false zones)
+  lines.sort((a, b) => a.x0 - b.x0);
+  let sloped = 0;
+  for (const L of lines) {
+    if (L.gone) continue;
+    let cur = L, chain = [L];
+    for (;;) {
+      const nx = lines.find(M => !M.gone && M !== cur && !chain.includes(M) && M.x0 >= cur.x1 - 3 * S && M.x0 <= cur.x1 + 4 && Math.abs(M.y0 - cur.y0) <= 3 && Math.abs(M.y0 - cur.y0) >= 1);
+      if (!nx) break; chain.push(nx); cur = nx;
+    }
+    if (chain.length < 2) continue;
+    const y0 = Math.min(...chain.map(c => c.y0)), y1 = Math.max(...chain.map(c => c.y1));
+    for (const c of chain) c.gone = true;
+    if (y1 - y0 <= 3 && chain.length < 4) lines.push({ x0: chain[0].x0, x1: cur.x1, y0, y1 });
+    else { DBG.push([{ x0: chain[0].x0, x1: cur.x1, y0, y1 }, 'cyan']); if (cur.x1 - chain[0].x0 > 60 * S) sloped++; }
+  }
+  const thin = lines.filter(l => !l.gone && l.y1 - l.y0 <= 4 * S).sort((a, b) => a.y0 - b.y0);
   // 2. pair lines into boxes, or use the empty band above a single line
   const zones = [], usedTop = new Set();
+  // length of the vertical dark run starting at (x, y) going up (-1) or down (+1), tolerant to 2px
+  const vrun = (x, y, dir) => {
+    let n = 0, miss = 0;
+    for (let yy = y + dir; yy >= 0 && yy < H && miss <= 2; yy += dir) {
+      let d = 0; for (let xx = Math.max(0, x - 2); xx <= Math.min(W - 1, x + 2); xx++) d |= dark[yy * W + xx];
+      if (d) { n++; miss = 0; } else miss++;
+    }
+    return n;
+  };
+  const isFrame = (l) => [l.x0, l.x1 - 1].some(x => vrun(x, l.y1, 1) > 40 * S || vrun(x, l.y0, -1) > 40 * S);
   for (const l of thin) {
     if (l.x1 - l.x0 > W * 0.9) continue; // page / section borders
+    // a real line has white just above and below it; the bottom edge of bold text has letter strokes above
+    if (darkRatio(l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > 0.22 || darkRatio(l.x0, l.y1 + 2, l.x1, l.y1 + 3 * S) > 0.22) { DBG.push([l, 'orange']); continue; }
+    // a real line is solid; the top/bottom edge of a word has small gaps between the letters
+    let best = 0;
+    for (let y = l.y0; y <= l.y1; y++) { let n = 0; for (let x = l.x0; x < l.x1; x++) n += ldark[y * W + x]; best = Math.max(best, n / (l.x1 - l.x0)); }
+    if (best < 0.93) { DBG.push([l, 'orange']); continue; }
+    // a box = two lines joined by vertical sides
     const top = thin.find(t => t !== l && !usedTop.has(t) && l.y0 - t.y1 >= 9 * S && l.y0 - t.y1 <= 32 * S &&
-      Math.abs(t.x0 - l.x0) < 6 * S && Math.abs(t.x1 - l.x1) < 6 * S);
+      Math.abs(t.x0 - l.x0) < 6 * S && Math.abs(t.x1 - l.x1) < 6 * S &&
+      vrun(l.x0 + 1, l.y0, -1) >= (l.y0 - t.y1) * 0.8 && vrun(l.x1 - 2, l.y0, -1) >= (l.y0 - t.y1) * 0.8);
     let z;
     if (top) { usedTop.add(top); z = { x0: l.x0, x1: l.x1, y0: top.y1 + 1, y1: l.y0 }; }
-    else z = { x0: l.x0, x1: l.x1, y0: l.y0 - 20 * S, y1: l.y0 - 1 };
-    if (darkRatio(z.x0 + 3 * S, z.y0 + 1, z.x1 - 3 * S, z.y1 - 1) > 0.045) continue; // already written / text
-    zones.push(z);
+    else {
+      if (isFrame(l)) { DBG.push([l, 'blue']); continue; } // edge of a section frame, not a writing line
+      // free space above the line, up to the text of the row above (captions are often close)
+      // columns of the comb ticks rising from the line are not "text above"
+      const cols = [];
+      for (let x = l.x0 + 3 * S | 0; x < l.x1 - 3 * S; x++) if (!(dark[(l.y0 - 2) * W + x] || dark[(l.y0 - 3) * W + x] || ldark[(l.y0 - 2) * W + x])) cols.push(x);
+      const rowDark = (yy) => { let n = 0; for (const x of cols) n += dark[yy * W + x]; return cols.length ? n / cols.length : 1; };
+      let y = l.y0 - 2 * S | 0;
+      const yMax = l.y0 - 20 * S;
+      while (y > yMax && y > 0 && rowDark(y - 1) < 0.012) y--;
+      if (l.y0 - y < 8 * S) { DBG.push([l, 'magenta']); continue; }
+      z = { x0: l.x0, x1: l.x1, y0: y + 1, y1: l.y0 - 1 };
+    }
+    if (darkRatio(z.x0 + 3 * S, z.y0 + 1, z.x1 - 3 * S, z.y1 - 2 * S) > 0.045) { DBG.push([l, 'red']); continue; } // already written / text
+    zones.push(z); DBG.push([l, 'lime']);
   }
+  const straight = thin.filter(l => l.x1 - l.x0 > 60 * S).length;
+  zones.sort((a, b) => (b.x1 - b.x0) - (a.x1 - a.x0));
+  for (let i = 0; i < zones.length; i++) for (let j = i + 1; j < zones.length; j++) {
+    const a = zones[i], b = zones[j]; if (a.gone || b.gone) continue;
+    const ix = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), iy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+    if (ix > 0 && iy > 0 && ix * iy > 0.3 * (b.x1 - b.x0) * (b.y1 - b.y0)) b.gone = true;
+  }
+  for (let i = zones.length - 1; i >= 0; i--) if (zones[i].gone) zones.splice(i, 1);
+  zones.sort((a, b) => (a.y1 - b.y1 > 4 * S || b.y1 - a.y1 > 4 * S) ? a.y1 - b.y1 : a.x0 - b.x0);
   // remove zones whose bottom line is in fact the top of a box
   const out = zones.filter(z => !thin.some(t => usedTop.has(t) && Math.abs(t.y0 - (z.y1 + 1)) <= 1 && Math.abs(t.x0 - z.x0) < 3));
   // 3. small hollow squares = tick boxes

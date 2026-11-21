@@ -167,5 +167,7 @@ export default {
  "later": "Nanti",
  "signCity": "Kota (tanda tangan)",
  "saveToPhone": "Simpan ke ponsel",
- "ocrFail": "Gagal membaca teks. Anda dapat mengisi manual."
+ "ocrFail": "Gagal membaca teks. Anda dapat mengisi manual.",
+ "ocrWait": "Harap tunggu: mendeteksi kolom…",
+ "noFieldsUnclear": "Tidak ada kolom yang terdeteksi dengan pasti: gambar kurang tajam atau sudah diisi. Isi secara manual dengan alat."
 };

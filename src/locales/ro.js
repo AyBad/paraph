@@ -167,5 +167,7 @@ export default {
  "later": "Mai târziu",
  "signCity": "Localitate (semnătură)",
  "saveToPhone": "Salvează pe telefon",
- "ocrFail": "Citirea textului a eșuat. Puteți completa manual."
+ "ocrFail": "Citirea textului a eșuat. Puteți completa manual.",
+ "ocrWait": "Vă rugăm așteptați: detectarea câmpurilor…",
+ "noFieldsUnclear": "Niciun câmp detectat cu certitudine: imaginea nu este clară sau este deja completată. Completați manual cu instrumentele."
 };

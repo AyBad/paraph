@@ -167,5 +167,7 @@ export default {
  "later": "Più tardi",
  "signCity": "Città (firma)",
  "saveToPhone": "Salva sul telefono",
- "ocrFail": "Lettura del testo non riuscita. Puoi compilare manualmente."
+ "ocrFail": "Lettura del testo non riuscita. Puoi compilare manualmente.",
+ "ocrWait": "Attendere: rilevamento dei campi…",
+ "noFieldsUnclear": "Nessun campo rilevato con certezza: l'immagine non è abbastanza nitida o è già compilata. Compila manualmente con gli strumenti."
 };

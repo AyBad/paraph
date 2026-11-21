@@ -167,5 +167,7 @@ export default {
  "later": "Hiljem",
  "signCity": "Koht (allkiri)",
  "saveToPhone": "Salvesta telefoni",
- "ocrFail": "Teksti lugemine ebaõnnestus. Täitke käsitsi."
+ "ocrFail": "Teksti lugemine ebaõnnestus. Täitke käsitsi.",
+ "ocrWait": "Palun oodake: väljade tuvastamine…",
+ "noFieldsUnclear": "Ühtegi välja ei tuvastatud kindlalt: pilt pole piisavalt terav või on juba täidetud. Täitke käsitsi tööriistadega."
 };

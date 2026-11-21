@@ -329,3 +329,4 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .dd-menu button.on{background:#e8eaf6;color:var(--ink);font-weight:600}
 [data-theme=dark] .dd-menu button.on{background:#272c4a;color:#c5cbff}
 .sec-list{overflow:visible}
+.obj.zone.pending{display:none}

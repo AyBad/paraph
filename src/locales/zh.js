@@ -167,5 +167,7 @@ export default {
  "later": "稍后",
  "signCity": "城市（签署地）",
  "saveToPhone": "保存到手机",
- "ocrFail": "文字识别失败，您可以手动填写。"
+ "ocrFail": "文字识别失败，您可以手动填写。",
+ "ocrWait": "请稍候：正在检测字段…",
+ "noFieldsUnclear": "未能可靠检测到字段：图像不够清晰或已填写。请使用工具手动填写。"
 };

@@ -170,5 +170,7 @@ export default {
  "later": "Plus tard",
  "signCity": "Ville (signature)",
  "saveToPhone": "Enregistrer sur le téléphone",
- "ocrFail": "La lecture du texte a échoué. Vous pouvez remplir à la main."
+ "ocrFail": "La lecture du texte a échoué. Vous pouvez remplir à la main.",
+ "ocrWait": "Veuillez patienter : détection des champs…",
+ "noFieldsUnclear": "Aucun champ détecté avec certitude : l'image n'est pas assez nette ou déjà remplie. Remplissez manuellement avec les outils (Texte, Cocher…)."
 };

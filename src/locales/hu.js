@@ -167,5 +167,7 @@ export default {
  "later": "Később",
  "signCity": "Hely (aláírás)",
  "saveToPhone": "Mentés a telefonra",
- "ocrFail": "A szöveg olvasása sikertelen. Kitöltheti kézzel."
+ "ocrFail": "A szöveg olvasása sikertelen. Kitöltheti kézzel.",
+ "ocrWait": "Kérjük, várjon: mezők felismerése…",
+ "noFieldsUnclear": "Nem sikerült biztosan mezőt felismerni: a kép nem elég éles vagy már ki van töltve. Töltse ki kézzel az eszközökkel."
 };

@@ -167,5 +167,7 @@ export default {
  "later": "Mais tarde",
  "signCity": "Localidade (assinatura)",
  "saveToPhone": "Salvar no telefone",
- "ocrFail": "A leitura do texto falhou. Pode preencher manualmente."
+ "ocrFail": "A leitura do texto falhou. Pode preencher manualmente.",
+ "ocrWait": "Aguarde: a detetar os campos…",
+ "noFieldsUnclear": "Nenhum campo detetado com certeza: a imagem não está nítida ou já está preenchida. Preencha manualmente com as ferramentas."
 };

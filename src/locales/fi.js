@@ -167,5 +167,7 @@ export default {
  "later": "Myöhemmin",
  "signCity": "Paikka (allekirjoitus)",
  "saveToPhone": "Tallenna puhelimeen",
- "ocrFail": "Tekstin luku epäonnistui. Voit täyttää käsin."
+ "ocrFail": "Tekstin luku epäonnistui. Voit täyttää käsin.",
+ "ocrWait": "Odota: kenttiä tunnistetaan…",
+ "noFieldsUnclear": "Kenttiä ei tunnistettu varmasti: kuva ei ole tarpeeksi tarkka tai se on jo täytetty. Täytä käsin työkaluilla."
 };

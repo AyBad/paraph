@@ -167,5 +167,7 @@ export default {
  "later": "Để sau",
  "signCity": "Thành phố (nơi ký)",
  "saveToPhone": "Lưu vào điện thoại",
- "ocrFail": "Đọc văn bản thất bại. Bạn có thể điền thủ công."
+ "ocrFail": "Đọc văn bản thất bại. Bạn có thể điền thủ công.",
+ "ocrWait": "Vui lòng chờ: đang phát hiện các ô…",
+ "noFieldsUnclear": "Không phát hiện chắc chắn ô nào: ảnh không đủ rõ hoặc đã được điền. Hãy điền thủ công bằng công cụ."
 };

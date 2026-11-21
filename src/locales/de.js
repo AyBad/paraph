@@ -167,5 +167,7 @@ export default {
  "later": "Später",
  "signCity": "Ort (Unterschrift)",
  "saveToPhone": "Auf dem Telefon speichern",
- "ocrFail": "Texterkennung fehlgeschlagen. Sie können manuell ausfüllen."
+ "ocrFail": "Texterkennung fehlgeschlagen. Sie können manuell ausfüllen.",
+ "ocrWait": "Bitte warten: Felder werden erkannt…",
+ "noFieldsUnclear": "Kein Feld sicher erkannt: Das Bild ist nicht scharf genug oder bereits ausgefüllt. Füllen Sie es mit den Werkzeugen manuell aus."
 };

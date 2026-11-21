@@ -167,5 +167,7 @@ export default {
  "later": "Aktar tard",
  "signCity": "Post (firma)",
  "saveToPhone": "Issejvja fuq it-telefon",
- "ocrFail": "Il-qari tat-test falla. Imla manwalment."
+ "ocrFail": "Il-qari tat-test falla. Imla manwalment.",
+ "ocrWait": "Stenna: qed jinstabu l-oqsma…",
+ "noFieldsUnclear": "L-ebda qasam ma nstab b'ċertezza: l-immaġni mhix ċara biżżejjed jew diġà mimlija. Imla manwalment."
 };

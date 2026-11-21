@@ -19,6 +19,7 @@ export async function pdfTextItems(page, vp) {
 let workerP = null;
 const simd = () => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch { return false; } };
 let progressCb = null;
+export function warmOcr() { ocrWorker().catch(() => { }); }
 export function resetOcr() { const w = workerP; workerP = null; if (w) w.then(x => x.terminate()).catch(() => { }); }
 async function ocrWorker() {
   if (!workerP) workerP = (async () => {
@@ -28,7 +29,11 @@ async function ocrWorker() {
       workerPath: base + 'worker.min.js',
       corePath: simd() ? base + 'tesseract-core-simd-lstm.wasm.js' : 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-lstm.wasm.js',
       langPath: base, gzip: true, workerBlobURL: false, cacheMethod: 'none',
-      logger: (m) => { if (m.status === 'recognizing text' && progressCb) progressCb(m.progress || 0); }
+      logger: (m) => {
+        if (!progressCb) return;
+        const st = { 'loading tesseract core': [0, .08], 'initializing tesseract': [.08, .04], 'loading language traineddata': [.12, .1], 'initializing api': [.22, .05], 'recognizing text': [.27, .73] }[m.status];
+        if (st) progressCb(st[0] + st[1] * (m.progress || 0));
+      }
     });
   })();
   return workerP;
@@ -42,21 +47,23 @@ export async function ocrTextItems(page, masks = [], onProgress) {
   const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: v }).promise;
-  // hide the empty boxes / lines: their borders confuse the text recognition next to them
-  ctx.fillStyle = '#fff';
-  for (const m of masks) ctx.fillRect((m.x - 3) * S, (m.y - 3) * S, (m.w + 6) * S, (m.h + 6) * S);
   // grey scale + contrast: faster and more reliable on photos
   const id = ctx.getImageData(0, 0, c.width, c.height), d = id.data;
   for (let i = 0; i < d.length; i += 4) { let l = d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114; l = l > 170 ? 255 : l < 90 ? 0 : (l - 90) * 255 / 80; d[i] = d[i + 1] = d[i + 2] = l; }
   ctx.putImageData(id, 0, 0);
   const w = await ocrWorker();
   const { data } = await w.recognize(c, {}, { blocks: true, text: false });
-  const out = [];
+  const out = [], ink = [];
   for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) for (const wd of l.words || []) {
-    if (!wd.text || !wd.text.trim() || wd.confidence < 35) continue;
+    const str = (wd.text || '').trim(); if (!str) continue;
     const { x0, y0, x1, y1 } = wd.bbox;
-    out.push({ str: wd.text, x: x0 / S, y: y0 / S, w: (x1 - x0) / S, h: (y1 - y0) / S });
+    const it = { str, x: x0 / S, y: y0 / S, w: (x1 - x0) / S, h: (y1 - y0) / S, conf: wd.confidence };
+    // anything that looks like letters or digits (handwriting included) = the place is not empty
+    if (wd.confidence >= 15 && (str.match(/[\p{L}\p{N}]/gu) || []).length >= 2 && !/^[|_lLIiJj1!\/\\\[\]{}()'".,:;~-]+$/.test(str)) ink.push(it);
+    if (wd.confidence >= 35) out.push(it);
   }
+  out.ink = ink;
+  out.quality = out.length ? out.reduce((a, b) => a + b.conf, 0) / out.length : 0;
   return out;
 }
 
@@ -81,9 +88,11 @@ export function textLines(items) {
 export function attachLabels(fields, items) {
   const rowOf = (o) => fields.filter(f => f.page === o.page && Math.abs((f.fy ?? f.y) + (f.fh ?? f.h) / 2 - ((o.fy ?? o.y) + (o.fh ?? o.h) / 2)) < Math.max(5, (o.fh ?? o.h) * 0.6));
   for (const o of fields) {
-    const fy = o.fy ?? o.y, fh = o.fh ?? o.h, fw = o.fw ?? o.w, cy = fy + fh / 2;
+    const fy = o.fy ?? o.y, fh = o.fh ?? o.h, fw = o.fw ?? o.w;
+    // writing line: the label sits on the line, not in the middle of the free space above it
+    const cy = o.zone ? fy + fh - Math.min(5, fh / 2) : fy + fh / 2;
     const row = rowOf(o).filter(f => f !== o);
-    const sameRow = items.filter(it => Math.abs(it.y + it.h / 2 - cy) < Math.max(4, fh * 0.75));
+    const sameRow = items.filter(it => Math.abs(it.y + it.h / 2 - cy) < (o.zone ? 5 : Math.max(4, fh * 0.75)));
     if (o.type === 'check') {
       // the closest text on either side ("F [ ] M [ ]" or "[ ] Oui")
       let best = null, side = '';
@@ -102,9 +111,12 @@ export function attachLabels(fields, items) {
       continue;
     }
     const prev = Math.max(...row.filter(f => f.x + (f.fw ?? f.w) <= o.x + 2).map(f => f.x + (f.fw ?? f.w)), o.x - 230);
-    o.label = sameRow.filter(it => it.x + it.w <= o.x + 4 && it.x + it.w > prev - 2).sort((a, b) => a.x - b.x).map(i => i.str).join(' ');
+    const labs = sameRow.filter(it => it.x < o.x - 2 && it.x + it.w <= o.x + 12 && it.x + it.w > prev - 2).sort((a, b) => a.x - b.x);
+    o.label = labs.map(i => i.str).join(' ');
+    o.labelGap = labs.length ? o.x - (labs[labs.length - 1].x + labs[labs.length - 1].w) : 999;
+    o.labelConf = labs.length ? Math.max(...labs.map(i => i.conf ?? 100)) : 0;
     // small caption printed under the box (cerfa style); normal-size text below is the next line's label, not a caption
-    o.caption = items.filter(it => it.h <= 7.5 && it.h < fh * 0.8 && it.y >= fy + fh - 2 && it.y <= fy + fh + 9 && it.x < o.x + fw && it.x + it.w > o.x).map(i => i.str).join(' ');
+    o.caption = items.filter(it => it.h <= (o.zone ? 8.5 : 7.5) && it.h < fh * 0.8 && it.y >= fy + fh - 2 && it.y <= fy + fh + 9 && it.x < o.x + fw && it.x + it.w > o.x).map(i => i.str).join(' ');
   }
 }
 
@@ -117,6 +129,12 @@ export function refineByRow(fields) {
   }
   for (const row of byRow.values()) {
     row.sort((a, b) => a.x - b.x);
+    // "Adresse : [n°] [type] [nom de la voie]": the first box is only the number
+    for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'fullAddress' && row.slice(i + 1).some(o => /^street/.test(o.match || ''))) row[i].match = 'streetNumber';
+    // "[code postal] [commune]": the box after the postal code is the town even if its caption was not read
+    for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'postalCode' && !row[i + 1].match) row[i + 1].match = 'city';
+    // "[n°] [ext] [type] [nom]": a long box ending the row after a street type is the street name
+    for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'streetType' && !row[i + 1].match) row[i + 1].match = 'streetName';
     for (let i = 1; i < row.length; i++) {
       const o = row[i], p = row[i - 1];
       if (o.match) continue;
