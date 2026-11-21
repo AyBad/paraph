@@ -151,5 +151,11 @@ export default {
  "moveTo": "Mover a carpeta",
  "rename": "Renombrar",
  "noFolder": "Sin carpeta",
- "openDoc": "Abrir"
+ "openDoc": "Abrir",
+ "autoWarn": "Revisa los campos rellenados: el autorrelleno puede equivocarse.",
+ "zonesFound": "{n} zonas para rellenar encontradas: toca una para escribir",
+ "tutoScan": "Toca «Escanear» y haz una foto: la hoja se recorta y endereza, y se detectan las zonas de escritura y las casillas.",
+ "tutoDocs": "Busca tus documentos, organízalos en carpetas y usa ⋮ para renombrar, mover, compartir o eliminar.",
+ "tutoSettings": "Idioma, tema claro u oscuro y código para bloquear la app.",
+ "tutoOpenWith": "También puedes abrir un PDF desde otra app (Gmail, WhatsApp, Archivos…) con «Abrir con» o «Compartir» → Paraph."
 };

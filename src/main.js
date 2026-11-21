@@ -563,15 +563,18 @@ function tutorialScreen() {
   <div class="screen tuto">
     ${header(t('tutorial'))}
     ${step(1, ICON.user, t('profiles'), t('s2d'))}
-    ${step(2, ICON.file, t('s1t'), t('s1d'))}
-    ${step(3, ICON.edit, t('startEdit'), t('tutoEdit'))}
-    ${step(4, ICON.magic, t('autofill'), t('tutoAuto'))}
-    <section class="tuto-step"><div class="tuto-n">5</div><div><h3>${ICON.pen}${t('tutoTools')}</h3>
+    ${step(2, ICON.file, t('s1t'), t('s1d') + (native ? ' ' + t('tutoOpenWith') : ''))}
+    ${step(3, ICON.camera, t('scan'), t('tutoScan'))}
+    ${step(4, ICON.edit, t('startEdit'), t('tutoEdit'))}
+    ${step(5, ICON.magic, t('autofill'), t('tutoAuto') + '<br><b>⚠️ ' + t('autoWarn') + '</b>')}
+    <section class="tuto-step"><div class="tuto-n">6</div><div><h3>${ICON.pen}${t('tutoTools')}</h3>
       <div class="tool-grid">${tools.map(([ic, k]) => `<div>${ICON[ic]}<span>${t(k)}</span></div>`).join('')}</div>
       <p>${t('tutoMove')}</p></div></section>
-    ${step(6, ICON.sign, t('s3t'), t('s3d'))}
-    ${step(7, ICON.save, t('s4t'), t('s4d'))}
-    ${step(8, ICON.cloud, t('backup'), t('backupHint'))}
+    ${step(7, ICON.sign, t('s3t'), t('s3d'))}
+    ${step(8, ICON.save, t('s4t'), t('s4d'))}
+    ${step(9, ICON.folder, t('myDocs'), t('tutoDocs'))}
+    ${step(10, ICON.gear, t('settings'), t('tutoSettings'))}
+    ${step(11, ICON.cloud, t('backup'), t('backupHint'))}
   </div>`;
   app.querySelector('.back').onclick = home;
 }

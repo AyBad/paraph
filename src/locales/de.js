@@ -151,5 +151,11 @@ export default {
  "moveTo": "In Ordner verschieben",
  "rename": "Umbenennen",
  "noFolder": "Kein Ordner",
- "openDoc": "Öffnen"
+ "openDoc": "Öffnen",
+ "autoWarn": "Prüfen Sie die ausgefüllten Felder: Das automatische Ausfüllen kann Fehler machen.",
+ "zonesFound": "{n} Bereiche zum Ausfüllen gefunden: zum Schreiben antippen",
+ "tutoScan": "Tippen Sie auf „Scannen“ und machen Sie ein Foto: Das Blatt wird zugeschnitten und begradigt, Schreibbereiche und Kästchen werden erkannt.",
+ "tutoDocs": "Durchsuchen Sie Ihre Dokumente, ordnen Sie sie in Ordner und nutzen Sie ⋮ zum Umbenennen, Verschieben, Teilen oder Löschen.",
+ "tutoSettings": "Sprache, helles oder dunkles Design und PIN-Code zum Sperren der App.",
+ "tutoOpenWith": "Sie können ein PDF auch aus einer anderen App (Gmail, WhatsApp, Dateien…) über „Öffnen mit“ oder „Teilen“ → Paraph öffnen."
 };

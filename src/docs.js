@@ -145,6 +145,86 @@ export async function detectBoxes(page, vp) {
   return out;
 }
 
+/**
+ * Pages without form fields (scans, flat PDFs): find empty areas to write in by looking at the image.
+ * - writing lines / boxes: a horizontal line with nothing written just above it
+ * - tick boxes: small hollow squares
+ * Returns { zones:[{x,y,w,h}], boxes:[{x,y,w,h}] } in viewport units.
+ */
+export async function detectZones(page) {
+  const S = 1.5, v = page.getViewport({ scale: S });
+  const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  try { await page.render({ canvasContext: ctx, viewport: v, annotationMode: pdfjs.AnnotationMode.DISABLE }).promise; } catch { return { zones: [], boxes: [] }; }
+  const W = c.width, H = c.height, px = ctx.getImageData(0, 0, W, H).data;
+  // adaptive darkness threshold (photos are greyish)
+  let sum = 0; const lum = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) { const l = (px[i * 4] * 299 + px[i * 4 + 1] * 587 + px[i * 4 + 2] * 114) / 1000; lum[i] = l; sum += l; }
+  const mean = sum / (W * H), thr = Math.min(150, mean - 45);
+  const dark = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) dark[i] = lum[i] < thr ? 1 : 0;
+  const darkRatio = (x0, y0, x1, y1) => {
+    x0 = Math.max(0, x0 | 0); y0 = Math.max(0, y0 | 0); x1 = Math.min(W, x1 | 0); y1 = Math.min(H, y1 | 0);
+    if (x1 <= x0 || y1 <= y0) return 1; let n = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) n += dark[y * W + x];
+    return n / ((x1 - x0) * (y1 - y0));
+  };
+  // 1. horizontal segments (allow 2px gaps)
+  const minLen = 40 * S, segs = [];
+  for (let y = 0; y < H; y++) {
+    let x = 0;
+    while (x < W) {
+      if (!dark[y * W + x]) { x++; continue; }
+      let e = x, gap = 0;
+      while (e < W && gap <= 2) { if (dark[y * W + e]) gap = 0; else gap++; e++; }
+      const x1 = e - gap;
+      if (x1 - x >= minLen) segs.push({ x0: x, x1, y0: y, y1: y });
+      x = e;
+    }
+  }
+  // merge rows belonging to the same line
+  const lines = [];
+  for (const sg of segs) {
+    const l = lines.find(L => sg.y0 - L.y1 <= 1 && sg.y0 >= L.y0 && Math.min(L.x1, sg.x1) - Math.max(L.x0, sg.x0) > 0.8 * Math.min(L.x1 - L.x0, sg.x1 - sg.x0));
+    if (l) { l.y1 = sg.y1; l.x0 = Math.min(l.x0, sg.x0); l.x1 = Math.max(l.x1, sg.x1); } else lines.push({ ...sg });
+  }
+  const thin = lines.filter(l => l.y1 - l.y0 <= 4 * S).sort((a, b) => a.y0 - b.y0);
+  // 2. pair lines into boxes, or use the empty band above a single line
+  const zones = [], usedTop = new Set();
+  for (const l of thin) {
+    if (l.x1 - l.x0 > W * 0.9) continue; // page / section borders
+    const top = thin.find(t => t !== l && !usedTop.has(t) && l.y0 - t.y1 >= 9 * S && l.y0 - t.y1 <= 32 * S &&
+      Math.abs(t.x0 - l.x0) < 6 * S && Math.abs(t.x1 - l.x1) < 6 * S);
+    let z;
+    if (top) { usedTop.add(top); z = { x0: l.x0, x1: l.x1, y0: top.y1 + 1, y1: l.y0 }; }
+    else z = { x0: l.x0, x1: l.x1, y0: l.y0 - 20 * S, y1: l.y0 - 1 };
+    if (darkRatio(z.x0 + 3 * S, z.y0 + 1, z.x1 - 3 * S, z.y1 - 1) > 0.045) continue; // already written / text
+    zones.push(z);
+  }
+  // remove zones whose bottom line is in fact the top of a box
+  const out = zones.filter(z => !thin.some(t => usedTop.has(t) && Math.abs(t.y0 - (z.y1 + 1)) <= 1 && Math.abs(t.x0 - z.x0) < 3));
+  // 3. small hollow squares = tick boxes
+  const boxes = [], seen = new Uint8Array(W * H), lo = 5 * S, hi = 20 * S;
+  for (let i = 0; i < W * H && boxes.length < 200; i++) {
+    if (!dark[i] || seen[i]) continue;
+    const st = [i]; seen[i] = 1; let n = 0, x0 = W, y0 = H, x1 = 0, y1 = 0, big = false;
+    while (st.length) {
+      const p = st.pop(); n++; const x = p % W, y = (p / W) | 0;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (x1 - x0 > hi || y1 - y0 > hi || n > 4000) big = true;
+      for (const q of [p - 1, p + 1, p - W, p + W]) if (q >= 0 && q < W * H && dark[q] && !seen[q]) { seen[q] = 1; st.push(q); }
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1;
+    if (big || w < lo || h < lo || Math.abs(w - h) > Math.max(2, w * 0.2)) continue;
+    const side = (a, b, c2, d) => darkRatio(a, b, c2, d) > 0.75;
+    const t = Math.max(1, Math.round(S));
+    if (side(x0, y0, x1 + 1, y0 + t) && side(x0, y1 + 1 - t, x1 + 1, y1 + 1) && side(x0, y0, x0 + t, y1 + 1) && side(x1 + 1 - t, y0, x1 + 1, y1 + 1)
+      && darkRatio(x0 + 2 * t, y0 + 2 * t, x1 - 2 * t, y1 - 2 * t) < 0.15)
+      boxes.push({ x: x0 / S, y: y0 / S, w: w / S, h: h / S });
+  }
+  return { zones: out.slice(0, 120).map(z => ({ x: z.x0 / S, y: z.y0 / S, w: (z.x1 - z.x0) / S, h: (z.y1 - z.y0) / S })), boxes };
+}
+
 const hex = (c) => {
   const n = parseInt((c || '#000').slice(1), 16);
   return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);

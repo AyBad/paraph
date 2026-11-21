@@ -151,5 +151,11 @@ export default {
  "moveTo": "Premjesti u mapu",
  "rename": "Preimenuj",
  "noFolder": "Bez mape",
- "openDoc": "Otvori"
+ "openDoc": "Otvori",
+ "autoWarn": "Provjerite ispunjena polja: automatsko ispunjavanje može pogriješiti.",
+ "zonesFound": "Pronađeno područja za ispunjavanje: {n}. Dodirnite za pisanje",
+ "tutoScan": "Dodirnite „Skeniraj” i snimite: list se obrezuje i izravnava, a područja za pisanje i kućice se prepoznaju.",
+ "tutoDocs": "Pretražujte dokumente, razvrstajte ih u mape i pomoću ⋮ ih preimenujte, premjestite, podijelite ili izbrišite.",
+ "tutoSettings": "Jezik, svijetla ili tamna tema i kod za zaključavanje aplikacije.",
+ "tutoOpenWith": "PDF možete otvoriti i iz druge aplikacije (Gmail, WhatsApp, Datoteke…) putem „Otvori pomoću” ili „Dijeli” → Paraph."
 };

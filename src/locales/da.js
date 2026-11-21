@@ -151,5 +151,11 @@ export default {
  "moveTo": "Flyt til mappe",
  "rename": "Omdøb",
  "noFolder": "Ingen mappe",
- "openDoc": "Åbn"
+ "openDoc": "Åbn",
+ "autoWarn": "Kontrollér de udfyldte felter: automatisk udfyldning kan tage fejl.",
+ "zonesFound": "{n} områder til udfyldning fundet: tryk for at skrive",
+ "tutoScan": "Tryk på “Scan” og tag et foto: arket beskæres og rettes op, skriveområder og afkrydsningsfelter findes.",
+ "tutoDocs": "Søg i dokumenter, sortér dem i mapper og brug ⋮ til at omdøbe, flytte, dele eller slette.",
+ "tutoSettings": "Sprog, lyst eller mørkt tema og en kode til at låse appen.",
+ "tutoOpenWith": "Du kan også åbne en pdf fra en anden app (Gmail, WhatsApp, Filer…) via “Åbn med” eller “Del” → Paraph."
 };

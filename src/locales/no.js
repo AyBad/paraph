@@ -151,5 +151,11 @@ export default {
  "moveTo": "Flytt til mappe",
  "rename": "Gi nytt navn",
  "noFolder": "Ingen mappe",
- "openDoc": "Åpne"
+ "openDoc": "Åpne",
+ "autoWarn": "Kontroller de utfylte feltene: automatisk utfylling kan ta feil.",
+ "zonesFound": "{n} utfyllingsområder funnet: trykk for å skrive",
+ "tutoScan": "Trykk på «Skann» og ta et bilde: arket beskjæres og rettes opp, skriveområder og avkrysningsbokser finnes.",
+ "tutoDocs": "Søk i dokumentene, sorter dem i mapper og bruk ⋮ for å gi nytt navn, flytte, dele eller slette.",
+ "tutoSettings": "Språk, lyst eller mørkt tema og en kode for å låse appen.",
+ "tutoOpenWith": "Du kan også åpne en pdf fra en annen app (Gmail, WhatsApp, Filer…) via «Åpne med» eller «Del» → Paraph."
 };

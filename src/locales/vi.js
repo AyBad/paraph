@@ -151,5 +151,11 @@ export default {
  "moveTo": "Chuyển vào thư mục",
  "rename": "Đổi tên",
  "noFolder": "Không có thư mục",
- "openDoc": "Mở"
+ "openDoc": "Mở",
+ "autoWarn": "Hãy kiểm tra các ô đã điền: tự động điền có thể sai.",
+ "zonesFound": "Tìm thấy {n} vùng cần điền: chạm vào để viết",
+ "tutoScan": "Chạm “Quét” và chụp ảnh: trang được cắt và làm thẳng, vùng viết và ô đánh dấu được nhận diện.",
+ "tutoDocs": "Tìm kiếm tài liệu, sắp xếp vào thư mục và dùng ⋮ để đổi tên, di chuyển, chia sẻ hoặc xóa.",
+ "tutoSettings": "Ngôn ngữ, giao diện sáng hoặc tối và mã khóa ứng dụng.",
+ "tutoOpenWith": "Bạn cũng có thể mở PDF từ ứng dụng khác (Gmail, WhatsApp, Tệp…) bằng “Mở bằng” hoặc “Chia sẻ” → Paraph."
 };

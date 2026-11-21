@@ -151,5 +151,11 @@ export default {
  "moveTo": "폴더로 이동",
  "rename": "이름 변경",
  "noFolder": "폴더 없음",
- "openDoc": "열기"
+ "openDoc": "열기",
+ "autoWarn": "채워진 칸을 확인하세요: 자동 채우기는 틀릴 수 있습니다.",
+ "zonesFound": "작성할 영역 {n}개를 찾았습니다: 탭해서 입력하세요",
+ "tutoScan": "'스캔'을 눌러 촬영하면 용지가 잘리고 반듯하게 펴지며 작성 영역과 체크 칸이 감지됩니다.",
+ "tutoDocs": "문서를 검색하고 폴더로 정리하며 ⋮로 이름 변경, 이동, 공유, 삭제를 할 수 있습니다.",
+ "tutoSettings": "언어, 라이트/다크 테마, 앱 잠금 비밀번호.",
+ "tutoOpenWith": "다른 앱(Gmail, WhatsApp, 파일…)에서 '다음으로 열기' 또는 '공유' → Paraph로 PDF를 열 수도 있습니다."
 };

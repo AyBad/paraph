@@ -151,5 +151,11 @@ export default {
  "moveTo": "Presunúť do priečinka",
  "rename": "Premenovať",
  "noFolder": "Bez priečinka",
- "openDoc": "Otvoriť"
+ "openDoc": "Otvoriť",
+ "autoWarn": "Skontrolujte vyplnené polia: automatické vypĺňanie sa môže mýliť.",
+ "zonesFound": "Nájdené oblasti na vyplnenie: {n}. Ťuknutím začnete písať",
+ "tutoScan": "Ťuknite na „Skenovať“ a odfoťte: list sa oreže a narovná, rozpoznajú sa oblasti na písanie aj políčka.",
+ "tutoDocs": "Vyhľadávajte dokumenty, triedte ich do priečinkov a pomocou ⋮ ich premenujte, presuňte, zdieľajte alebo odstráňte.",
+ "tutoSettings": "Jazyk, svetlý alebo tmavý motív a kód na zamknutie aplikácie.",
+ "tutoOpenWith": "PDF môžete otvoriť aj z inej aplikácie (Gmail, WhatsApp, Súbory…) cez „Otvoriť v“ alebo „Zdieľať“ → Paraph."
 };

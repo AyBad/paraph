@@ -151,5 +151,11 @@ export default {
  "moveTo": "Premakni v mapo",
  "rename": "Preimenuj",
  "noFolder": "Brez mape",
- "openDoc": "Odpri"
+ "openDoc": "Odpri",
+ "autoWarn": "Preverite izpolnjena polja: samodejno izpolnjevanje se lahko zmoti.",
+ "zonesFound": "Najdena področja za izpolnjevanje: {n}. Tapnite za pisanje",
+ "tutoScan": "Tapnite »Skeniraj« in fotografirajte: list se obreže in poravna, zaznajo se področja za pisanje in polja.",
+ "tutoDocs": "Iščite dokumente, razvrstite jih v mape in z ⋮ jih preimenujte, premaknite, delite ali izbrišite.",
+ "tutoSettings": "Jezik, svetla ali temna tema in koda za zaklep aplikacije.",
+ "tutoOpenWith": "PDF lahko odprete tudi iz druge aplikacije (Gmail, WhatsApp, Datoteke…) z »Odpri z« ali »Deli« → Paraph."
 };

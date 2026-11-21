@@ -151,5 +151,11 @@ export default {
  "moveTo": "Klasöre taşı",
  "rename": "Yeniden adlandır",
  "noFolder": "Klasör yok",
- "openDoc": "Aç"
+ "openDoc": "Aç",
+ "autoWarn": "Doldurulan alanları kontrol edin: otomatik doldurma hata yapabilir.",
+ "zonesFound": "{n} doldurulacak alan bulundu: yazmak için dokunun",
+ "tutoScan": "“Tara”ya dokunup fotoğraf çekin: sayfa kırpılıp düzeltilir, yazı alanları ve kutucuklar algılanır.",
+ "tutoDocs": "Belgelerde arayın, klasörlere ayırın ve ⋮ ile yeniden adlandırın, taşıyın, paylaşın veya silin.",
+ "tutoSettings": "Dil, açık veya koyu tema ve uygulamayı kilitlemek için kod.",
+ "tutoOpenWith": "Başka bir uygulamadan da (Gmail, WhatsApp, Dosyalar…) “Birlikte aç” veya “Paylaş” → Paraph ile PDF açabilirsiniz."
 };

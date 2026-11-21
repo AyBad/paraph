@@ -151,5 +151,11 @@ export default {
  "moveTo": "Mexxi f'folder",
  "rename": "Ibdel l-isem",
  "noFolder": "L-ebda folder",
- "openDoc": "Iftaħ"
+ "openDoc": "Iftaħ",
+ "autoWarn": "Iċċekkja l-oqsma mimlija: l-mili awtomatiku jista' jiżbalja.",
+ "zonesFound": "Instabu {n} żoni biex timla: agħfas waħda biex tikteb",
+ "tutoScan": "Agħfas “Skennja” u ħu ritratt: il-folja tinqata' u tiddritta, iż-żoni tal-kitba u l-kaxxi jinstabu.",
+ "tutoDocs": "Fittex id-dokumenti, poġġihom f'folders u uża ⋮ biex tibdel l-isem, tmexxi, taqsam jew tħassar.",
+ "tutoSettings": "Lingwa, tema ċara jew skura u kodiċi biex tissakkar l-app.",
+ "tutoOpenWith": "Tista' tiftaħ PDF minn app oħra (Gmail, WhatsApp, Fajls…) b'“Iftaħ b'” jew “Aqsam” → Paraph."
 };

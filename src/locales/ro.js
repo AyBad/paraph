@@ -151,5 +151,11 @@ export default {
  "moveTo": "Mută în dosar",
  "rename": "Redenumește",
  "noFolder": "Fără dosar",
- "openDoc": "Deschide"
+ "openDoc": "Deschide",
+ "autoWarn": "Verifică câmpurile completate: completarea automată poate greși.",
+ "zonesFound": "{n} zone de completat găsite: atinge una pentru a scrie",
+ "tutoScan": "Atinge „Scanează” și fă o fotografie: foaia este decupată și îndreptată, iar zonele de scris și căsuțele sunt detectate.",
+ "tutoDocs": "Caută documente, organizează-le în dosare și folosește ⋮ pentru a redenumi, muta, partaja sau șterge.",
+ "tutoSettings": "Limbă, temă luminoasă sau întunecată și cod de blocare a aplicației.",
+ "tutoOpenWith": "Poți deschide un PDF și din altă aplicație (Gmail, WhatsApp, Fișiere…) cu „Deschide cu” sau „Partajează” → Paraph."
 };

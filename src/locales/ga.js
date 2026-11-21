@@ -151,5 +151,11 @@ export default {
  "moveTo": "Bog go fillteán",
  "rename": "Athainmnigh",
  "noFolder": "Gan fillteán",
- "openDoc": "Oscail"
+ "openDoc": "Oscail",
+ "autoWarn": "Seiceáil na réimsí líonta: is féidir le líonadh uathoibríoch botúin a dhéanamh.",
+ "zonesFound": "Aimsíodh {n} limistéar le líonadh: tapáil chun scríobh",
+ "tutoScan": "Tapáil “Scanáil” agus tóg grianghraf: bearrtar agus díríthear an leathanach, aimsítear limistéir scríbhneoireachta agus boscaí.",
+ "tutoDocs": "Cuardaigh do dhoiciméid, eagraigh i bhfillteáin iad agus úsáid ⋮ chun athainmniú, bogadh, comhroinnt nó scriosadh.",
+ "tutoSettings": "Teanga, téama geal nó dorcha agus cód chun an aip a ghlasáil.",
+ "tutoOpenWith": "Is féidir PDF a oscailt ó aip eile (Gmail, WhatsApp, Comhaid…) le “Oscail le” nó “Comhroinn” → Paraph."
 };

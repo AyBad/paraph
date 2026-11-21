@@ -1,4 +1,4 @@
-import { pdfjs, detectFields, detectBoxes, exportPdf, fieldTooltips } from './docs.js';
+import { pdfjs, detectFields, detectBoxes, detectZones, exportPdf, fieldTooltips } from './docs.js';
 import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
@@ -18,7 +18,7 @@ function matchField(f) {
   const has = (re) => re.test(n);
   if (has(/signature|siret|siren|immatric|identification|kilom|agrement|marque|modele|iban|bic\b|motif|denomination|genre|formule|certificat|vehicule|variante/)) return null;
   const birth = has(/naiss|birth|dob\b|geburt|nacim|nasc|born|\bne ?\(?e?\)? le\b|\bnee? le\b/);
-  if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune|\ba\b/)) return 'birthPlace';
+  if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune/)) return 'birthPlace';
   if (birth) return 'birthDate';
   if (has(/code postal|postal|\bzip\b|\bcp\b|\bplz\b|postcode/)) return 'postalCode';
   if (has(/type (de )?(la )?voie|street type/)) return 'streetType';
@@ -112,20 +112,27 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     pagesEl.appendChild(el);
     const pf = await detectFields(page, vp, tips);
     for (const f of pf) fields.push({ ...f, page: i - 1 });
-    let boxes = [];
+    let boxes = [], zones = [];
     if (!pf.length) {
       boxes = await detectBoxes(page, vp);
+      if (!initialObjs && i <= 30) {
+        try { const z = await detectZones(page); zones = z.zones; for (const bx of z.boxes) if (!boxes.some(o => Math.abs(o.x - bx.x) < 3 && Math.abs(o.y - bx.y) < 3)) boxes.push(bx); } catch (e) { console.warn(e); }
+      }
       // a run of adjacent squares is a comb (character boxes), not a tick box
       boxes = boxes.filter(bx => !boxes.some(o => o !== bx && Math.abs(o.y - bx.y) < 2 && (Math.abs(o.x - (bx.x + bx.w)) < 2.5 || Math.abs(bx.x - (o.x + o.w)) < 2.5)));
     }
     pagesInfo.push({ page, vp, rotate: page.rotate || 0, el, canvas: el.querySelector('canvas'), layer: el.querySelector('.layer'), s: 1, boxes });
+    for (const z of zones) fields.push({ kind: 'zone', page: i - 1, ...z });
   }
   b.close();
 
   // fields -> objects (or restore the objects of a document saved earlier)
   if (initialObjs && initialObjs.length) objs = JSON.parse(JSON.stringify(initialObjs));
   else for (const f of fields) {
-    if (f.kind === 'text') {
+    if (f.kind === 'zone') {
+      const fs = Math.max(6, Math.min(12, f.h * 0.65));
+      objs.push({ id: uid(), page: f.page, type: 'text', field: 'zone', zone: true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y, y: f.y + Math.max(0, f.h - fs * 1.25), fontSize: fs, baseFs: fs, text: '', color });
+    } else if (f.kind === 'text') {
       const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
       objs.push({
         id: uid(), page: f.page, type: 'text', field: f.name || true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y,
@@ -239,10 +246,24 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     o.y = o.fy + (o.multiline ? 1 : Math.max(0, (o.fh - o.fontSize * 1.2) / 2));
   }
 
+  let autoWarned = false;
   function showFieldsBanner() {
-    if (!objs.some(o => o.field) || viewing) { banner.classList.add('hidden'); return; }
+    if (autoWarned && !viewing) {
+      banner.classList.remove('hidden'); banner.classList.add('warn');
+      banner.innerHTML = `<span>⚠️ ${t('autoWarn')}</span><button class="icon-btn x">${ICON.cross}</button>`;
+      banner.querySelector('.x').onclick = () => { autoWarned = false; banner.classList.remove('warn'); showFieldsBanner(); };
+      return;
+    }
+    banner.classList.remove('warn');
+    const real = objs.filter(o => o.field && !o.zone).length, zn = objs.filter(o => o.zone).length;
+    if (!real && zn && !viewing) {
+      banner.classList.remove('hidden');
+      banner.innerHTML = `<span>${t('zonesFound', { n: zn })}</span>`;
+      return;
+    }
+    if (!real || viewing) { banner.classList.add('hidden'); return; }
     banner.classList.remove('hidden');
-    banner.innerHTML = `<span>${t('fieldsFound', { n: objs.filter(o => o.field).length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
+    banner.innerHTML = `<span>${t('fieldsFound', { n: real })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
     banner.querySelector('.af').onclick = autofill;
   }
   showFieldsBanner();
@@ -274,7 +295,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         if (want && !o.on) { setRadio(o, true); o.color = color; n++; }
       }
     }
-    toast(t('filled', { n })); renderObjs();
+    toast(t('filled', { n })); autoWarned = n > 0; showFieldsBanner(); renderObjs();
   }
 
   // ---------- page rendering ----------
@@ -328,7 +349,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const p = pagesInfo[o.page]; if (!p) continue;
       const s = p.s;
       const el = document.createElement('div');
-      el.className = `obj ${o.type}${o.field ? ' field' : ''}${sel === o ? ' sel' : ''}`;
+      el.className = `obj ${o.type}${o.field ? ' field' : ''}${o.zone ? ' zone' : ''}${sel === o ? ' sel' : ''}`;
       el.dataset.id = o.id;
       if (o.type === 'text' && o.field) {
         Object.assign(el.style, { left: o.x * s + 'px', top: o.fy * s + 'px', width: o.fw * s + 'px', height: o.fh * s + 'px' });
@@ -446,14 +467,14 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     sel = o;
     renderSelbar();
   }
-  function memKey(o) { return o.field ? norm(String(o.field).split('.').pop().replace(/\[\d+\]/g, '')) : ''; }
+  function memKey(o) { return o.field && !o.zone ? norm(String(o.field).split('.').pop().replace(/\[\d+\]/g, '')) : ''; }
   function commitEdit(fromChip) {
     if (!editing) return;
     const { o, ta, before } = editing;
     editing = null;
     o.text = ta.value.replace(/\r/g, '');
     // remember values typed in fields that the profile cannot fill (plate, car brand…)
-    if (o.field && !o.match && o.text.trim()) { const k = memKey(o); memory[k] = [o.text, ...(memory[k] || []).filter(v => v !== o.text)].slice(0, 5); remember(k, o.text); }
+    if (o.field && !o.zone && !o.match && o.text.trim()) { const k = memKey(o); memory[k] = [o.text, ...(memory[k] || []).filter(v => v !== o.text)].slice(0, 5); remember(k, o.text); }
     if (!fromChip && o.bind && o.text !== profVal(o.bind, o)) delete o.bind;
     if (o.field) fit(o);
     ta.remove();
@@ -466,7 +487,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   // ---------- placing ----------
   function setHint(msg) {
     if (!msg) return showFieldsBanner();
-    banner.classList.remove('hidden'); banner.innerHTML = `<span>${esc(msg)}</span><button class="icon-btn x">${ICON.cross}</button>`;
+    banner.classList.remove('hidden', 'warn'); banner.innerHTML = `<span>${esc(msg)}</span><button class="icon-btn x">${ICON.cross}</button>`;
     banner.querySelector('.x').onclick = () => setTool(null);
   }
   function setTool(tl, pend) {

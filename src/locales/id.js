@@ -151,5 +151,11 @@ export default {
  "moveTo": "Pindahkan ke folder",
  "rename": "Ganti nama",
  "noFolder": "Tanpa folder",
- "openDoc": "Buka"
+ "openDoc": "Buka",
+ "autoWarn": "Periksa kolom yang terisi: isi otomatis bisa salah.",
+ "zonesFound": "Ditemukan {n} area untuk diisi: ketuk untuk menulis",
+ "tutoScan": "Ketuk “Pindai” lalu ambil foto: halaman dipotong dan diluruskan, area tulisan dan kotak centang terdeteksi.",
+ "tutoDocs": "Cari dokumen, atur ke dalam folder, dan gunakan ⋮ untuk ganti nama, pindahkan, bagikan, atau hapus.",
+ "tutoSettings": "Bahasa, tema terang atau gelap, dan kode untuk mengunci aplikasi.",
+ "tutoOpenWith": "Anda juga bisa membuka PDF dari aplikasi lain (Gmail, WhatsApp, File…) lewat “Buka dengan” atau “Bagikan” → Paraph."
 };

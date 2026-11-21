@@ -151,5 +151,11 @@ export default {
  "moveTo": "Áthelyezés mappába",
  "rename": "Átnevezés",
  "noFolder": "Nincs mappa",
- "openDoc": "Megnyitás"
+ "openDoc": "Megnyitás",
+ "autoWarn": "Ellenőrizze a kitöltött mezőket: az automatikus kitöltés tévedhet.",
+ "zonesFound": "{n} kitöltendő terület található: koppintson az íráshoz",
+ "tutoScan": "Koppintson a „Szkennelés” gombra és fényképezzen: a lap kivágásra és kiegyenesítésre kerül, az írási területek és jelölőnégyzetek felismerésre kerülnek.",
+ "tutoDocs": "Keressen a dokumentumok között, rendezze mappákba, és a ⋮ menüvel nevezze át, helyezze át, ossza meg vagy törölje őket.",
+ "tutoSettings": "Nyelv, világos vagy sötét téma és kód az alkalmazás zárolásához.",
+ "tutoOpenWith": "PDF-et más alkalmazásból is megnyithat (Gmail, WhatsApp, Fájlok…) a „Megnyitás ezzel” vagy „Megosztás” → Paraph menüvel."
 };
