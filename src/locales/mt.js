@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Ipproteġi d-dokumenti tiegħek",
  "pinOfferD": "Issettja kodiċi ta' 4 ċifri biex tissakkar Paraph. Tista' tibdlu fis-Settings.",
  "later": "Aktar tard",
- "signCity": "Post (firma)"
+ "signCity": "Post (firma)",
+ "saveToPhone": "Issejvja fuq it-telefon",
+ "ocrFail": "Il-qari tat-test falla. Imla manwalment."
 };

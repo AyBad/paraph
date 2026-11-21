@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Zaščitite svoje dokumente",
  "pinOfferD": "Nastavite 4-mestno kodo za zaklep Paraph. Spremenite jo v Nastavitvah.",
  "later": "Pozneje",
- "signCity": "Kraj (podpis)"
+ "signCity": "Kraj (podpis)",
+ "saveToPhone": "Shrani v telefon",
+ "ocrFail": "Branje besedila ni uspelo. Izpolnite ročno."
 };

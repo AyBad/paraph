@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Schützen Sie Ihre Dokumente",
  "pinOfferD": "Legen Sie einen 4-stelligen Code fest, um Paraph zu sperren. Änderbar in den Einstellungen.",
  "later": "Später",
- "signCity": "Ort (Unterschrift)"
+ "signCity": "Ort (Unterschrift)",
+ "saveToPhone": "Auf dem Telefon speichern",
+ "ocrFail": "Texterkennung fehlgeschlagen. Sie können manuell ausfüllen."
 };

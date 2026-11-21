@@ -168,5 +168,7 @@ export default {
  "pinOffer": "Protect your documents",
  "pinOfferD": "Set a 4-digit code to lock Paraph. You can change it later in Settings.",
  "later": "Later",
- "signCity": "City (signature)"
+ "signCity": "City (signature)",
+ "saveToPhone": "Save to phone",
+ "ocrFail": "Text reading failed. You can fill in manually."
 };

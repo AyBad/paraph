@@ -204,7 +204,7 @@ function docActions(d, folders) {
     <button class="list-item a-ren">${ICON.edit}<b>${t('rename')}</b></button>
     <button class="list-item a-mv">${ICON.folder}<b>${t('moveTo')}</b><span>${esc(d.folder || t('noFolder'))}</span></button>
     <button class="list-item a-sh">${ICON.share}<b>${t('share')}</b></button>
-    <button class="list-item a-dl">${ICON.download}<b>${t('download')}</b></button>
+    <button class="list-item a-dl">${ICON.download}<b>${t('saveToPhone')}</b></button>
     <button class="list-item a-del danger-t">${ICON.trash}<b>${t('delete')}</b></button>
   </div><div class="row end"><button class="btn ghost c">${t('close')}</button></div>`, 'sheet');
   const on = (c, f) => m.el.querySelector(c).onclick = () => { m.close(); f(); };

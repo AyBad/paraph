@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Protejează-ți documentele",
  "pinOfferD": "Setează un cod de 4 cifre pentru a bloca Paraph. Îl poți schimba din Setări.",
  "later": "Mai târziu",
- "signCity": "Localitate (semnătură)"
+ "signCity": "Localitate (semnătură)",
+ "saveToPhone": "Salvează pe telefon",
+ "ocrFail": "Citirea textului a eșuat. Puteți completa manual."
 };

@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Chraňte své dokumenty",
  "pinOfferD": "Nastavte 4místný kód pro zamknutí Paraph. Změníte ho v Nastavení.",
  "later": "Později",
- "signCity": "Místo (podpis)"
+ "signCity": "Místo (podpis)",
+ "saveToPhone": "Uložit do telefonu",
+ "ocrFail": "Čtení textu selhalo. Můžete vyplnit ručně."
 };

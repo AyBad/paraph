@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Chroń swoje dokumenty",
  "pinOfferD": "Ustaw 4-cyfrowy kod blokady Paraph. Zmienisz go w Ustawieniach.",
  "later": "Później",
- "signCity": "Miejscowość (podpis)"
+ "signCity": "Miejscowość (podpis)",
+ "saveToPhone": "Zapisz w telefonie",
+ "ocrFail": "Odczyt tekstu nie powiódł się. Możesz wypełnić ręcznie."
 };

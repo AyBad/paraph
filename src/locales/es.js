@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Protege tus documentos",
  "pinOfferD": "Define un código de 4 cifras para bloquear Paraph. Podrás cambiarlo en Ajustes.",
  "later": "Más tarde",
- "signCity": "Ciudad (firma)"
+ "signCity": "Ciudad (firma)",
+ "saveToPhone": "Guardar en el teléfono",
+ "ocrFail": "La lectura del texto falló. Puede rellenar manualmente."
 };

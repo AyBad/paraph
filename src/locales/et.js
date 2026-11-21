@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Kaitse oma dokumente",
  "pinOfferD": "Määra Paraphi lukustamiseks 4-kohaline kood. Saad seda muuta seadetes.",
  "later": "Hiljem",
- "signCity": "Koht (allkiri)"
+ "signCity": "Koht (allkiri)",
+ "saveToPhone": "Salvesta telefoni",
+ "ocrFail": "Teksti lugemine ebaõnnestus. Täitke käsitsi."
 };

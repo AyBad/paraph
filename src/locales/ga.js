@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Cosain do dhoiciméid",
  "pinOfferD": "Socraigh cód 4 dhigit chun Paraph a ghlasáil. Is féidir é a athrú sna Socruithe.",
  "later": "Ar ball",
- "signCity": "Áit (síniú)"
+ "signCity": "Áit (síniú)",
+ "saveToPhone": "Sábháil ar an bhfón",
+ "ocrFail": "Theip ar léamh an téacs. Is féidir líonadh de láimh."
 };

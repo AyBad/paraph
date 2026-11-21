@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Beskyt dine dokumenter",
  "pinOfferD": "Vælg en firecifret kode til at låse Paraph. Kan ændres i Indstillinger.",
  "later": "Senere",
- "signCity": "By (underskrift)"
+ "signCity": "By (underskrift)",
+ "saveToPhone": "Gem på telefonen",
+ "ocrFail": "Tekstlæsning mislykkedes. Du kan udfylde manuelt."
 };

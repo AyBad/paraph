@@ -18,6 +18,8 @@ export async function pdfTextItems(page, vp) {
 
 let workerP = null;
 const simd = () => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch { return false; } };
+let progressCb = null;
+export function resetOcr() { const w = workerP; workerP = null; if (w) w.then(x => x.terminate()).catch(() => { }); }
 async function ocrWorker() {
   if (!workerP) workerP = (async () => {
     const { createWorker } = await import('tesseract.js');
@@ -25,21 +27,28 @@ async function ocrWorker() {
     return createWorker('fra', 1, {
       workerPath: base + 'worker.min.js',
       corePath: simd() ? base + 'tesseract-core-simd-lstm.wasm.js' : 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-lstm.wasm.js',
-      langPath: base, gzip: true, workerBlobURL: false, cacheMethod: 'none'
+      langPath: base, gzip: true, workerBlobURL: false, cacheMethod: 'none',
+      logger: (m) => { if (m.status === 'recognizing text' && progressCb) progressCb(m.progress || 0); }
     });
   })();
   return workerP;
 }
 
 /** OCR of a scanned page: words as [{str,x,y,w,h}] in viewport units */
-export async function ocrTextItems(page, masks = []) {
-  const S = 2, v = page.getViewport({ scale: S });
+export async function ocrTextItems(page, masks = [], onProgress) {
+  progressCb = onProgress || null;
+  const base1 = page.getViewport({ scale: 1 });
+  const S = Math.min(2, 1700 / Math.max(base1.width, base1.height) * 1.4), v = page.getViewport({ scale: S });
   const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: v }).promise;
   // hide the empty boxes / lines: their borders confuse the text recognition next to them
   ctx.fillStyle = '#fff';
   for (const m of masks) ctx.fillRect((m.x - 3) * S, (m.y - 3) * S, (m.w + 6) * S, (m.h + 6) * S);
+  // grey scale + contrast: faster and more reliable on photos
+  const id = ctx.getImageData(0, 0, c.width, c.height), d = id.data;
+  for (let i = 0; i < d.length; i += 4) { let l = d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114; l = l > 170 ? 255 : l < 90 ? 0 : (l - 90) * 255 / 80; d[i] = d[i + 1] = d[i + 2] = l; }
+  ctx.putImageData(id, 0, 0);
   const w = await ocrWorker();
   const { data } = await w.recognize(c, {}, { blocks: true, text: false });
   const out = [];
@@ -76,8 +85,20 @@ export function attachLabels(fields, items) {
     const row = rowOf(o).filter(f => f !== o);
     const sameRow = items.filter(it => Math.abs(it.y + it.h / 2 - cy) < Math.max(4, fh * 0.75));
     if (o.type === 'check') {
-      const next = Math.min(...row.filter(f => f.x > o.x + 2).map(f => f.x), o.x + 140);
-      o.label = sameRow.filter(it => it.x >= o.x + fw - 2 && it.x < next).sort((a, b) => a.x - b.x).map(i => i.str).join(' ');
+      // the closest text on either side ("F [ ] M [ ]" or "[ ] Oui")
+      let best = null, side = '';
+      for (const it of sameRow) {
+        const gl = o.x - (it.x + it.w), gr = it.x - (o.x + fw);
+        if (gl >= -1.5 && gl < 14 && (!best || gl < best.g)) { best = { it, g: gl }; side = 'L'; }
+        if (gr >= -1.5 && gr < 14 && (!best || gr < best.g)) { best = { it, g: gr }; side = 'R'; }
+      }
+      if (!best) { o.label = ''; continue; }
+      if (side === 'L') o.label = best.it.str.trim().split(/\s+/).pop();
+      else {
+        const next = Math.min(...row.filter(f => f.x > o.x + 2).map(f => f.x), o.x + 160);
+        const after = sameRow.filter(it => it.x >= best.it.x && it.x < next).sort((a, b) => a.x - b.x);
+        o.label = after.map(i => i.str).join(' ');
+      }
       continue;
     }
     const prev = Math.max(...row.filter(f => f.x + (f.fw ?? f.w) <= o.x + 2).map(f => f.x + (f.fw ?? f.w)), o.x - 230);
@@ -110,3 +131,27 @@ export function refineByRow(fields) {
 }
 
 export const sameText = norm;
+
+/** areas for the administration only ("Cadre réservé à l'administration"…): never auto-filled */
+const ADMIN = /reserve a l.?administration|cadre reserve|reserve a l.?autorite|reserve au service|ne rien (ecrire|inscrire)|partie reservee|for official use|office use only|nur fur den dienstgebrauch/;
+export function markAdmin(fields, lines) {
+  for (const l of lines) {
+    if (!ADMIN.test(norm(l.text))) continue;
+    for (const o of fields) if ((o.fy ?? o.y) > l.y - 2 && o.x + (o.fw ?? o.w) > l.x0 - 20 && o.x < l.x0 + 420) o.admin = true;
+  }
+}
+
+/** canonical person role from a section title, so that the same person on another page is the same group */
+const ROLES = [
+  ['self', /vos informations|votre identite|vos coordonnees|je soussigne|le demandeur|la demandeuse|demandeur|declarant 1|declarant principal|assure|souscripteur|your details|applicant/],
+  ['proxy', /procuration|mandataire/],
+  ['seller', /vendeur|ancien proprietaire|cedant|seller/],
+  ['buyer', /acheteur|nouveau proprietaire|acquereur|buyer/],
+  ['guest', /heberg(er|e)\b|personne hebergee|guest/],
+  ['child', /enfant|mineur|child/],
+  ['spouse', /conjoint|epoux|epouse|declarant 2|partenaire|spouse|partner/],
+  ['parent', /pere|mere|parent|representant legal|tuteur|guardian/],
+  ['employer', /employeur|employer/], ['employee', /salarie|employee/],
+  ['tenant', /locataire|tenant/], ['landlord', /bailleur|landlord/]
+];
+export function roleOf(title) { const n = norm(title); for (const [r, re] of ROLES) if (re.test(n)) return r; return null; }

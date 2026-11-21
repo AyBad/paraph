@@ -165,5 +165,7 @@ export default {
  "pinOffer": "書類を保護しましょう",
  "pinOfferD": "Paraph をロックする4桁のコードを設定します。設定で変更できます。",
  "later": "あとで",
- "signCity": "市区町村（署名地）"
+ "signCity": "市区町村（署名地）",
+ "saveToPhone": "スマホに保存",
+ "ocrFail": "文字の読み取りに失敗しました。手動で入力できます。"
 };

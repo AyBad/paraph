@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Aizsargājiet savus dokumentus",
  "pinOfferD": "Iestatiet 4 ciparu kodu Paraph bloķēšanai. To var mainīt iestatījumos.",
  "later": "Vēlāk",
- "signCity": "Vieta (paraksts)"
+ "signCity": "Vieta (paraksts)",
+ "saveToPhone": "Saglabāt tālrunī",
+ "ocrFail": "Teksta nolasīšana neizdevās. Aizpildiet manuāli."
 };

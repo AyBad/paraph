@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Védje dokumentumait",
  "pinOfferD": "Állítson be 4 jegyű kódot a Paraph zárolásához. A Beállításokban módosítható.",
  "later": "Később",
- "signCity": "Hely (aláírás)"
+ "signCity": "Hely (aláírás)",
+ "saveToPhone": "Mentés a telefonra",
+ "ocrFail": "A szöveg olvasása sikertelen. Kitöltheti kézzel."
 };

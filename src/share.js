@@ -1,4 +1,5 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+const SaveAs = registerPlugin('SaveAs');
 
 const native = () => Capacitor.isNativePlatform();
 
@@ -15,13 +16,17 @@ export const safeName = (n, mime = 'application/pdf') => { const e = extOf(mime)
 export async function downloadPdf(bytes, name, mime = 'application/pdf') {
   name = safeName(name, mime);
   if (native()) {
-    const { Filesystem, Directory } = await import('@capacitor/filesystem');
     const data = toBase64(bytes);
+    // let the user choose the folder on the phone (Downloads, Documents, Drive…)
     try {
-      await Filesystem.writeFile({ path: 'Paraph/' + name, data, directory: Directory.Documents, recursive: true });
-      return 'Documents/Paraph/' + name;
+      const r = await SaveAs.save({ name, mime, data });
+      return r && r.saved ? name : '';
     } catch (e) {
-      await shareFile(bytes, name, name, mime); return '';
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      try {
+        await Filesystem.writeFile({ path: 'Paraph/' + name, data, directory: Directory.Documents, recursive: true });
+        return 'Documents/Paraph/' + name;
+      } catch { await shareFile(bytes, name, name, mime); return ''; }
     }
   }
   const blob = new Blob([bytes], { type: mime });

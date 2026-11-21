@@ -165,5 +165,7 @@ export default {
  "pinOffer": "Zaštitite svoje dokumente",
  "pinOfferD": "Postavite 4-znamenkasti kod za zaključavanje Paraph. Promijenite ga u Postavkama.",
  "later": "Kasnije",
- "signCity": "Mjesto (potpis)"
+ "signCity": "Mjesto (potpis)",
+ "saveToPhone": "Spremi na telefon",
+ "ocrFail": "Čitanje teksta nije uspjelo. Možete ispuniti ručno."
 };
