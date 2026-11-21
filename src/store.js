@@ -1,4 +1,5 @@
 import { get, set, del } from 'idb-keyval';
+import { t } from './i18n.js';
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export { uid };
@@ -16,7 +17,7 @@ export function emptyProfile() {
 export async function getProfiles() {
   let p = await get('profiles');
   if (!p || !p.length) {
-    p = [Object.assign(emptyProfile(), { name: 'Moi' })];
+    p = [Object.assign(emptyProfile(), { name: t('me') })];
     await set('profiles', p);
   }
   return p.map(migrate);

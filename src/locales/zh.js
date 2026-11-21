@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "图片 (.jpg)",
  "fmtHint_jpg": "所有页面合成一张图片",
  "scanColor": "彩色",
- "scanBW": "黑白"
+ "scanBW": "黑白",
+ "noProfile": "不使用资料",
+ "noProfileHint": "不会自动填写任何内容",
+ "streetType": "道路类型",
+ "hour": "时",
+ "minute": "分",
+ "me": "我"
 };

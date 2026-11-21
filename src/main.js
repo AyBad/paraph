@@ -340,13 +340,15 @@ async function newProfile() {
 
 function chooseProfile(profiles, activeId) {
   return new Promise(res => {
+    // nothing pre-selected: the user picks a person, or no profile at all
     const m = modal(`<h2>${t('choose')}</h2><div class="list">${profiles.map(p => `
-      <button class="list-item prof${p.id === activeId ? ' on' : ''}" data-id="${p.id}">
+      <button class="list-item prof" data-id="${p.id}">
         <i class="dot" style="background:${p.color}"></i><b>${esc(pname(p))}</b><span></span>
-        ${p.signature ? `<img src="${p.signature}">` : ''}</button>`).join('')}</div>
+        ${p.signature ? `<img src="${p.signature}">` : ''}</button>`).join('')}
+      <button class="list-item prof none" data-id="__none__"><i class="dot hollow"></i><b>${t('noProfile')}</b><span class="muted">${t('noProfileHint')}</span></button></div>
       <div class="row end"><button class="btn ghost c">${t('cancel')}</button></div>`, 'sheet');
     m.el.querySelector('.c').onclick = () => { m.close(); res(null); };
-    m.el.querySelectorAll('.prof').forEach(b => b.onclick = async () => { m.close(); await store.setActiveProfileId(b.dataset.id); res(b.dataset.id); });
+    m.el.querySelectorAll('.prof').forEach(b => b.onclick = async () => { m.close(); if (b.dataset.id !== '__none__') await store.setActiveProfileId(b.dataset.id); res(b.dataset.id); });
   });
 }
 

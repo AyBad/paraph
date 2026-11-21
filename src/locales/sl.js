@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Slika (.jpg)",
  "fmtHint_jpg": "Vse strani v eni sliki",
  "scanColor": "Barvno",
- "scanBW": "Črno-belo"
+ "scanBW": "Črno-belo",
+ "noProfile": "Brez profila",
+ "noProfileHint": "Nič se ne izpolni samodejno",
+ "streetType": "Vrsta ulice",
+ "hour": "Ura",
+ "minute": "Minuta",
+ "me": "Jaz"
 };

@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Kuva (.jpg)",
  "fmtHint_jpg": "Kaikki sivut yhdessä kuvassa",
  "scanColor": "Väri",
- "scanBW": "Mustavalko"
+ "scanBW": "Mustavalko",
+ "noProfile": "Ei profiilia",
+ "noProfileHint": "Mitään ei täytetä automaattisesti",
+ "streetType": "Kadun tyyppi",
+ "hour": "Tunti",
+ "minute": "Minuutti",
+ "me": "Minä"
 };

@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Imagem (.jpg)",
  "fmtHint_jpg": "Todas as páginas numa só imagem",
  "scanColor": "Cor",
- "scanBW": "Preto e branco"
+ "scanBW": "Preto e branco",
+ "noProfile": "Sem perfil",
+ "noProfileHint": "Nada é preenchido automaticamente",
+ "streetType": "Tipo de via",
+ "hour": "Hora",
+ "minute": "Minuto",
+ "me": "Eu"
 };

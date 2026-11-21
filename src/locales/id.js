@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Gambar (.jpg)",
  "fmtHint_jpg": "Semua halaman dalam satu gambar",
  "scanColor": "Warna",
- "scanBW": "Hitam putih"
+ "scanBW": "Hitam putih",
+ "noProfile": "Tanpa profil",
+ "noProfileHint": "Tidak ada yang diisi otomatis",
+ "streetType": "Jenis jalan",
+ "hour": "Jam",
+ "minute": "Menit",
+ "me": "Saya"
 };

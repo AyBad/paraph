@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Εικόνα (.jpg)",
  "fmtHint_jpg": "Όλες οι σελίδες σε μία εικόνα",
  "scanColor": "Έγχρωμο",
- "scanBW": "Ασπρόμαυρο"
+ "scanBW": "Ασπρόμαυρο",
+ "noProfile": "Χωρίς προφίλ",
+ "noProfileHint": "Τίποτα δεν συμπληρώνεται αυτόματα",
+ "streetType": "Τύπος οδού",
+ "hour": "Ώρα",
+ "minute": "Λεπτό",
+ "me": "Εγώ"
 };

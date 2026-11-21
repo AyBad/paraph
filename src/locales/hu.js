@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Kép (.jpg)",
  "fmtHint_jpg": "Minden oldal egyetlen képen",
  "scanColor": "Színes",
- "scanBW": "Fekete-fehér"
+ "scanBW": "Fekete-fehér",
+ "noProfile": "Profil nélkül",
+ "noProfileHint": "Semmi sem töltődik ki automatikusan",
+ "streetType": "Közterület jellege",
+ "hour": "Óra",
+ "minute": "Perc",
+ "me": "Én"
 };

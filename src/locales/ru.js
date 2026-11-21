@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Изображение (.jpg)",
  "fmtHint_jpg": "Все страницы в одном изображении",
  "scanColor": "Цветной",
- "scanBW": "Чёрно-белый"
+ "scanBW": "Чёрно-белый",
+ "noProfile": "Без профиля",
+ "noProfileHint": "Ничего не заполняется автоматически",
+ "streetType": "Тип улицы",
+ "hour": "Час",
+ "minute": "Минута",
+ "me": "Я"
 };

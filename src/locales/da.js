@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Billede (.jpg)",
  "fmtHint_jpg": "Alle sider i ét billede",
  "scanColor": "Farve",
- "scanBW": "Sort-hvid"
+ "scanBW": "Sort-hvid",
+ "noProfile": "Ingen profil",
+ "noProfileHint": "Intet udfyldes automatisk",
+ "streetType": "Vejtype",
+ "hour": "Time",
+ "minute": "Minut",
+ "me": "Mig"
 };

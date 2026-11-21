@@ -183,5 +183,8 @@ export default {
  "fmt_jpg": "Image (.jpg)",
  "fmtHint_jpg": "All pages joined in a single picture",
  "scanColor": "Colour",
- "scanBW": "Black & white"
+ "scanBW": "Black & white",
+ "noProfile": "No profile",
+ "noProfileHint": "Nothing is filled in automatically",
+ "me": "Me"
 };

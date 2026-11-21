@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Pilt (.jpg)",
  "fmtHint_jpg": "Kõik lehed ühel pildil",
  "scanColor": "Värviline",
- "scanBW": "Mustvalge"
+ "scanBW": "Mustvalge",
+ "noProfile": "Profiilita",
+ "noProfileHint": "Midagi ei täideta automaatselt",
+ "streetType": "Tänava tüüp",
+ "hour": "Tund",
+ "minute": "Minut",
+ "me": "Mina"
 };

@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Attēls (.jpg)",
  "fmtHint_jpg": "Visas lapas vienā attēlā",
  "scanColor": "Krāsains",
- "scanBW": "Melnbalts"
+ "scanBW": "Melnbalts",
+ "noProfile": "Bez profila",
+ "noProfileHint": "Nekas netiek aizpildīts automātiski",
+ "streetType": "Ielas veids",
+ "hour": "Stunda",
+ "minute": "Minūte",
+ "me": "Es"
 };

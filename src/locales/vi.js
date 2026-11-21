@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Ảnh (.jpg)",
  "fmtHint_jpg": "Tất cả trang trong một ảnh",
  "scanColor": "Màu",
- "scanBW": "Đen trắng"
+ "scanBW": "Đen trắng",
+ "noProfile": "Không dùng hồ sơ",
+ "noProfileHint": "Không tự động điền gì",
+ "streetType": "Loại đường",
+ "hour": "Giờ",
+ "minute": "Phút",
+ "me": "Tôi"
 };

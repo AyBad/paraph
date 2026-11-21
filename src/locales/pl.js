@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Obraz (.jpg)",
  "fmtHint_jpg": "Wszystkie strony w jednym obrazie",
  "scanColor": "Kolor",
- "scanBW": "Czarno-białe"
+ "scanBW": "Czarno-białe",
+ "noProfile": "Bez profilu",
+ "noProfileHint": "Nic nie jest wypełniane automatycznie",
+ "streetType": "Rodzaj ulicy",
+ "hour": "Godzina",
+ "minute": "Minuta",
+ "me": "Ja"
 };

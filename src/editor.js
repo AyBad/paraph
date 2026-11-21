@@ -65,7 +65,9 @@ function textWidth(txt, fs) {
 }
 
 export async function openEditor({ bytes, name, docId, profiles, profileId, onExit, initialObjs, viewOnly, chooseProfile, onSaved }) {
-  let profile = profiles.find(p => p.id === profileId) || profiles[0];
+  // "no profile": nothing is filled in by itself, the user writes everything
+  const NONE = { id: '__none__', name: t('noProfile'), color: (profiles[0] || {}).color || '#1a237e' };
+  let profile = profileId === '__none__' ? NONE : profiles.find(p => p.id === profileId) || profiles[0];
   let color = profile.color || '#1a237e';
   let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false, pinching = false, viewing = !!viewOnly;
   const undoStack = [];
@@ -480,7 +482,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     const groups = []; for (const sct of sections) if (!groups.find(g => g.group === sct.group)) groups.push(sct);
     if (groups.length <= 1) return doAutofill({ [groups[0]?.group]: profile });
     const selfIdx = Math.max(0, groups.findIndex(g => g.group === 'self'));
-    const choice = {}; groups.forEach((g, i) => choice[g.group] = i === selfIdx ? profile.id : '');
+    const choice = {}; groups.forEach((g, i) => choice[g.group] = i === selfIdx && profile !== NONE ? profile.id : '');
     const label = (id) => id ? esc(pn(profiles.find(p => p.id === id))) : t('skipSection');
     const m = modal(`<h2>${t('autofillTitle')}</h2><div class="sec-list">${groups.map(g => `
       <div class="sec" data-g="${esc(g.group)}"><b>${esc(g.title)}</b>
@@ -928,7 +930,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       if (!profile[k]) {
         const url = await signaturePad({ title: t(k), color: profile.color });
         if (!url) return;
-        profile[k] = url; await saveProfile(profile);
+        profile[k] = url; if (profile !== NONE) await saveProfile(profile);
       }
     }
     if (k === 'insert') {
@@ -964,7 +966,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (id && id !== profile.id) switchProfile(id);
   };
   async function switchProfile(id) {
-    profile = profiles.find(p => p.id === id) || profile;
+    profile = id === '__none__' ? NONE : profiles.find(p => p.id === id) || profile;
     $('.prof-btn span').textContent = pn(profile);
     color = profile.color || color; syncColorInput();
     let changed = false;
@@ -1005,7 +1007,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     const base = baseName(name);
     let fmt = defaultFormat(name);
     const m = modal(`<h2>${t('save')}</h2>
-      <label class="field-l">${t('fileName')}<div class="name-row"><input class="fname" value="${esc(base)}"><span class="ext">${FORMATS[fmt].ext}</span></div></label>
+      <label class="field-l">${t('fileName')}<div class="name-row" dir="ltr"><input class="fname" value="${esc(base)}"><span class="ext">${FORMATS[fmt].ext}</span></div></label>
       <div class="field-l">${t('format')}</div>${formatPicker(fmt)}
       <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary s">${ICON.save}<span>${t('save')}</span></button></div>`, 'sheet');
     bindPicker(m.el, (f) => { fmt = f; m.el.querySelector('.ext').textContent = FORMATS[f].ext; });

@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "تصویر (.jpg)",
  "fmtHint_jpg": "تمام صفحات ایک تصویر میں",
  "scanColor": "رنگین",
- "scanBW": "سیاہ و سفید"
+ "scanBW": "سیاہ و سفید",
+ "noProfile": "بغیر پروفائل",
+ "noProfileHint": "کچھ بھی خودکار طور پر نہیں بھرا جاتا",
+ "streetType": "سڑک کی قسم",
+ "hour": "گھنٹہ",
+ "minute": "منٹ",
+ "me": "میں"
 };

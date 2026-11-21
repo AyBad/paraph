@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "ছবি (.jpg)",
  "fmtHint_jpg": "সব পৃষ্ঠা একটি ছবিতে",
  "scanColor": "রঙিন",
- "scanBW": "সাদা-কালো"
+ "scanBW": "সাদা-কালো",
+ "noProfile": "কোনো প্রোফাইল নয়",
+ "noProfileHint": "কিছুই স্বয়ংক্রিয়ভাবে পূরণ হয় না",
+ "streetType": "রাস্তার ধরন",
+ "hour": "ঘণ্টা",
+ "minute": "মিনিট",
+ "me": "আমি"
 };
