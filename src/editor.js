@@ -4,7 +4,7 @@ import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
 import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
-import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr, warmOcr, splitLeaders } from './labels.js';
+import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr, warmOcr, splitLeaders, ocrError } from './labels.js';
 import { downloadPdf, shareFile } from './share.js';
 import { FORMATS, defaultFormat, baseName, formatPicker, bindPicker, exportAs } from './convert.js';
 
@@ -292,7 +292,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); validateZones(pi, items); }
     }
   }
-  let ocrState = '', ocrPct = 0, ocrCancel = null, unclear = false;
+  let ocrState = '', ocrPct = 0, ocrCancel = null, unclear = false, ocrFailed = '';
   /**
    * A detected line/box is kept only if it really looks like a place to write:
    * nothing written inside it, and a printed label next to it (left) or under it (caption).
@@ -349,7 +349,9 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       for (const pi of todo) {
         if (cancelled) break;
         const k = todo.indexOf(pi);
+        let lastMove = Date.now(), lastPct = -1;
         const items = await Promise.race([
+          new Promise((_, rej) => { const iv = setInterval(() => { if (ocrPct !== lastPct) { lastPct = ocrPct; lastMove = Date.now(); } else if (Date.now() - lastMove > 30000) { clearInterval(iv); rej(new Error('stall')); } if (!ocrState) clearInterval(iv); }, 1000); }),
           ocrTextItems(pagesInfo[pi].page, objs.filter(o => o.pending && o.dotted && o.page === pi).map(o => ({ x: o.x - 1, y: o.fy + o.fh - 0.5, w: o.fw + 2, h: 3.5 })), (p) => { ocrPct = Math.min(99, Math.round(((k + p) / todo.length) * 100)); updateOcrBanner(); }),
           new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000)),
           new Promise((_, rej) => { const iv = setInterval(() => { if (cancelled) { clearInterval(iv); rej(new Error('cancel')); } }, 300); })
@@ -365,7 +367,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         good += objs.filter(o => o.zone && o.page === pi).length;
       }
       analyze();
-    } catch (e) { console.warn('ocr', e); resetOcr(); }
+    } catch (e) { console.warn('ocr', e); resetOcr(); if (e.message !== 'cancel') ocrFailed = (e.message || '') + (ocrError() ? ' · ' + ocrError() : ''); }
     dropPending(null);
     unclear = !objs.some(o => o.field);
     ocrState = ''; ocrCancel = null; renderObjs(); showFieldsBanner();
@@ -448,7 +450,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (ocrState !== 'run' && !real && !zn) {
       if (!unclear) { banner.classList.add('hidden'); return; }
       banner.classList.add('warn');
-      banner.innerHTML = `<span>${t('noFieldsUnclear')}</span><button class="icon-btn x">${ICON.cross}</button>`;
+      banner.innerHTML = `<span>${t('noFieldsUnclear')}${ocrFailed ? `<small class="muted"> (${esc(ocrFailed.slice(0, 80))})</small>` : ''}</span><button class="icon-btn x">${ICON.cross}</button>`;
       banner.querySelector('.x').onclick = () => { unclear = false; showFieldsBanner(); };
       return;
     }

@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(IncomingFilePlugin.class);
         registerPlugin(SaveAsPlugin.class);
+        registerPlugin(TextOcrPlugin.class);
         super.onCreate(savedInstanceState);
     }
 

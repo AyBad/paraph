@@ -14,12 +14,16 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /** "Save as…": the system file picker lets the user choose where to store the file on the phone. */
 @CapacitorPlugin(name = "SaveAs")
 public class SaveAsPlugin extends Plugin {
-    private byte[] pendingData;
+    private File pending() { return new File(getContext().getCacheDir(), "paraph-save-as.tmp"); }
 
     @PluginMethod
     public void save(PluginCall call) {
@@ -30,7 +34,12 @@ public class SaveAsPlugin extends Plugin {
             call.reject("no data");
             return;
         }
-        pendingData = Base64.decode(data, Base64.DEFAULT);
+        try (FileOutputStream fo = new FileOutputStream(pending())) {
+            fo.write(Base64.decode(data, Base64.DEFAULT));
+        } catch (Exception e) {
+            call.reject("tmp: " + e.getMessage());
+            return;
+        }
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(mime);
@@ -48,12 +57,16 @@ public class SaveAsPlugin extends Plugin {
             return;
         }
         Uri uri = result.getData().getData();
-        try {
-            OutputStream os = getContext().getContentResolver().openOutputStream(uri);
+        File tmp = pending();
+        try (InputStream in = new FileInputStream(tmp); OutputStream os = getContext().getContentResolver().openOutputStream(uri, "wt")) {
             if (os == null) throw new Exception("cannot write");
-            os.write(pendingData);
-            os.close();
-            pendingData = null;
+            byte[] buf = new byte[65536];
+            int n;
+            long total = 0;
+            while ((n = in.read(buf)) > 0) { os.write(buf, 0, n); total += n; }
+            os.flush();
+            if (total == 0) throw new Exception("empty");
+            tmp.delete();
             ret.put("saved", true);
             ret.put("uri", uri.toString());
             call.resolve(ret);
