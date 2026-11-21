@@ -1,6 +1,0 @@
-{
-  "appId": "com.aybad.paraph",
-  "appName": "Paraph",
-  "webDir": "dist",
-  "android": { "allowMixedContent": false }
-}
