@@ -256,9 +256,10 @@ async function home() {
     </div>
     <section class="card prof-card">
       <div class="card-h"><h2>${ICON.user}${t('profiles')}</h2><button class="link manage">${t('edit')}</button></div>
-      <div class="chips">${profiles.map(p => `<button class="chip${p.id === active.id ? ' on' : ''}" data-id="${p.id}">
+      ${profiles.length > 2 ? `<div class="row gap pdd-row"><div class="dd-wrap grow"><button class="dd pdd">${active.signature ? `<img class="dd-sig" src="${active.signature}">` : ICON.user}<span>${esc(pname(active))}</span><span class="dd-n">${profiles.length}</span><svg viewBox="0 0 24 24" class="ic"><path d="M7 10l5 5 5-5"/></svg></button></div>
+        <button class="chip add">${ICON.plus}</button></div>` : `<div class="chips">${profiles.map(p => `<button class="chip${p.id === active.id ? ' on' : ''}" data-id="${p.id}">
         ${p.signature ? `<img src="${p.signature}">` : ''}<span>${esc(pname(p))}</span></button>`).join('')}
-        <button class="chip add">${ICON.plus}</button></div>
+        <button class="chip add">${ICON.plus}</button></div>`}
     </section>
     <section class="card">
       <div class="card-h"><h2>${ICON.file}${t('myDocs')}</h2></div>
@@ -275,6 +276,17 @@ async function home() {
   $('.manage').onclick = profilesScreen;
   $('.chip.add').onclick = newProfile;
   app.querySelectorAll('.chip[data-id]').forEach(c => c.onclick = async () => { await store.setActiveProfileId(c.dataset.id); home(); });
+  // more than two profiles: a drop-down list
+  const pdd = $('.pdd');
+  if (pdd) pdd.onclick = (e) => {
+    e.stopPropagation();
+    const old = app.querySelector('.pdd + .dd-menu'); if (old) { old.remove(); return; }
+    const menu = document.createElement('div'); menu.className = 'dd-menu';
+    menu.innerHTML = profiles.map(p => `<button data-id="${p.id}" class="${p.id === active.id ? 'on' : ''}">${p.signature ? `<img class="dd-sig" src="${p.signature}">` : ICON.user}<span>${esc(pname(p))}</span></button>`).join('');
+    pdd.after(menu);
+    menu.querySelectorAll('button').forEach(b => b.onclick = async () => { await store.setActiveProfileId(b.dataset.id); home(); });
+    setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }));
+  };
   $('.file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) startFile(f); };
   $('.scan-card').onclick = async () => { hideBanner(); const r = await scanDocument(); if (r) openNew(r.bytes, r.name); else home(); };
   const list = $('.docs');

@@ -318,7 +318,11 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const L = (o.label || '').trim();
       // a whole sentence before a line is running text, not a field label (unless it ends with ":")
       const sentence = L.split(/\s+/).length > 5 && !/:\s*$/.test(L);
-      const goodLabel = (o.labelGap ?? 0) <= 80 && L && !sentence && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|la|à|a|h|du|au|de)[\s:\-]*$/i.test(L) || /^[\/\-]$/.test(L) || !!matchField({ name: '', alt: L }));
+      // a short gap in the middle of a sentence (words right before and right after it) is not a field
+      const rowY = o.fy + o.fh - Math.min(5, o.fh / 2);
+      const wordAfter = items.some(it => Math.abs(it.y + it.h / 2 - rowY) < 5 && it.x >= o.x + o.fw - 1 && it.x - (o.x + o.fw) < 6 && /[\p{L}]{2,}/u.test(it.str));
+      const inSentence = wordAfter && o.fw < 70 && (o.labelGap ?? 99) < 8 && !/(:\s*$)|((^|\s|,)(le|à|a|h)\s*$)/i.test(L);
+      const goodLabel = (o.labelGap ?? 0) <= 80 && L && !sentence && !inSentence && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|à|a|h)[\s:\-]*$/i.test(L) || /^[\/\-]$/.test(L) || !!matchField({ name: '', alt: L }));
       const lab = (goodLabel ? L : '') + ' ' + (o.caption || '');
       if (!filled && !crossed && o.fw >= 18 && !/[\p{L}]{2,}|[:/]/u.test(lab)) { o.maybe = true; continue; }
       const ok = !filled && !crossed && o.fw >= 18;

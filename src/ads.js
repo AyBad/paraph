@@ -10,7 +10,15 @@ const TEST = {
 };
 
 const native = Capacitor.isNativePlatform();
-let admob = null, ready = false, bannerShown = false, wanted = false;
+let admob = null, ready = false, bannerShown = false, wanted = false, bannerH = 0, modalHidden = false;
+// the banner is hidden while a window (dialog, sheet) is open: it never covers its buttons
+const anyModal = () => !!document.querySelector('.modal-back, .busy, .fake-inter');
+new MutationObserver(() => {
+  if (!native || !ready || !bannerShown) return;
+  const open = anyModal();
+  if (open && !modalHidden) { modalHidden = true; admob.hideBanner().catch(() => { }); }
+  else if (!open && modalHidden) { modalHidden = false; if (wanted) admob.resumeBanner().catch(() => { }); }
+}).observe(document.body, { childList: true });
 const setAdSpace = (h) => { document.documentElement.style.setProperty('--ad', (h || 0) + 'px'); document.body.classList.toggle('ad-on', !!h); };
 
 async function adsAllowed() { return !(await getPro()); }
@@ -20,7 +28,7 @@ export async function initAds() {
   try {
     admob = (await import('@capacitor-community/admob')).AdMob;
     await admob.initialize({ initializeForTesting: true });
-    admob.addListener('bannerAdSizeChanged', (info) => { if (wanted) setAdSpace(info && info.height ? info.height : 60); });
+    admob.addListener('bannerAdSizeChanged', (info) => { if (info && info.height) bannerH = info.height; if (wanted) setAdSpace((bannerH || 60) + 6); });
     ready = true;
   } catch (e) { console.warn('ads', e); }
 }
@@ -33,10 +41,10 @@ export async function showBanner(container) {
     await initAds(); if (!ready || !wanted) return;
     try {
       if (!bannerShown) await admob.showBanner({ adId: TEST.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: true });
-      else await admob.resumeBanner();
+      else if (!anyModal()) await admob.resumeBanner();
       bannerShown = true;
       if (!wanted) { await admob.hideBanner(); return; } // the user left the home screen meanwhile
-      setAdSpace(60);
+      setAdSpace((bannerH || 60) + 6);
       container && container.classList.add('with-ad');
     } catch (e) { console.warn('banner', e); }
   } else if (container && wanted) {

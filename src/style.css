@@ -350,3 +350,7 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .fmt-t small{color:var(--mut);font-size:12.5px;line-height:1.3}
 .fmt-ok{opacity:0;color:var(--ink)}.fmt.on .fmt-ok{opacity:1}
 .fmt-ok svg{width:22px;height:22px}
+.pdd-row{align-items:center}
+.pdd-row .grow{flex:1;margin:0}
+.dd-sig{height:22px;width:44px;object-fit:contain}
+[data-theme=dark] .dd-sig{filter:invert(1)}
