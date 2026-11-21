@@ -69,5 +69,13 @@ export const ICON = {
   info: P('M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5v.5'),
   book: P('M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7'),
   star: P('M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z'),
+  camera: P('M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 100-8 4 4 0 000 8z'),
+  rotate: P('M20 11a8 8 0 10-2.3 5.7M20 4v7h-7'),
+  folder: P('M3 6h6l2 2h10v11H3z'),
+  dots: P('M12 6v.01M12 12v.01M12 18v.01', 'style="stroke-width:3"'),
+  search: P('M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5'),
+  moon: P('M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z'),
+  shield: P('M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z'),
+  scan: P('M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M4 12h16'),
   lock: P('M6 11h12v10H6zM8 11V8a4 4 0 018 0v3')
 };

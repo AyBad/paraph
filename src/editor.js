@@ -2,7 +2,7 @@ import { pdfjs, detectFields, detectBoxes, exportPdf, fieldTooltips } from './do
 import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
-import { saveProfile, saveDoc, uid } from './store.js';
+import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
 import { downloadPdf, shareFile } from './share.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
@@ -66,6 +66,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   let objs = [], sel = null, tool = null, pending = null, zoom = 1, editing = null, dirty = false, pinching = false, viewing = !!viewOnly;
   const undoStack = [];
   const pagesInfo = [];
+  const memory = await getMemory();
+  function pn(p) { return p.name || [p.firstName, p.lastName].join(' ').trim() || t('unnamed'); }
 
   const root = document.getElementById('app');
   root.innerHTML = `
@@ -73,7 +75,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     <header class="ed-top">
       <button class="icon-btn back" aria-label="back">${ICON.back}</button>
       <div class="ed-title">${esc(name)}</div>
-      <select class="prof-sel" aria-label="${t('profile')}">${profiles.map(p => `<option value="${p.id}" ${p.id === profile.id ? 'selected' : ''}>${esc(p.name || [p.firstName, p.lastName].join(' ').trim() || t('unnamed'))}</option>`).join('')}</select>
+      <button class="prof-btn" aria-label="${t('profile')}"><span>${esc(pn(profile))}</span><svg viewBox="0 0 24 24" class="ic chev"><path d="M7 10l5 5 5-5"/></svg></button>
       <label class="color-dot" title="${t('color')}"><input type="color" class="col" value="${color}"><span style="background:${color}"></span></label>
       <button class="btn primary small finish" aria-label="${t('save')}">${ICON.save}<span>${t('save')}</span></button>
       <button class="icon-btn v-sh" aria-label="${t('share')}">${ICON.share}</button>
@@ -133,7 +135,13 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       });
     } else {
       const s = Math.min(f.w, f.h);
-      objs.push({ id: uid(), page: f.page, type: 'check', field: f.name || true, on: f.value, mark: 'check', x: f.x + (f.w - s) / 2, y: f.y + (f.h - s) / 2, w: s, h: s, color });
+      const nn = norm((f.name || '').split('.').pop() + ' ' + f.alt);
+      objs.push({
+        id: uid(), page: f.page, type: 'check', field: f.name || true, on: f.value, mark: 'check', x: f.x + (f.w - s) / 2, y: f.y + (f.h - s) / 2, w: s, h: s, color,
+        radio: f.radio, group: f.name, bval: f.bval, fy: f.y,
+        match: /sexe|\bsex\b|gender|femme|homme|masculin|feminin/.test(nn) ? 'sex' : /personne physique|physique|natural person/.test(nn) ? 'physical' : null,
+        role: BUYER.test(nn) ? 'buyer' : SELLER.test(nn) ? 'seller' : null
+      });
     }
   }
   // split dates typed in several boxes on one row (dd | mm | yyyy)
@@ -148,13 +156,28 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
     }
   }
+  // radio / tick boxes: which value each box stands for (sex M/F, natural person)
+  const checks = objs.filter(o => o.field && o.type === 'check' && o.match);
+  for (const g of new Set(checks.map(o => o.page + '|' + o.group))) {
+    const grp = checks.filter(o => o.page + '|' + o.group === g);
+    if (grp[0].match === 'sex') {
+      const byX = [...grp].sort((a, c) => a.x - c.x);
+      grp.forEach(o => {
+        const v = norm(o.bval);
+        o.val = /^(m|h|homme|male|masc)/.test(v) ? 'M' : /^(f|femme|female|fem)/.test(v) ? 'F' : (byX.indexOf(o) === 0 ? 'M' : 'F');
+      });
+    } else {
+      const byY = [...grp].sort((a, c) => a.y - c.y);
+      grp.forEach(o => o.val = byY.indexOf(o) === 0 ? 'P' : '');
+    }
+  }
   // fields without a role marker belong to the section they sit in (seller above the first buyer field)
   if (!initialObjs) for (let pi = 0; pi < pagesInfo.length; pi++) {
-    const onPage = textFields.filter(o => o.page === pi);
+    const onPage = objs.filter(o => o.field && o.page === pi);
     const buyers = onPage.filter(o => o.role === 'buyer' && o.match);
     if (!buyers.length) continue;
     const top = Math.min(...buyers.map(o => o.fy)) - 30;
-    for (const o of onPage) if (!o.role) o.role = o.fy >= top ? 'buyer' : 'seller';
+    for (const o of onPage) if (!o.role) o.role = (o.fy ?? o.y) >= top ? 'buyer' : 'seller';
   }
   const hasStreetType = new Set(textFields.filter(o => o.match === 'streetType').map(o => o.page));
   for (const o of textFields) if (o.match === 'streetName' && hasStreetType.has(o.page)) o.part = 'nameOnly';
@@ -217,16 +240,16 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
 
   function showFieldsBanner() {
-    if (!fields.length || viewing || (initialObjs && initialObjs.length)) { banner.classList.add('hidden'); return; }
+    if (!objs.some(o => o.field) || viewing) { banner.classList.add('hidden'); return; }
     banner.classList.remove('hidden');
-    banner.innerHTML = `<span>${t('fieldsFound', { n: fields.length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
+    banner.innerHTML = `<span>${t('fieldsFound', { n: objs.filter(o => o.field).length })}</span><button class="btn small primary af">${ICON.magic}<span>${t('autofill')}</span></button>`;
     banner.querySelector('.af').onclick = autofill;
   }
   showFieldsBanner();
 
   function autofill() {
     commitEdit();
-    const roles = new Set(objs.filter(o => o.field && o.match && o.role).map(o => o.role));
+    const roles = new Set(objs.filter(o => o.field && o.match && o.role && o.type === 'text').map(o => o.role));
     if (roles.has('buyer') && roles.has('seller')) {
       const m = modal(`<h2>${t('roleQ')}</h2><div class="col gap">
         <button class="btn ghost big" data-r="seller">${t('roleA')}</button>
@@ -245,6 +268,10 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       if (o.type === 'text' && o.field && o.match && !o.text && (role === 'both' || !o.role || o.role === role)) {
         const v = profVal(o.match, o);
         if (v) { o.text = o.maxLen ? v.slice(0, o.maxLen) : v; o.bind = o.match; o.color = color; fit(o); n++; }
+      }
+      if (o.type === 'check' && o.field && o.match && o.val !== undefined && (role === 'both' || !o.role || o.role === role)) {
+        const want = o.match === 'sex' ? (profile.sex && o.val === profile.sex) : o.val === 'P';
+        if (want && !o.on) { setRadio(o, true); o.color = color; n++; }
       }
     }
     toast(t('filled', { n })); renderObjs();
@@ -338,13 +365,16 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       // suggestions from the current profile while typing
       const o = editing.o;
       const keys = [o.match, ...INSERT_KEYS].filter((k, i, a) => k && a.indexOf(k) === i);
-      const chips = keys.map(k => ({ k, v: profVal(k, k === o.match ? o : null) })).filter(c => c.v);
+      const mem = (memory[memKey(o)] || []).map(v => ({ k: 'mem', v }));
+      const chips = [...mem, ...keys.map(k => ({ k, v: profVal(k, k === o.match ? o : null) }))].filter((c, i, a) => c.v && a.findIndex(x => x.v === c.v) === i);
       selbar.classList.remove('hidden');
       selbar.innerHTML = chips.map(c => `<button class="chip-s" data-k="${c.k}" title="${esc(t(c.k))}">${esc(c.v)}</button>`).join('') +
         `<span class="sep"></span><button class="icon-btn ok-b">${ICON.done}</button>`;
       selbar.querySelectorAll('button').forEach(bt => bt.addEventListener('pointerdown', e => e.preventDefault()));
       selbar.querySelectorAll('.chip-s').forEach(bt => bt.onclick = () => {
-        const k = bt.dataset.k; editing.ta.value = profVal(k, k === o.match ? o : null); o.bind = k; commitEdit(true);
+        const k = bt.dataset.k;
+        if (k === 'mem') { editing.ta.value = bt.textContent; delete o.bind; commitEdit(); return; }
+        editing.ta.value = profVal(k, k === o.match ? o : null); o.bind = k; commitEdit(true);
       });
       selbar.querySelector('.ok-b').onclick = () => commitEdit();
       return;
@@ -377,6 +407,10 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     on('.ok-b', () => { sel = null; renderObjs(); });
   }
 
+  function setRadio(o, on) {
+    if (on && o.radio) objs.forEach(x => { if (x !== o && x.radio && x.group === o.group && x.page === o.page) x.on = false; });
+    o.on = on;
+  }
   async function setObjColor(o, c) {
     snap(); o.color = c; color = c; syncColorInput();
     if (o.type === 'image') { o.src = await tint(o.orig || o.src, c); o.tinted = true; }
@@ -412,11 +446,14 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     sel = o;
     renderSelbar();
   }
+  function memKey(o) { return o.field ? norm(String(o.field).split('.').pop().replace(/\[\d+\]/g, '')) : ''; }
   function commitEdit(fromChip) {
     if (!editing) return;
     const { o, ta, before } = editing;
     editing = null;
     o.text = ta.value.replace(/\r/g, '');
+    // remember values typed in fields that the profile cannot fill (plate, car brand…)
+    if (o.field && !o.match && o.text.trim()) { const k = memKey(o); memory[k] = [o.text, ...(memory[k] || []).filter(v => v !== o.text)].slice(0, 5); remember(k, o.text); }
     if (!fromChip && o.bind && o.text !== profVal(o.bind, o)) delete o.bind;
     if (o.field) fit(o);
     ta.remove();
@@ -534,7 +571,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       if (o.field && o.type === 'check') {
         commitEdit(); snap();
         const mark = tool === 'cross' ? 'cross' : 'check';
-        if (o.on && o.mark === mark) o.on = false; else { o.on = true; o.mark = mark; o.color = color; }
+        if (o.on && o.mark === mark) o.on = false; else { setRadio(o, true); o.mark = mark; o.color = color; }
         sel = null; renderObjs(); return;
       }
       if (o.field && o.type === 'text') { startEdit(o); return; }
@@ -667,9 +704,15 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (sel) setObjColor(sel, color);
   };
 
-  $('.prof-sel').onchange = async (e) => {
+  $('.prof-btn').onclick = async () => {
     commitEdit();
-    profile = profiles.find(p => p.id === e.target.value) || profile;
+    if (!chooseProfile) return;
+    const id = await chooseProfile(profile.id);
+    if (id && id !== profile.id) switchProfile(id);
+  };
+  async function switchProfile(id) {
+    profile = profiles.find(p => p.id === id) || profile;
+    $('.prof-btn span').textContent = pn(profile);
     color = profile.color || color; syncColorInput();
     let changed = false;
     for (const o of objs) {
@@ -730,7 +773,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (chooseProfile && profiles.length > 1) {
       const id = await chooseProfile(profile.id);
       if (!id) return;
-      if (id !== profile.id) { const sel2 = $('.prof-sel'); sel2.value = id; sel2.dispatchEvent(new Event('change')); }
+      if (id !== profile.id) await switchProfile(id);
     }
     viewing = false; root.querySelector('.editor').classList.remove('viewing'); showFieldsBanner();
   }
