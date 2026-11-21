@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Stampa (.jpg)",
  "fmtHint_jpg": "Il-paġni kollha fi stampa waħda",
  "scanColor": "Kulur",
- "scanBW": "Iswed u abjad"
+ "scanBW": "Iswed u abjad",
+ "noProfile": "Mingħajr profil",
+ "noProfileHint": "Xejn ma jimtela awtomatikament",
+ "streetType": "Tip ta' triq",
+ "hour": "Siegħa",
+ "minute": "Minuta",
+ "me": "Jien"
 };

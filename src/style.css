@@ -357,3 +357,6 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .scan-bar .s-mode{background:#2b2b33;flex:0 0 auto}
 .scan-bar .s-mode .seg-b{color:#bbb;padding:9px 12px}
 .scan-bar .s-mode .seg-b.on{background:#3949ab;color:#fff}
+.dot.hollow{background:transparent!important;border:2px dashed var(--mut)}
+.list-item.prof.none{flex-wrap:wrap}
+.list-item.prof.none span{font-size:12.5px;flex:1 1 100%;white-space:normal;overflow:visible;text-overflow:clip;padding-inline-start:28px}

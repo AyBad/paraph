@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Resim (.jpg)",
  "fmtHint_jpg": "Tüm sayfalar tek bir resimde",
  "scanColor": "Renkli",
- "scanBW": "Siyah beyaz"
+ "scanBW": "Siyah beyaz",
+ "noProfile": "Profilsiz",
+ "noProfileHint": "Hiçbir şey otomatik doldurulmaz",
+ "streetType": "Yol türü",
+ "hour": "Saat",
+ "minute": "Dakika",
+ "me": "Ben"
 };

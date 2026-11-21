@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Obrázek (.jpg)",
  "fmtHint_jpg": "Všechny stránky v jednom obrázku",
  "scanColor": "Barevně",
- "scanBW": "Černobíle"
+ "scanBW": "Černobíle",
+ "noProfile": "Bez profilu",
+ "noProfileHint": "Nic se nevyplní automaticky",
+ "streetType": "Typ ulice",
+ "hour": "Hodina",
+ "minute": "Minuta",
+ "me": "Já"
 };

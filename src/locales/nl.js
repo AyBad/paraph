@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Afbeelding (.jpg)",
  "fmtHint_jpg": "Alle pagina's in één afbeelding",
  "scanColor": "Kleur",
- "scanBW": "Zwart-wit"
+ "scanBW": "Zwart-wit",
+ "noProfile": "Geen profiel",
+ "noProfileHint": "Er wordt niets automatisch ingevuld",
+ "streetType": "Type straat",
+ "hour": "Uur",
+ "minute": "Minuut",
+ "me": "Ik"
 };

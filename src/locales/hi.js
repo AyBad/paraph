@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "चित्र (.jpg)",
  "fmtHint_jpg": "सभी पेज एक ही चित्र में",
  "scanColor": "रंगीन",
- "scanBW": "श्वेत-श्याम"
+ "scanBW": "श्वेत-श्याम",
+ "noProfile": "कोई प्रोफ़ाइल नहीं",
+ "noProfileHint": "कुछ भी अपने आप नहीं भरा जाता",
+ "streetType": "सड़क का प्रकार",
+ "hour": "घंटा",
+ "minute": "मिनट",
+ "me": "मैं"
 };

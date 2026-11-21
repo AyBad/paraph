@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Vaizdas (.jpg)",
  "fmtHint_jpg": "Visi puslapiai viename vaizde",
  "scanColor": "Spalvotas",
- "scanBW": "Nespalvotas"
+ "scanBW": "Nespalvotas",
+ "noProfile": "Be profilio",
+ "noProfileHint": "Niekas nepildoma automatiškai",
+ "streetType": "Gatvės tipas",
+ "hour": "Valanda",
+ "minute": "Minutė",
+ "me": "Aš"
 };

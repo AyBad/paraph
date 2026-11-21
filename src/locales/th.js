@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "รูปภาพ (.jpg)",
  "fmtHint_jpg": "รวมทุกหน้าเป็นภาพเดียว",
  "scanColor": "สี",
- "scanBW": "ขาวดำ"
+ "scanBW": "ขาวดำ",
+ "noProfile": "ไม่ใช้โปรไฟล์",
+ "noProfileHint": "ไม่มีการกรอกอัตโนมัติ",
+ "streetType": "ประเภทถนน",
+ "hour": "ชั่วโมง",
+ "minute": "นาที",
+ "me": "ฉัน"
 };

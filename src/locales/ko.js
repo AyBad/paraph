@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "이미지 (.jpg)",
  "fmtHint_jpg": "모든 페이지를 한 장의 이미지로",
  "scanColor": "컬러",
- "scanBW": "흑백"
+ "scanBW": "흑백",
+ "noProfile": "프로필 없음",
+ "noProfileHint": "자동으로 채우지 않습니다",
+ "streetType": "도로 유형",
+ "hour": "시",
+ "minute": "분",
+ "me": "나"
 };

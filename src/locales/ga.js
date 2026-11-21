@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Íomhá (.jpg)",
  "fmtHint_jpg": "Na leathanaigh go léir in aon íomhá amháin",
  "scanColor": "Dath",
- "scanBW": "Dubh agus bán"
+ "scanBW": "Dubh agus bán",
+ "noProfile": "Gan phróifíl",
+ "noProfileHint": "Ní líontar aon rud go huathoibríoch",
+ "streetType": "Cineál sráide",
+ "hour": "Uair",
+ "minute": "Nóiméad",
+ "me": "Mé"
 };

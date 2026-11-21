@@ -45,28 +45,29 @@ async function toJpg(bytes) {
   return jpegBytes(out, 0.88);
 }
 
-/** a Word file with one page per page of the document, each page as a picture */
+/**
+ * A Word file with one section per page of the document (own size and orientation),
+ * each page as a picture inside small margins: opens the same way in Word, Google Docs and phone viewers.
+ */
 async function toDocx(bytes) {
-  const JSZip = (await import('jszip')).default;
+  const { Document, Packer, Paragraph, ImageRun, AlignmentType } = await import('docx');
   const ps = await pages(bytes, 2);
-  const zip = new JSZip();
-  const EMU = 12700, tw = (pt) => Math.round(pt * 20);
-  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
-  zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
-  let rels = '', body = '';
-  for (let i = 0; i < ps.length; i++) {
-    const p = ps[i], id = `rIdImg${i + 1}`;
-    zip.file(`word/media/page${i + 1}.jpeg`, await jpegBytes(p.c, 0.9));
-    rels += `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/page${i + 1}.jpeg"/>`;
-    // a little smaller than the page, so that the picture never spills onto a new page
-    const cx = Math.round(p.w * 0.98 * EMU), cy = Math.round(p.h * 0.98 * EMU);
-    body += `<w:p><w:pPr>${i ? '<w:pageBreakBefore/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i + 1}" name="Page ${i + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${i + 1}" name="page${i + 1}.jpeg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  const M = 0.3 * 72; // 3/10 inch margin, in points
+  const tw = (pt) => Math.round(pt * 20), px = (pt) => Math.round(pt * 96 / 72);
+  const sections = [];
+  for (const p of ps) {
+    // the largest picture that fits inside the margins, page ratio kept
+    const k = Math.min((p.w - 2 * M) / p.w, (p.h - 2 * M - 4) / p.h);
+    sections.push({
+      properties: { page: { size: { width: tw(p.w), height: tw(p.h) }, margin: { top: tw(M), bottom: tw(M), left: tw(M), right: tw(M), header: 0, footer: 0, gutter: 0 } } },
+      children: [new Paragraph({
+        alignment: AlignmentType.CENTER, spacing: { before: 0, after: 0 },
+        children: [new ImageRun({ type: 'jpg', data: await jpegBytes(p.c, 0.9), transformation: { width: px(p.w * k), height: px(p.h * k) } })]
+      })]
+    });
   }
-  const p0 = ps[0] || { w: 595, h: 842 };
-  body += `<w:sectPr><w:pgSz w:w="${tw(p0.w)}" w:h="${tw(p0.h)}"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>`;
-  zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels}</Relationships>`);
-  zip.file('word/document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}</w:body></w:document>`);
-  return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+  const doc = new Document({ creator: 'Paraph', title: 'Paraph', sections });
+  return new Uint8Array(await (await Packer.toBlob(doc)).arrayBuffer());
 }
 
 export async function convert(bytes, fmt) {

@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "画像 (.jpg)",
  "fmtHint_jpg": "全ページを1枚の画像に",
  "scanColor": "カラー",
- "scanBW": "白黒"
+ "scanBW": "白黒",
+ "noProfile": "プロフィールなし",
+ "noProfileHint": "自動入力は行いません",
+ "streetType": "通りの種類",
+ "hour": "時",
+ "minute": "分",
+ "me": "自分"
 };

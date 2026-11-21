@@ -180,5 +180,11 @@ export default {
  "fmt_jpg": "Imagine (.jpg)",
  "fmtHint_jpg": "Toate paginile într-o singură imagine",
  "scanColor": "Color",
- "scanBW": "Alb-negru"
+ "scanBW": "Alb-negru",
+ "noProfile": "Fără profil",
+ "noProfileHint": "Nimic nu se completează automat",
+ "streetType": "Tip stradă",
+ "hour": "Ora",
+ "minute": "Minutul",
+ "me": "Eu"
 };
