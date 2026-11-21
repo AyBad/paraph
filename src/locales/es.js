@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Guardar en el teléfono",
  "ocrFail": "La lectura del texto falló. Puede rellenar manualmente.",
  "ocrWait": "Espere: detectando los campos…",
- "noFieldsUnclear": "Ningún campo detectado con certeza: la imagen no es lo bastante nítida o ya está rellenada. Rellénela manualmente con las herramientas."
+ "noFieldsUnclear": "Ningún campo detectado con certeza: la imagen no es lo bastante nítida o ya está rellenada. Rellénela manualmente con las herramientas.",
+ "format": "Formato",
+ "chooseFormat": "Elegir el formato",
+ "converting": "Convirtiendo…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Recomendado · diseño intacto, editable de nuevo en Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Cada página se coloca como imagen en el archivo Word (texto no editable)",
+ "fmt_jpg": "Imagen (.jpg)",
+ "fmtHint_jpg": "Todas las páginas en una sola imagen"
 };

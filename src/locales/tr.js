@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Telefona kaydet",
  "ocrFail": "Metin okunamadı. Elle doldurabilirsiniz.",
  "ocrWait": "Lütfen bekleyin: alanlar algılanıyor…",
- "noFieldsUnclear": "Hiçbir alan kesin olarak algılanamadı: görüntü yeterince net değil veya zaten doldurulmuş. Araçlarla elle doldurun."
+ "noFieldsUnclear": "Hiçbir alan kesin olarak algılanamadı: görüntü yeterince net değil veya zaten doldurulmuş. Araçlarla elle doldurun.",
+ "format": "Biçim",
+ "chooseFormat": "Biçimi seçin",
+ "converting": "Dönüştürülüyor…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Önerilen · düzen korunur, Paraph'ta yeniden düzenlenebilir",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Her sayfa Word dosyasına resim olarak eklenir (metin düzenlenemez)",
+ "fmt_jpg": "Resim (.jpg)",
+ "fmtHint_jpg": "Tüm sayfalar tek bir resimde"
 };

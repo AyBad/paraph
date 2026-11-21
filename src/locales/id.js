@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Simpan ke ponsel",
  "ocrFail": "Gagal membaca teks. Anda dapat mengisi manual.",
  "ocrWait": "Harap tunggu: mendeteksi kolom…",
- "noFieldsUnclear": "Tidak ada kolom yang terdeteksi dengan pasti: gambar kurang tajam atau sudah diisi. Isi secara manual dengan alat."
+ "noFieldsUnclear": "Tidak ada kolom yang terdeteksi dengan pasti: gambar kurang tajam atau sudah diisi. Isi secara manual dengan alat.",
+ "format": "Format",
+ "chooseFormat": "Pilih format",
+ "converting": "Mengonversi…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Disarankan · tata letak utuh, dapat diedit lagi di Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Setiap halaman dimasukkan sebagai gambar di file Word (teks tidak dapat diedit)",
+ "fmt_jpg": "Gambar (.jpg)",
+ "fmtHint_jpg": "Semua halaman dalam satu gambar"
 };

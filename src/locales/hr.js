@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Spremi na telefon",
  "ocrFail": "Čitanje teksta nije uspjelo. Možete ispuniti ručno.",
  "ocrWait": "Pričekajte: prepoznavanje polja…",
- "noFieldsUnclear": "Nijedno polje nije sigurno prepoznato: slika nije dovoljno oštra ili je već ispunjena. Ispunite ručno alatima."
+ "noFieldsUnclear": "Nijedno polje nije sigurno prepoznato: slika nije dovoljno oštra ili je već ispunjena. Ispunite ručno alatima.",
+ "format": "Format",
+ "chooseFormat": "Odaberite format",
+ "converting": "Pretvaranje…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Preporučeno · izgled ostaje, može se ponovno uređivati u Paraphu",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Svaka stranica umetnuta je kao slika u Word datoteku (tekst se ne može uređivati)",
+ "fmt_jpg": "Slika (.jpg)",
+ "fmtHint_jpg": "Sve stranice u jednoj slici"
 };

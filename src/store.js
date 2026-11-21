@@ -55,6 +55,7 @@ export async function saveDoc(name, bytes, id, extra = {}) {
   const docs = await getDocs();
   id = id || uid();
   const meta = { id, name, date: Date.now(), size: bytes.length };
+  if (extra.fmt) meta.fmt = extra.fmt;
   const i = docs.findIndex(d => d.id === id);
   if (i >= 0 && docs[i].folder) meta.folder = docs[i].folder;
   if (i >= 0) docs.splice(i, 1);

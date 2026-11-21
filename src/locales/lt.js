@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Išsaugoti telefone",
  "ocrFail": "Teksto nuskaityti nepavyko. Užpildykite rankiniu būdu.",
  "ocrWait": "Palaukite: aptinkami laukai…",
- "noFieldsUnclear": "Laukai neaptikti patikimai: vaizdas nepakankamai ryškus arba jau užpildytas. Užpildykite rankiniu būdu."
+ "noFieldsUnclear": "Laukai neaptikti patikimai: vaizdas nepakankamai ryškus arba jau užpildytas. Užpildykite rankiniu būdu.",
+ "format": "Formatas",
+ "chooseFormat": "Pasirinkite formatą",
+ "converting": "Konvertuojama…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Rekomenduojama · išdėstymas išlieka, galima vėl redaguoti Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Kiekvienas puslapis įdedamas kaip paveikslėlis į Word failą (tekstas neredaguojamas)",
+ "fmt_jpg": "Vaizdas (.jpg)",
+ "fmtHint_jpg": "Visi puslapiai viename vaizde"
 };

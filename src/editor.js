@@ -1,11 +1,12 @@
 import { Capacitor } from '@capacitor/core';
-import { pdfjs, detectFields, detectBoxes, detectZones, exportPdf, fieldTooltips } from './docs.js';
+import { pdfjs, detectFields, detectBoxes, detectZones, exportPdf, fieldTooltips, storedZones } from './docs.js';
 import { t, fmtDate } from './i18n.js';
 import { esc, modal, toast, busy, confirmBox, ICON } from './ui.js';
 import { signaturePad, tint } from './sigpad.js';
 import { saveProfile, saveDoc, uid, getMemory, remember } from './store.js';
-import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr, warmOcr } from './labels.js';
+import { pdfTextItems, ocrTextItems, textLines, attachLabels, refineByRow, markAdmin, roleOf, resetOcr, warmOcr, splitLeaders } from './labels.js';
 import { downloadPdf, shareFile } from './share.js';
+import { FORMATS, defaultFormat, baseName, formatPicker, bindPicker, exportAs } from './convert.js';
 
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 const STREET_TYPES = /^(rue|avenue|av\.?|boulevard|bd|allee|allée|chemin|impasse|place|route|quai|cours|square|passage|voie|sentier|rond-point|residence|résidence|lotissement|hameau|lieu-dit|faubourg|esplanade|parvis|promenade|street|st\.?|road|rd\.?|lane|drive|way)\s+/i;
@@ -24,7 +25,7 @@ function matchField(f) {
   if (birth && has(/lieu|place|\bort\b|lugar|luogo|city|ville|town|commune/)) return 'birthPlace';
   if (birth) return 'birthDate';
   if (has(/code postal|postal|\bzip\b|\bcp\b|\bplz\b|postcode/)) return 'postalCode';
-  if (has(/typ[eo] (de )?(la )?vo[il]e?|street type/)) return 'streetType';
+  if (has(/typ[eo] (de )?(la )?vo[il]e?|street type|\(?avenue,? etc/)) return 'streetType';
   if (has(/extension|bis ter|\bbis\b/)) return null;
   if (has(/n ?[°o]? ?de (la )?voie|numero (de )?(la )?(voie|rue)|house n|street n(o|um)|hausnummer|\bn° voie|num voie|numero voie/)) return 'streetNumber';
   if (has(/no[mn] (de )?(la )?vo[il][eos]?\b|libelle (de la )?voie|street|\brue\b|\bvoie\b|strasse|calle|\bvia\b/)) return 'streetName';
@@ -107,6 +108,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   } catch (e) { b.close(); toast(t('err')); onExit(); return; }
   const fields = [];
   const tips = await fieldTooltips(bytes);
+  const stored = initialObjs ? null : await storedZones(pdf); // Word document converted by Paraph
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const vp = page.getViewport({ scale: 1 });
@@ -116,7 +118,11 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     const pf = await detectFields(page, vp, tips);
     for (const f of pf) fields.push({ ...f, page: i - 1 });
     let boxes = [], zones = [];
-    if (!pf.length) {
+    const st = stored && stored[i - 1];
+    if (st) {
+      for (const [x, y, w, h, lab] of st.z) fields.push({ kind: 'zone', page: i - 1, x, y, w, h, sure: true, lab });
+      for (const [x, y, w, h] of st.b) boxes.push({ x, y, w, h });
+    } else if (!pf.length) {
       boxes = await detectBoxes(page, vp);
       if (!initialObjs && i <= 30) {
         try { const z = await detectZones(page); zones = z.zones; for (const bx of z.boxes) if (!boxes.some(o => Math.abs(o.x - bx.x) < 3 && Math.abs(o.y - bx.y) < 3)) boxes.push(bx); } catch (e) { console.warn(e); }
@@ -124,7 +130,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       // a run of adjacent squares is a comb (character boxes), not a tick box
       boxes = boxes.filter(bx => !boxes.some(o => o !== bx && Math.abs(o.y - bx.y) < 2 && (Math.abs(o.x - (bx.x + bx.w)) < 2.5 || Math.abs(bx.x - (o.x + o.w)) < 2.5)));
     }
-    pagesInfo.push({ page, vp, rotate: page.rotate || 0, el, canvas: el.querySelector('canvas'), layer: el.querySelector('.layer'), s: 1, boxes });
+    pagesInfo.push({ page, vp, rotate: page.rotate || 0, el, canvas: el.querySelector('canvas'), layer: el.querySelector('.layer'), s: 1, boxes, hasForm: pf.length > 0 || !!st });
     for (const z of zones) fields.push({ kind: 'zone', page: i - 1, ...z });
   }
   b.close();
@@ -132,10 +138,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   // fields -> objects (or restore the objects of a document saved earlier)
   if (initialObjs && initialObjs.length) objs = JSON.parse(JSON.stringify(initialObjs));
   else for (const f of fields) {
-    if (f.kind === 'zone') {
-      const fs = Math.max(6, Math.min(12, f.h * 0.65));
-      objs.push({ id: uid(), page: f.page, type: 'text', field: 'zone', zone: true, pending: true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y, y: f.y + Math.max(0, f.h - fs * 1.25), fontSize: fs, baseFs: fs, text: '', color });
-    } else if (f.kind === 'text') {
+    if (f.kind === 'zone') { const z = addZone(f.page, f.x, f.y, f.w, f.h, !f.sure); if (f.lab) z.fixedLabel = f.lab; if (f.dotted) z.dotted = true; }
+    else if (f.kind === 'text') {
       const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
       objs.push({
         id: uid(), page: f.page, type: 'text', field: f.name || true, x: f.x, w: f.w, h: f.h, fw: f.w, fh: f.h, fy: f.y,
@@ -152,6 +156,25 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         match: /sexe|\bsex\b|gender|femme|homme|masculin|feminin/.test(nn) ? 'sex' : /personne physique|physique|natural person/.test(nn) ? 'physical' : null,
         role: BUYER.test(nn) ? 'buyer' : SELLER.test(nn) ? 'seller' : null
       });
+    }
+  }
+  function addZone(page, x, y, w, h, pending) {
+    const fs = Math.max(6, Math.min(12, h * 0.65));
+    const o = { id: uid(), page, type: 'text', field: 'zone', zone: true, x, w, h, fw: w, fh: h, fy: y, y: y + Math.max(0, h - fs * 1.25), fontSize: fs, baseFs: fs, text: '', color };
+    if (pending) o.pending = true;
+    objs.push(o); return o;
+  }
+  /** "Nom : ........" in the text = a place to write, sure enough to be shown without more checks */
+  function leaderZones(pi, leaders) {
+    if (pagesInfo[pi].hasForm) return;
+    for (const l of leaders) {
+      if (l.w < 14) continue;
+      const yb = l.ocr ? l.y + l.h : l.y + l.h * 0.85;
+      const fh = l.ocr ? 16 : Math.max(12, Math.min(22, l.h * 1.6)), fy = yb - fh + 1;
+      // the same dotted line found in the picture: keep only this one
+      objs = objs.filter(o => !(o.pending && o.page === pi && Math.min(o.x + o.fw, l.x + l.w) - Math.max(o.x, l.x) > 0.5 * Math.min(o.fw, l.w) && Math.abs((o.fy + o.fh) - yb) < 8));
+      if (objs.some(o => o.zone && !o.pending && o.page === pi && Math.abs(o.x - l.x) < 4 && Math.abs((o.fy + o.fh) - (fy + fh)) < 4)) continue;
+      addZone(pi, l.x, fy, l.w, fh, false);
     }
   }
   // ---------- understanding the form: labels, values, sections ----------
@@ -243,21 +266,29 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 && l.text.length > 3 &&
           !objs.some(o => o.field && o.type === 'text' && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
         // a heading naming a person ("Ancien propriétaire", "Le demandeur"…) a bit higher wins over the nearest line
-        const roleLine = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 160 && roleOf(l.text))
-          .sort((a, b) => b.cy - a.cy)[0];
+        // "… propriétaire" whose first word was misread, after the seller's part = the buyer
+        const afterSeller = sections.slice(0, i).some(x => x.group === 'seller');
+        const roleOfL = (t2) => roleOf(t2) || (afterSeller && /propri[eé]taire|acqu[eé]reur/i.test(t2) && !/ancien/i.test(t2) ? 'buyer' : null);
+        const roleLines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 160 && roleOfL(l.text) && !/signature|signataire/i.test(l.text))
+          .sort((a, b) => b.cy - a.cy);
+        // "Je soussigné(e)" says little about who: a heading such as "Nouveau propriétaire" above it wins
+        let roleLine = roleLines[0];
+        if (roleLine && /soussign/i.test(norm(roleLine.text))) roleLine = roleLines.find(l => roleOfL(l.text) !== 'self' && roleLines[0].cy - l.cy < 70) || roleLine;
         const l = roleLine || lines.sort((a, b) => b.cy - a.cy)[0];
         if (l) title = l.text.replace(/[:\s]+$/, '');
+        if (roleLine && roleOfL(roleLine.text) === 'buyer' && !roleOf(roleLine.text)) { title = t('roleB'); sct.role2 = 'buyer'; }
       }
       if (!title) title = `${t('profile')} ${i + 1}`;
       if (title.length > 48) title = title.slice(0, 46) + '…';
-      sct.title = title; sct.group = sct.role || roleOf(title) || norm(title);
+      sct.title = title; sct.group = sct.role || sct.role2 || roleOf(title) || norm(title);
     });
   }
 
   async function readLabels() {
     for (let pi = 0; pi < pagesInfo.length; pi++) {
-      const items = await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp);
+      const { text: items, leaders } = splitLeaders(await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp));
       pageText[pi] = { items, lines: textLines(items), ocr: false };
+      if (!initialObjs) leaderZones(pi, leaders);
       if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); validateZones(pi, items); }
     }
   }
@@ -285,7 +316,9 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const crossed = items.some(it => (it.conf == null || it.conf >= 60) && ly > it.y - 0.5 && ly < it.y + it.h + 0.5 && !TICKS.test(it.str) &&
         Math.min(x1, it.x + it.w) - Math.max(x0, it.x) > it.w * 0.5 && /[\p{L}]{3,}/u.test(it.str));
       const L = (o.label || '').trim();
-      const goodLabel = (o.labelGap ?? 0) <= 80 && L && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|la|à|a|h|du|au|de)\s*:?$/i.test(L));
+      // a whole sentence before a line is running text, not a field label (unless it ends with ":")
+      const sentence = L.split(/\s+/).length > 5 && !/:\s*$/.test(L);
+      const goodLabel = (o.labelGap ?? 0) <= 80 && L && !sentence && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|la|à|a|h|du|au|de)[\s:\-]*$/i.test(L) || /^[\/\-]$/.test(L) || !!matchField({ name: '', alt: L }));
       const lab = (goodLabel ? L : '') + ' ' + (o.caption || '');
       if (!filled && !crossed && o.fw >= 18 && !/[\p{L}]{2,}|[:/]/u.test(lab)) { o.maybe = true; continue; }
       const ok = !filled && !crossed && o.fw >= 18;
@@ -306,7 +339,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
   function dropPending(pi) { objs = objs.filter(o => !(o.pending && (pi == null || o.page === pi))); }
   async function runOcr() {
-    const todo = pagesInfo.map((p, i) => i).filter(i => objs.some(o => o.pending && o.page === i)).slice(0, 3);
+    const todo = pagesInfo.map((p, i) => i).filter(i => !pagesInfo[i].hasForm && !pageText[i]?.items.length).slice(0, 3);
     objs = objs.filter(o => !(o.pending && !todo.includes(o.page)));
     if (!todo.length) { ocrState = ''; renderObjs(); showFieldsBanner(); return; }
     ocrState = 'run'; ocrPct = 0; showFieldsBanner();
@@ -317,16 +350,18 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         if (cancelled) break;
         const k = todo.indexOf(pi);
         const items = await Promise.race([
-          ocrTextItems(pagesInfo[pi].page, [], (p) => { ocrPct = Math.min(99, Math.round(((k + p) / todo.length) * 100)); updateOcrBanner(); }),
+          ocrTextItems(pagesInfo[pi].page, objs.filter(o => o.pending && o.dotted && o.page === pi).map(o => ({ x: o.x - 1, y: o.fy + o.fh - 0.5, w: o.fw + 2, h: 3.5 })), (p) => { ocrPct = Math.min(99, Math.round(((k + p) / todo.length) * 100)); updateOcrBanner(); }),
           new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000)),
           new Promise((_, rej) => { const iv = setInterval(() => { if (cancelled) { clearInterval(iv); rej(new Error('cancel')); } }, 300); })
         ]);
-        pageText[pi] = { items, lines: textLines(items), ocr: true };
+        const sp = splitLeaders(items); sp.text.ink = items.ink; sp.text.quality = items.quality;
+        pageText[pi] = { items: sp.text, lines: textLines(sp.text), ocr: true };
         // too few readable words = blurry / dark photo: nothing can be trusted on this page
-        if (items.length < 12 || items.quality < 50) { dropPending(pi); continue; }
-        attachLabels(objs.filter(o => o.field && o.page === pi), items);
+        if (sp.text.length < 12 || items.quality < 50) { dropPending(pi); continue; }
+        leaderZones(pi, sp.leaders);
+        attachLabels(objs.filter(o => o.field && o.page === pi), sp.text);
         markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines);
-        validateZones(pi, items);
+        validateZones(pi, sp.text);
         good += objs.filter(o => o.zone && o.page === pi).length;
       }
       analyze();
@@ -955,20 +990,24 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   $('.finish').onclick = async () => {
     commitEdit();
     sel = null; renderObjs();
-    const base = name.replace(/\.(pdf|docx|png|jpe?g|webp|heic)$/i, '');
+    const base = baseName(name);
+    let fmt = defaultFormat(name);
     const m = modal(`<h2>${t('save')}</h2>
-      <label class="field-l">${t('fileName')}<div class="name-row"><input class="fname" value="${esc(base)}"><span>.pdf</span></div></label>
+      <label class="field-l">${t('fileName')}<div class="name-row"><input class="fname" value="${esc(base)}"><span class="ext">${FORMATS[fmt].ext}</span></div></label>
+      <div class="field-l">${t('format')}</div>${formatPicker(fmt)}
       <div class="row end gap"><button class="btn ghost c">${t('cancel')}</button><button class="btn primary s">${ICON.save}<span>${t('save')}</span></button></div>`, 'sheet');
+    bindPicker(m.el, (f) => { fmt = f; m.el.querySelector('.ext').textContent = FORMATS[f].ext; });
     m.el.querySelector('.c').onclick = m.close;
     m.el.querySelector('.fname').select();
     m.el.querySelector('.s').onclick = async () => {
-      const fname = (m.el.querySelector('.fname').value.trim() || base) + '.pdf';
+      const bn = m.el.querySelector('.fname').value.trim() || base, fname = bn + FORMATS[fmt].ext;
       m.close();
       const bz = busy(t('exporting'));
       let out;
       try {
         out = await exportPdf(bytes, objs, pagesInfo.map(p => ({ vp: p.vp, rotate: p.rotate })));
-        const meta = await saveDoc(fname, out, docId, { src: bytes, objs: JSON.parse(JSON.stringify(objs)) });
+        // kept as PDF in the app (to open and modify it again); converted when it leaves the app
+        const meta = await saveDoc(bn + '.pdf', out, docId, { src: bytes, objs: JSON.parse(JSON.stringify(objs)), fmt });
         docId = meta.id;
       } catch (err) { console.error(err); bz.close(); toast(t('err') + ' (' + err.message + ')'); return; }
       bz.close(); dirty = false;
@@ -979,8 +1018,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
           <button class="btn ghost big dl">${ICON.download}<span>${t('saveToPhone')}</span></button>
           <button class="btn ghost hm">${t('home')}</button>
         </div>`, 'sheet center');
-      r.el.querySelector('.sh').onclick = async () => { try { await shareFile(out, fname); } catch (e) { toast(e.message); } };
-      r.el.querySelector('.dl').onclick = async () => { const where = await downloadPdf(out, fname); if (where) toast(t('downloaded') + ' : ' + where); };
+      r.el.querySelector('.sh').onclick = () => exportAs(out, fname, 'share', fmt);
+      r.el.querySelector('.dl').onclick = () => exportAs(out, fname, 'save', fmt);
       r.el.querySelector('.hm').onclick = () => { r.close(); cleanup(); onExit(); };
     };
   };
@@ -996,8 +1035,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   }
   $('.start-edit').onclick = startEditing;
   const currentPdf = async () => (initialObjs && initialObjs.length) || objs.some(o => !o.field || o.text || o.on) ? exportPdf(bytes, objs, pagesInfo.map(p => ({ vp: p.vp, rotate: p.rotate }))) : bytes;
-  $('.v-sh').onclick = async () => { try { await shareFile(await currentPdf(), name); } catch (e) { toast(e.message); } };
-  $('.v-dl').onclick = async () => { const w = await downloadPdf(await currentPdf(), name); if (w) toast(t('downloaded') + ' : ' + w); };
+  $('.v-sh').onclick = async () => exportAs(await currentPdf(), name, 'share');
+  $('.v-dl').onclick = async () => exportAs(await currentPdf(), name, 'save');
 
   let rt; const onResize = () => {
     clearTimeout(rt);

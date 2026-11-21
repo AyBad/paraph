@@ -9,7 +9,7 @@ function toBase64(bytes) {
   return btoa(s);
 }
 
-const extOf = (mime) => mime === 'application/json' ? '.json' : '.pdf';
+const extOf = (mime) => mime === 'application/json' ? '.json' : /wordprocessing/.test(mime) ? '.docx' : mime === 'image/jpeg' ? '.jpg' : '.pdf';
 export const safeName = (n, mime = 'application/pdf') => { const e = extOf(mime); return (n || 'document').replace(/[\\/:*?"<>|]+/g, '_').replace(new RegExp(e.replace('.', '\\.') + '$', 'i'), '').trim() + e; };
 
 /** Save the file to the device. Returns a short location string or '' */

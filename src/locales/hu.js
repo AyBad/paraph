@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Mentés a telefonra",
  "ocrFail": "A szöveg olvasása sikertelen. Kitöltheti kézzel.",
  "ocrWait": "Kérjük, várjon: mezők felismerése…",
- "noFieldsUnclear": "Nem sikerült biztosan mezőt felismerni: a kép nem elég éles vagy már ki van töltve. Töltse ki kézzel az eszközökkel."
+ "noFieldsUnclear": "Nem sikerült biztosan mezőt felismerni: a kép nem elég éles vagy már ki van töltve. Töltse ki kézzel az eszközökkel.",
+ "format": "Formátum",
+ "chooseFormat": "Formátum választása",
+ "converting": "Átalakítás…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Ajánlott · az elrendezés megmarad, Paraphban újra szerkeszthető",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Minden oldal képként kerül a Word-fájlba (a szöveg nem szerkeszthető)",
+ "fmt_jpg": "Kép (.jpg)",
+ "fmtHint_jpg": "Minden oldal egyetlen képen"
 };

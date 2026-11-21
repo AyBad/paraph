@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Lưu vào điện thoại",
  "ocrFail": "Đọc văn bản thất bại. Bạn có thể điền thủ công.",
  "ocrWait": "Vui lòng chờ: đang phát hiện các ô…",
- "noFieldsUnclear": "Không phát hiện chắc chắn ô nào: ảnh không đủ rõ hoặc đã được điền. Hãy điền thủ công bằng công cụ."
+ "noFieldsUnclear": "Không phát hiện chắc chắn ô nào: ảnh không đủ rõ hoặc đã được điền. Hãy điền thủ công bằng công cụ.",
+ "format": "Định dạng",
+ "chooseFormat": "Chọn định dạng",
+ "converting": "Đang chuyển đổi…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Khuyên dùng · giữ bố cục, có thể sửa lại trong Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Mỗi trang được đặt thành ảnh trong tệp Word (không sửa được chữ)",
+ "fmt_jpg": "Ảnh (.jpg)",
+ "fmtHint_jpg": "Tất cả trang trong một ảnh"
 };

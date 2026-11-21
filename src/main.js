@@ -7,6 +7,7 @@ import { signaturePad } from './sigpad.js';
 import { fileToPdfBytes } from './docs.js';
 import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
+import { exportAs } from './convert.js';
 import { showBanner, hideBanner, showInterstitial, removeBannerForPro } from './ads.js';
 import { scanDocument } from './scan.js';
 const IncomingFile = registerPlugin('IncomingFile');
@@ -221,8 +222,8 @@ function docActions(d, folders) {
     mm.el.querySelectorAll('[data-f]').forEach(b => b.onclick = async () => { mm.close(); await store.moveDoc(d.id, b.dataset.f); home(); });
     mm.el.querySelector('.nf').onclick = () => { mm.close(); askText(t('folderName'), '', async (v) => { await store.moveDoc(d.id, v); docFolder = v; home(); }); };
   });
-  on('.a-sh', async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } });
-  on('.a-dl', async () => { const w = await downloadPdf(await store.getDocBytes(d.id), d.name); if (w) toast(t('downloaded') + ' : ' + w); });
+  on('.a-sh', async () => exportAs(await store.getDocBytes(d.id), d.name, 'share', null, d.fmt));
+  on('.a-dl', async () => exportAs(await store.getDocBytes(d.id), d.name, 'save', null, d.fmt));
   on('.a-del', async () => { if (await confirmBox(t('confirmDelete'), t('delete'), t('cancel'))) { await store.deleteDoc(d.id); home(); } });
 }
 
@@ -263,7 +264,7 @@ async function home() {
       <div class="card-h"><h2>${ICON.file}${t('myDocs')}</h2></div>
       ${docs.length ? `
         <div class="search">${ICON.search}<input class="q" type="search" placeholder="${t('search')}" value="${esc(docQuery)}"></div>
-        ${folders.length ? `<div class="chips folders"><button class="chip${!docFolder ? ' on' : ''}" data-f="">${t('allDocs')}</button>${folders.map(f => `<button class="chip${docFolder === f ? ' on' : ''}" data-f="${esc(f)}">${ICON.folder}<span>${esc(f)}</span></button>`).join('')}</div>` : ''}
+        ${folders.length ? `<div class="dd-wrap folders"><button class="dd fdd">${ICON.folder}<span>${docFolder ? esc(docFolder) : t('allDocs')}</span><span class="dd-n">${docs.filter(d => !docFolder || d.folder === docFolder).length}</span><svg viewBox="0 0 24 24" class="ic"><path d="M7 10l5 5 5-5"/></svg></button></div>` : ''}
         <div class="docs"></div>` : `<p class="empty">${t('noDocs')}</p>`}
     </section>
     ${isIOS && !standalone && !native ? `<p class="hint-ios">${t('iosInstall')}</p>` : ''}
@@ -291,13 +292,24 @@ async function home() {
     list.querySelectorAll('.doc').forEach(el => {
       const d = docs.find(x => x.id === el.dataset.id);
       el.querySelector('.doc-m').onclick = () => openSaved(d);
-      el.querySelector('.d-sh').onclick = async () => { try { await shareFile(await store.getDocBytes(d.id), d.name); } catch (e) { toast(e.message); } };
+      el.querySelector('.d-sh').onclick = async () => exportAs(await store.getDocBytes(d.id), d.name, 'share', null, d.fmt);
       el.querySelector('.d-more').onclick = () => docActions(d, folders);
     });
   };
   renderDocs();
   const q = $('.q'); if (q) q.oninput = () => { docQuery = q.value; renderDocs(); };
-  app.querySelectorAll('.folders .chip').forEach(c => c.onclick = () => { docFolder = c.dataset.f; home(); });
+  // folders: a drop-down list
+  const fdd = $('.fdd');
+  if (fdd) fdd.onclick = (e) => {
+    e.stopPropagation();
+    const old = app.querySelector('.dd-menu'); if (old) { old.remove(); return; }
+    const menu = document.createElement('div'); menu.className = 'dd-menu';
+    menu.innerHTML = [['', t('allDocs'), docs.length], ...folders.map(f => [f, f, docs.filter(d => d.folder === f).length])]
+      .map(([v, l, n]) => `<button data-f="${esc(v)}" class="${docFolder === v ? 'on' : ''}">${v ? ICON.folder : ICON.file}<span>${esc(l)}</span><small>${n}</small></button>`).join('');
+    fdd.after(menu);
+    menu.querySelectorAll('button').forEach(b => b.onclick = () => { docFolder = b.dataset.f; home(); });
+    setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }));
+  };
   showBanner(app.querySelector('.screen'));
 }
 
@@ -331,7 +343,7 @@ async function startFile(file) {
   try {
     const bytes = await fileToPdfBytes(file, (s) => b.set(t(s)));
     b.close();
-    openNew(bytes, file.name.replace(/\.[^.]+$/, '') + '.pdf');
+    openNew(bytes, file.name);
   } catch (e) {
     b.close(); console.error(e);
     toast(e.message === 'doc' ? t('errDoc') : t('err'));

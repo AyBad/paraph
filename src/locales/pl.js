@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Zapisz w telefonie",
  "ocrFail": "Odczyt tekstu nie powiódł się. Możesz wypełnić ręcznie.",
  "ocrWait": "Proszę czekać: wykrywanie pól…",
- "noFieldsUnclear": "Nie wykryto pól z pewnością: obraz jest nieostry lub już wypełniony. Wypełnij ręcznie za pomocą narzędzi."
+ "noFieldsUnclear": "Nie wykryto pól z pewnością: obraz jest nieostry lub już wypełniony. Wypełnij ręcznie za pomocą narzędzi.",
+ "format": "Format",
+ "chooseFormat": "Wybierz format",
+ "converting": "Konwersja…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Zalecany · układ bez zmian, edytowalny w Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Każda strona jako obraz w pliku Word (tekst nieedytowalny)",
+ "fmt_jpg": "Obraz (.jpg)",
+ "fmtHint_jpg": "Wszystkie strony w jednym obrazie"
 };
