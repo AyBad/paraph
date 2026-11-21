@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Salvesta telefoni",
  "ocrFail": "Teksti lugemine ebaõnnestus. Täitke käsitsi.",
  "ocrWait": "Palun oodake: väljade tuvastamine…",
- "noFieldsUnclear": "Ühtegi välja ei tuvastatud kindlalt: pilt pole piisavalt terav või on juba täidetud. Täitke käsitsi tööriistadega."
+ "noFieldsUnclear": "Ühtegi välja ei tuvastatud kindlalt: pilt pole piisavalt terav või on juba täidetud. Täitke käsitsi tööriistadega.",
+ "format": "Vorming",
+ "chooseFormat": "Valige vorming",
+ "converting": "Teisendamine…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Soovitatav · paigutus säilib, Paraphis uuesti muudetav",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Iga leht lisatakse Wordi faili pildina (teksti ei saa muuta)",
+ "fmt_jpg": "Pilt (.jpg)",
+ "fmtHint_jpg": "Kõik lehed ühel pildil"
 };

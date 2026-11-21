@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Tallenna puhelimeen",
  "ocrFail": "Tekstin luku epäonnistui. Voit täyttää käsin.",
  "ocrWait": "Odota: kenttiä tunnistetaan…",
- "noFieldsUnclear": "Kenttiä ei tunnistettu varmasti: kuva ei ole tarpeeksi tarkka tai se on jo täytetty. Täytä käsin työkaluilla."
+ "noFieldsUnclear": "Kenttiä ei tunnistettu varmasti: kuva ei ole tarpeeksi tarkka tai se on jo täytetty. Täytä käsin työkaluilla.",
+ "format": "Muoto",
+ "chooseFormat": "Valitse muoto",
+ "converting": "Muunnetaan…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Suositeltu · asettelu säilyy, muokattavissa Paraphissa",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Jokainen sivu lisätään kuvana Word-tiedostoon (teksti ei muokattavissa)",
+ "fmt_jpg": "Kuva (.jpg)",
+ "fmtHint_jpg": "Kaikki sivut yhdessä kuvassa"
 };

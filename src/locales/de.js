@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Auf dem Telefon speichern",
  "ocrFail": "Texterkennung fehlgeschlagen. Sie können manuell ausfüllen.",
  "ocrWait": "Bitte warten: Felder werden erkannt…",
- "noFieldsUnclear": "Kein Feld sicher erkannt: Das Bild ist nicht scharf genug oder bereits ausgefüllt. Füllen Sie es mit den Werkzeugen manuell aus."
+ "noFieldsUnclear": "Kein Feld sicher erkannt: Das Bild ist nicht scharf genug oder bereits ausgefüllt. Füllen Sie es mit den Werkzeugen manuell aus.",
+ "format": "Format",
+ "chooseFormat": "Format wählen",
+ "converting": "Konvertierung…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Empfohlen · Layout bleibt erhalten, später in Paraph bearbeitbar",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Jede Seite wird als Bild in die Word-Datei eingefügt (Text nicht bearbeitbar)",
+ "fmt_jpg": "Bild (.jpg)",
+ "fmtHint_jpg": "Alle Seiten in einem einzigen Bild"
 };

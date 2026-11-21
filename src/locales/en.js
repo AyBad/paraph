@@ -172,5 +172,14 @@ export default {
  "saveToPhone": "Save to phone",
  "ocrFail": "Text reading failed. You can fill in manually.",
  "ocrWait": "Please wait: detecting the fields…",
- "noFieldsUnclear": "No field detected with certainty: the image is not sharp enough or already filled in. Fill it in manually with the tools (Text, Tick…)."
+ "noFieldsUnclear": "No field detected with certainty: the image is not sharp enough or already filled in. Fill it in manually with the tools (Text, Tick…).",
+ "format": "Format",
+ "chooseFormat": "Choose the format",
+ "converting": "Converting…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Recommended · layout kept, can be edited again in Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Each page is placed as a picture in the Word file (text not editable)",
+ "fmt_jpg": "Image (.jpg)",
+ "fmtHint_jpg": "All pages joined in a single picture"
 };

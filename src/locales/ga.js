@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Sábháil ar an bhfón",
  "ocrFail": "Theip ar léamh an téacs. Is féidir líonadh de láimh.",
  "ocrWait": "Fan, le do thoil: réimsí á mbrath…",
- "noFieldsUnclear": "Níor aimsíodh aon réimse go cinnte: níl an íomhá soiléir go leor nó tá sí líonta cheana. Líon de láimh."
+ "noFieldsUnclear": "Níor aimsíodh aon réimse go cinnte: níl an íomhá soiléir go leor nó tá sí líonta cheana. Líon de láimh.",
+ "format": "Formáid",
+ "chooseFormat": "Roghnaigh an fhormáid",
+ "converting": "Á thiontú…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Molta · leagan amach slán, is féidir eagarthóireacht arís in Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Cuirtear gach leathanach mar íomhá sa chomhad Word (téacs nach féidir a chur in eagar)",
+ "fmt_jpg": "Íomhá (.jpg)",
+ "fmtHint_jpg": "Na leathanaigh go léir in aon íomhá amháin"
 };

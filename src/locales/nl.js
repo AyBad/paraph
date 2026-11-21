@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Opslaan op telefoon",
  "ocrFail": "Tekst lezen mislukt. U kunt handmatig invullen.",
  "ocrWait": "Even geduld: velden worden gedetecteerd…",
- "noFieldsUnclear": "Geen veld met zekerheid gevonden: de afbeelding is niet scherp genoeg of al ingevuld. Vul handmatig in met de hulpmiddelen."
+ "noFieldsUnclear": "Geen veld met zekerheid gevonden: de afbeelding is niet scherp genoeg of al ingevuld. Vul handmatig in met de hulpmiddelen.",
+ "format": "Formaat",
+ "chooseFormat": "Kies het formaat",
+ "converting": "Converteren…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Aanbevolen · opmaak blijft behouden, later te bewerken in Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Elke pagina wordt als afbeelding in het Word-bestand gezet (tekst niet bewerkbaar)",
+ "fmt_jpg": "Afbeelding (.jpg)",
+ "fmtHint_jpg": "Alle pagina's in één afbeelding"
 };

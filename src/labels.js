@@ -16,6 +16,32 @@ export async function pdfTextItems(page, vp) {
   return out;
 }
 
+// "Nom : ............" / "Ville : ________": the run of dots or underscores is the place to write
+const LEADER = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}/g;
+const cw = (c) => /[.,:;·' ]/.test(c) ? 0.28 : c === '_' ? 0.556 : c === '…' ? 1 : /[A-ZÀ-ÖØ-Þ]/.test(c) ? 0.68 : /[il|!]/.test(c) ? 0.24 : 0.53;
+export function splitLeaders(items) {
+  const text = [], leaders = [];
+  for (const it of items) {
+    const s = it.str;
+    if (!/[.·…_]{4,}|_{3,}|(\. ?){4,}/.test(s)) { text.push(it); continue; }
+    const ch = [...s], acc = [0];
+    for (const c of ch) acc.push(acc[acc.length - 1] + cw(c));
+    // regex indices are UTF-16: map them to characters
+    const idx = []; { let u = 0; ch.forEach((c, i) => { idx[u] = i; u += c.length; }); idx[s.length] = ch.length; }
+    const k = it.w / (acc[ch.length] || 1), xAt = (u) => it.x + acc[idx[u] ?? ch.length] * k;
+    let last = 0, m; LEADER.lastIndex = 0;
+    while ((m = LEADER.exec(s))) {
+      const pre = s.slice(last, m.index);
+      if (pre.trim()) text.push({ ...it, str: pre.trim(), x: xAt(last), w: xAt(m.index) - xAt(last) });
+      leaders.push({ ...it, str: m[0], x: xAt(m.index), w: xAt(m.index + m[0].length) - xAt(m.index), leader: true });
+      last = m.index + m[0].length;
+    }
+    const post = s.slice(last);
+    if (post.trim()) text.push({ ...it, str: post.trim(), x: xAt(last), w: it.x + it.w - xAt(last) });
+  }
+  return { text, leaders };
+}
+
 let workerP = null;
 const simd = () => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch { return false; } };
 let progressCb = null;
@@ -47,6 +73,9 @@ export async function ocrTextItems(page, masks = [], onProgress) {
   const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
   const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
   await page.render({ canvasContext: ctx, viewport: v }).promise;
+  // erase the writing lines found in the picture: glued to the words, they make them unreadable
+  ctx.fillStyle = '#fff';
+  for (const m of masks) ctx.fillRect(m.x * S, m.y * S, m.w * S, m.h * S);
   // grey scale + contrast: faster and more reliable on photos
   const id = ctx.getImageData(0, 0, c.width, c.height), d = id.data;
   for (let i = 0; i < d.length; i += 4) { let l = d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114; l = l > 170 ? 255 : l < 90 ? 0 : (l - 90) * 255 / 80; d[i] = d[i + 1] = d[i + 2] = l; }
@@ -57,13 +86,14 @@ export async function ocrTextItems(page, masks = [], onProgress) {
   for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) for (const wd of l.words || []) {
     const str = (wd.text || '').trim(); if (!str) continue;
     const { x0, y0, x1, y1 } = wd.bbox;
-    const it = { str, x: x0 / S, y: y0 / S, w: (x1 - x0) / S, h: (y1 - y0) / S, conf: wd.confidence };
+    const it = { str, x: x0 / S, y: y0 / S, w: (x1 - x0) / S, h: (y1 - y0) / S, conf: wd.confidence, ocr: true };
     // anything that looks like letters or digits (handwriting included) = the place is not empty
     if (wd.confidence >= 15 && (str.match(/[\p{L}\p{N}]/gu) || []).length >= 2 && !/^[|_lLIiJj1!\/\\\[\]{}()'".,:;~-]+$/.test(str)) ink.push(it);
-    if (wd.confidence >= 35) out.push(it);
+    if (wd.confidence >= 35 || /^[.…_·]{4,}$/.test(str)) out.push(it);
   }
   out.ink = ink;
-  out.quality = out.length ? out.reduce((a, b) => a + b.conf, 0) / out.length : 0;
+  const real = out.filter(i => i.conf >= 35);
+  out.quality = real.length ? real.reduce((a, b) => a + b.conf, 0) / real.length : 0;
   return out;
 }
 
@@ -93,6 +123,7 @@ export function attachLabels(fields, items) {
     const cy = o.zone ? fy + fh - Math.min(5, fh / 2) : fy + fh / 2;
     const row = rowOf(o).filter(f => f !== o);
     const sameRow = items.filter(it => Math.abs(it.y + it.h / 2 - cy) < (o.zone ? 5 : Math.max(4, fh * 0.75)));
+    if (o.fixedLabel) { o.label = o.fixedLabel; o.labelGap = 0; continue; }
     if (o.type === 'check') {
       // the closest text on either side ("F [ ] M [ ]" or "[ ] Oui")
       let best = null, side = '';
@@ -116,7 +147,7 @@ export function attachLabels(fields, items) {
     o.labelGap = labs.length ? o.x - (labs[labs.length - 1].x + labs[labs.length - 1].w) : 999;
     o.labelConf = labs.length ? Math.max(...labs.map(i => i.conf ?? 100)) : 0;
     // small caption printed under the box (cerfa style); normal-size text below is the next line's label, not a caption
-    o.caption = items.filter(it => it.h <= (o.zone ? 8.5 : 7.5) && it.h < fh * 0.8 && it.y >= fy + fh - 2 && it.y <= fy + fh + 9 && it.x < o.x + fw && it.x + it.w > o.x).map(i => i.str).join(' ');
+    o.caption = items.filter(it => it.h <= (o.zone ? 8.5 : 7.5) && it.h < fh * 0.8 && it.y >= fy + fh - 2 && it.y <= fy + fh + 9 && it.x + it.w / 2 > o.x - 2 && it.x + it.w / 2 < o.x + fw + 2).map(i => i.str).join(' ');
   }
 }
 
@@ -138,7 +169,7 @@ export function refineByRow(fields) {
     for (let i = 1; i < row.length; i++) {
       const o = row[i], p = row[i - 1];
       if (o.match) continue;
-      const l = norm(o.label);
+      const l = norm(o.label).replace(/\s*:$/, '');
       if ((!l || /^[\/\-.]+$/.test(l)) && (p.match === 'birthDate' || p.match === 'today')) o.match = p.match;
       else if (l === 'a' && p.match === 'birthDate') o.match = 'birthPlace';
       else if (l === 'a' && p.match === 'today') o.match = 'hour';

@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "휴대폰에 저장",
  "ocrFail": "텍스트 인식에 실패했습니다. 직접 입력할 수 있습니다.",
  "ocrWait": "잠시 기다려 주세요: 입력란 감지 중…",
- "noFieldsUnclear": "입력란을 확실히 감지하지 못했습니다. 이미지가 선명하지 않거나 이미 작성되었습니다. 도구로 직접 입력하세요."
+ "noFieldsUnclear": "입력란을 확실히 감지하지 못했습니다. 이미지가 선명하지 않거나 이미 작성되었습니다. 도구로 직접 입력하세요.",
+ "format": "형식",
+ "chooseFormat": "형식 선택",
+ "converting": "변환 중…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "권장 · 레이아웃 유지, Paraph에서 다시 편집 가능",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "각 페이지를 이미지로 Word 파일에 넣음 (텍스트 편집 불가)",
+ "fmt_jpg": "이미지 (.jpg)",
+ "fmtHint_jpg": "모든 페이지를 한 장의 이미지로"
 };

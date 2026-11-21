@@ -172,5 +172,14 @@ export default {
  "saveToPhone": "Enregistrer sur le téléphone",
  "ocrFail": "La lecture du texte a échoué. Vous pouvez remplir à la main.",
  "ocrWait": "Veuillez patienter : détection des champs…",
- "noFieldsUnclear": "Aucun champ détecté avec certitude : l'image n'est pas assez nette ou déjà remplie. Remplissez manuellement avec les outils (Texte, Cocher…)."
+ "noFieldsUnclear": "Aucun champ détecté avec certitude : l'image n'est pas assez nette ou déjà remplie. Remplissez manuellement avec les outils (Texte, Cocher…).",
+ "format": "Format",
+ "chooseFormat": "Choisir le format",
+ "converting": "Conversion…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Recommandé · mise en page intacte, modifiable plus tard dans Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Chaque page est placée en image dans le fichier Word (texte non modifiable)",
+ "fmt_jpg": "Image (.jpg)",
+ "fmtHint_jpg": "Toutes les pages réunies dans une seule image"
 };

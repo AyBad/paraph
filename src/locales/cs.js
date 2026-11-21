@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Uložit do telefonu",
  "ocrFail": "Čtení textu selhalo. Můžete vyplnit ručně.",
  "ocrWait": "Čekejte prosím: rozpoznávání polí…",
- "noFieldsUnclear": "Žádné pole nebylo spolehlivě rozpoznáno: obrázek není dost ostrý nebo je již vyplněn. Vyplňte ručně pomocí nástrojů."
+ "noFieldsUnclear": "Žádné pole nebylo spolehlivě rozpoznáno: obrázek není dost ostrý nebo je již vyplněn. Vyplňte ručně pomocí nástrojů.",
+ "format": "Formát",
+ "chooseFormat": "Vyberte formát",
+ "converting": "Převod…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Doporučeno · rozvržení zachováno, lze znovu upravit v Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Každá stránka je vložena jako obrázek do souboru Word (text nelze upravit)",
+ "fmt_jpg": "Obrázek (.jpg)",
+ "fmtHint_jpg": "Všechny stránky v jednom obrázku"
 };

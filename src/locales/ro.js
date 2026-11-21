@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Salvează pe telefon",
  "ocrFail": "Citirea textului a eșuat. Puteți completa manual.",
  "ocrWait": "Vă rugăm așteptați: detectarea câmpurilor…",
- "noFieldsUnclear": "Niciun câmp detectat cu certitudine: imaginea nu este clară sau este deja completată. Completați manual cu instrumentele."
+ "noFieldsUnclear": "Niciun câmp detectat cu certitudine: imaginea nu este clară sau este deja completată. Completați manual cu instrumentele.",
+ "format": "Format",
+ "chooseFormat": "Alegeți formatul",
+ "converting": "Conversie…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Recomandat · aspect păstrat, editabil din nou în Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Fiecare pagină este pusă ca imagine în fișierul Word (text needitabil)",
+ "fmt_jpg": "Imagine (.jpg)",
+ "fmtHint_jpg": "Toate paginile într-o singură imagine"
 };

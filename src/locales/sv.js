@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Spara på telefonen",
  "ocrFail": "Textläsningen misslyckades. Du kan fylla i manuellt.",
  "ocrWait": "Vänta: fälten identifieras…",
- "noFieldsUnclear": "Inga fält hittades säkert: bilden är inte skarp nog eller redan ifylld. Fyll i manuellt med verktygen."
+ "noFieldsUnclear": "Inga fält hittades säkert: bilden är inte skarp nog eller redan ifylld. Fyll i manuellt med verktygen.",
+ "format": "Format",
+ "chooseFormat": "Välj format",
+ "converting": "Konverterar…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Rekommenderas · layouten behålls, kan redigeras igen i Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Varje sida läggs in som bild i Word-filen (text ej redigerbar)",
+ "fmt_jpg": "Bild (.jpg)",
+ "fmtHint_jpg": "Alla sidor i en enda bild"
 };

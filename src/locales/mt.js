@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Issejvja fuq it-telefon",
  "ocrFail": "Il-qari tat-test falla. Imla manwalment.",
  "ocrWait": "Stenna: qed jinstabu l-oqsma…",
- "noFieldsUnclear": "L-ebda qasam ma nstab b'ċertezza: l-immaġni mhix ċara biżżejjed jew diġà mimlija. Imla manwalment."
+ "noFieldsUnclear": "L-ebda qasam ma nstab b'ċertezza: l-immaġni mhix ċara biżżejjed jew diġà mimlija. Imla manwalment.",
+ "format": "Format",
+ "chooseFormat": "Agħżel il-format",
+ "converting": "Konverżjoni…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Rakkomandat · it-tqassim jibqa', editjabbli f'Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Kull paġna titqiegħed bħala stampa fil-fajl Word (test mhux editjabbli)",
+ "fmt_jpg": "Stampa (.jpg)",
+ "fmtHint_jpg": "Il-paġni kollha fi stampa waħda"
 };

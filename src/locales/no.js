@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Lagre på telefonen",
  "ocrFail": "Tekstlesing mislyktes. Du kan fylle ut manuelt.",
  "ocrWait": "Vent: feltene oppdages…",
- "noFieldsUnclear": "Ingen felt funnet med sikkerhet: bildet er ikke skarpt nok eller allerede utfylt. Fyll ut manuelt med verktøyene."
+ "noFieldsUnclear": "Ingen felt funnet med sikkerhet: bildet er ikke skarpt nok eller allerede utfylt. Fyll ut manuelt med verktøyene.",
+ "format": "Format",
+ "chooseFormat": "Velg format",
+ "converting": "Konverterer…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Anbefalt · oppsettet beholdes, kan redigeres igjen i Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Hver side settes inn som bilde i Word-filen (tekst kan ikke redigeres)",
+ "fmt_jpg": "Bilde (.jpg)",
+ "fmtHint_jpg": "Alle sider i ett bilde"
 };

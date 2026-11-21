@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Saglabāt tālrunī",
  "ocrFail": "Teksta nolasīšana neizdevās. Aizpildiet manuāli.",
  "ocrWait": "Lūdzu, uzgaidiet: lauku noteikšana…",
- "noFieldsUnclear": "Neviens lauks netika droši atrasts: attēls nav pietiekami ass vai jau aizpildīts. Aizpildiet manuāli ar rīkiem."
+ "noFieldsUnclear": "Neviens lauks netika droši atrasts: attēls nav pietiekami ass vai jau aizpildīts. Aizpildiet manuāli ar rīkiem.",
+ "format": "Formāts",
+ "chooseFormat": "Izvēlieties formātu",
+ "converting": "Konvertē…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Ieteicams · izkārtojums saglabājas, rediģējams Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Katra lapa ievietota kā attēls Word failā (teksts nav rediģējams)",
+ "fmt_jpg": "Attēls (.jpg)",
+ "fmtHint_jpg": "Visas lapas vienā attēlā"
 };

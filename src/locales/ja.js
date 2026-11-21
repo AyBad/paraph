@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "スマホに保存",
  "ocrFail": "文字の読み取りに失敗しました。手動で入力できます。",
  "ocrWait": "お待ちください：入力欄を検出しています…",
- "noFieldsUnclear": "入力欄を確実に検出できませんでした。画像が不鮮明か、すでに記入済みです。ツールで手動入力してください。"
+ "noFieldsUnclear": "入力欄を確実に検出できませんでした。画像が不鮮明か、すでに記入済みです。ツールで手動入力してください。",
+ "format": "形式",
+ "chooseFormat": "形式を選択",
+ "converting": "変換中…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "おすすめ · レイアウトを保持、Paraph で再編集可能",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "各ページを画像として Word ファイルに配置（テキスト編集不可）",
+ "fmt_jpg": "画像 (.jpg)",
+ "fmtHint_jpg": "全ページを1枚の画像に"
 };

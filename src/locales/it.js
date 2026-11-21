@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Salva sul telefono",
  "ocrFail": "Lettura del testo non riuscita. Puoi compilare manualmente.",
  "ocrWait": "Attendere: rilevamento dei campi…",
- "noFieldsUnclear": "Nessun campo rilevato con certezza: l'immagine non è abbastanza nitida o è già compilata. Compila manualmente con gli strumenti."
+ "noFieldsUnclear": "Nessun campo rilevato con certezza: l'immagine non è abbastanza nitida o è già compilata. Compila manualmente con gli strumenti.",
+ "format": "Formato",
+ "chooseFormat": "Scegli il formato",
+ "converting": "Conversione…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Consigliato · impaginazione intatta, modificabile in Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Ogni pagina è inserita come immagine nel file Word (testo non modificabile)",
+ "fmt_jpg": "Immagine (.jpg)",
+ "fmtHint_jpg": "Tutte le pagine in un'unica immagine"
 };

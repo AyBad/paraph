@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "保存到手机",
  "ocrFail": "文字识别失败，您可以手动填写。",
  "ocrWait": "请稍候：正在检测字段…",
- "noFieldsUnclear": "未能可靠检测到字段：图像不够清晰或已填写。请使用工具手动填写。"
+ "noFieldsUnclear": "未能可靠检测到字段：图像不够清晰或已填写。请使用工具手动填写。",
+ "format": "格式",
+ "chooseFormat": "选择格式",
+ "converting": "正在转换…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "推荐 · 保留版式，可在 Paraph 中再次编辑",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "每页以图片形式放入 Word 文件（文字不可编辑）",
+ "fmt_jpg": "图片 (.jpg)",
+ "fmtHint_jpg": "所有页面合成一张图片"
 };

@@ -1,6 +1,6 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
-import { PDFDocument, StandardFonts, rgb, degrees, LineCapStyle, PDFName, PDFDict, PDFArray } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, degrees, LineCapStyle, PDFName, PDFDict, PDFArray, PDFHexString } from 'pdf-lib';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 export { pdfjs };
@@ -43,6 +43,53 @@ async function imageToPdf(file) {
   return pdf.save();
 }
 
+const WINANSI = /[\x20-\x7e\xa0-\xff€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
+const LEAD_RE = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}/g;
+/** positions (px, relative to the page) of the words, the dotted / underlined places and the empty table cells of a rendered Word page */
+function docxLayout(sec) {
+  const base = sec.getBoundingClientRect(), words = [], zones = [], boxes = [];
+  const rel = (r) => [r.left - base.left, r.top - base.top, r.width, r.height];
+  const tw = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    const s = n.nodeValue; if (!s || !s.trim()) continue;
+    const re = /[.·…_]{4,}|_{3,}|(?:\. ?){4,}|[☐□❑▢◻]|[^\s.·…_☐□❑▢◻]+|\S/g; let m;
+    while ((m = re.exec(s))) {
+      range.setStart(n, m.index); range.setEnd(n, m.index + m[0].length);
+      const rects = [...range.getClientRects()].filter(r => r.width > 0.5 && r.height > 0.5);
+      if (/^[☐□❑▢◻]$/.test(m[0])) { for (const r of rects) { const [x, y, w, h] = rel(r); const sz = Math.min(w, h) * 0.8; boxes.push([x + (w - sz) / 2, y + (h - sz) / 2, sz, sz]); } continue; }
+      LEAD_RE.lastIndex = 0;
+      if (LEAD_RE.test(m[0]) && m[0].replace(/\s/g, '').length >= 3) { for (const r of rects) if (r.width > 18) zones.push(rel(r)); continue; }
+      for (const r of rects) { const [x, y, w, h] = rel(r); words.push({ t: m[0], x, y, w, h }); }
+    }
+  }
+  // an empty table cell next to a filled one = a place to write
+  for (const td of sec.querySelectorAll('td')) {
+    if (td.textContent.replace(/[\s\u00a0]/g, '') || td.querySelector('img')) continue;
+    const r = td.getBoundingClientRect(); if (r.width < 30 || r.height < 12) continue;
+    const row = td.parentElement, hasText = row && [...row.children].some(c => c !== td && c.textContent.trim());
+    const prevRow = row && row.previousElementSibling, header = prevRow && prevRow.children[[...row.children].indexOf(td)]?.textContent.trim();
+    const left = td.previousElementSibling?.textContent.trim();
+    if (hasText || header) zones.push([...rel({ left: r.left + 3, top: r.top + 2, width: r.width - 6, height: r.height - 4 }), left ? '' : header || '']);
+  }
+  // underlined blanks (u with spaces only)
+  for (const u of sec.querySelectorAll('span')) {
+    const st = getComputedStyle(u);
+    if (!/underline/.test(st.textDecorationLine || st.textDecoration) || u.textContent.trim()) continue;
+    const r = u.getBoundingClientRect(); if (r.width > 18) zones.push(rel(r));
+  }
+  return { words, zones, boxes };
+}
+
+/** places to write stored by the Word conversion (see docxToPdf) */
+export async function storedZones(pdf) {
+  try {
+    const md = await pdf.getMetadata();
+    const v = md?.info?.Custom?.ParaphZones;
+    return v ? JSON.parse(typeof v === 'string' ? v : v.name || '') : null;
+  } catch { return null; }
+}
+
 async function docxToPdf(file) {
   const [{ renderAsync }, html2canvas] = await Promise.all([
     import('docx-preview'), import('html2canvas').then(m => m.default)
@@ -58,15 +105,29 @@ async function docxToPdf(file) {
     await new Promise(r => setTimeout(r, 300));
     const sections = host.querySelectorAll('section.docx');
     const pdf = await PDFDocument.create();
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const zonesAll = [];
     for (const s of sections) {
       s.style.margin = '0'; s.style.boxShadow = 'none';
+      const lay = docxLayout(s);
       const canvas = await html2canvas(s, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
       const jpg = await (await fetch(canvas.toDataURL('image/jpeg', 0.92))).arrayBuffer();
       const im = await pdf.embedJpg(jpg);
       const w = s.offsetWidth * 0.75, h = s.offsetHeight * 0.75;
-      pdf.addPage([w, h]).drawImage(im, { x: 0, y: 0, width: w, height: h });
+      const pg = pdf.addPage([w, h]);
+      pg.drawImage(im, { x: 0, y: 0, width: w, height: h });
+      // invisible text: the words stay readable for the form analysis (labels, headings) without OCR
+      for (const wd of lay.words) {
+        const txt = [...wd.t].map(c => WINANSI.test(c) ? c : '?').join('');
+        let wpt; try { wpt = font.widthOfTextAtSize(txt, 1); } catch { continue; }
+        if (!wpt) continue;
+        const size = Math.max(2, Math.min(wd.h * 0.75 * 1.2, (wd.w * 0.75) / wpt));
+        try { pg.drawText(txt, { x: wd.x * 0.75, y: h - (wd.y + wd.h * 0.8) * 0.75, size, font, opacity: 0 }); } catch { }
+      }
+      zonesAll.push({ z: lay.zones.map(z => z.map(v => typeof v === 'number' ? Math.round(v * 0.75 * 10) / 10 : v)), b: lay.boxes.map(z => z.map(v => Math.round(v * 0.75 * 10) / 10)) });
     }
     if (!sections.length) throw new Error('empty');
+    pdf.getInfoDict().set(PDFName.of('ParaphZones'), PDFHexString.fromText(JSON.stringify(zonesAll)));
     return pdf.save();
   } finally { host.remove(); }
 }
@@ -208,6 +269,42 @@ export async function detectZones(page) {
     if (y1 - y0 <= 3 && chain.length < 4) lines.push({ x0: chain[0].x0, x1: cur.x1, y0, y1 });
     else { DBG.push([{ x0: chain[0].x0, x1: cur.x1, y0, y1 }, 'cyan']); if (cur.x1 - chain[0].x0 > 60 * S) sloped++; }
   }
+  // dotted lines ". . . . . . ." : rows of small dots at the same height, evenly spaced
+  {
+    const seenD = new Uint8Array(W * H), dots = [], lim = 3.5 * S;
+    for (let i = 0; i < W * H; i++) {
+      if (!ldark[i] || seenD[i]) continue;
+      const st = [i]; seenD[i] = 1; let n = 0, x0 = W, y0 = H, x1 = 0, y1 = 0, big = false;
+      while (st.length) {
+        const p = st.pop(); n++; const x = p % W, y = (p / W) | 0;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        if (x1 - x0 > lim || y1 - y0 > lim) big = true;
+        if (n > 400) { big = true; }
+        for (const q of [p - 1, p + 1, p - W, p + W]) if (q >= 0 && q < W * H && ldark[q] && !seenD[q]) { seenD[q] = 1; st.push(q); }
+      }
+      if (!big) dots.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, x0, x1 });
+    }
+    dots.sort((a, b) => a.x - b.x);
+    const used = new Set();
+    for (let i = 0; i < dots.length; i++) {
+      if (used.has(i)) continue;
+      const ch = [i]; let cur = dots[i];
+      for (let j = i + 1; j < dots.length && dots[j].x - cur.x <= 8 * S; j++) {
+        if (used.has(j)) continue;
+        const d = dots[j];
+        if (Math.abs(d.y - cur.y) <= 1.2 * S && d.x - cur.x >= 1.2) { ch.push(j); cur = d; }
+      }
+      if (ch.length >= 6 && cur.x - dots[i].x >= 22 * S) {
+        // regular spacing (a word's i-dots / periods are not)
+        const gaps = ch.slice(1).map((k, n) => dots[k].x - dots[ch[n]].x), mg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+        if (gaps.every(g => g < mg * 2.2)) {
+          for (const k of ch) used.add(k);
+          const y = Math.round(ch.reduce((a, k) => a + dots[k].y, 0) / ch.length);
+          lines.push({ x0: Math.round(dots[i].x0), x1: Math.round(cur.x1) + 1, y0: y, y1: y + 1, dotted: true });
+        }
+      }
+    }
+  }
   const thin = lines.filter(l => !l.gone && l.y1 - l.y0 <= 4 * S).sort((a, b) => a.y0 - b.y0);
   // 2. pair lines into boxes, or use the empty band above a single line
   const zones = [], usedTop = new Set();
@@ -224,11 +321,17 @@ export async function detectZones(page) {
   for (const l of thin) {
     if (l.x1 - l.x0 > W * 0.9) continue; // page / section borders
     // a real line has white just above and below it; the bottom edge of bold text has letter strokes above
-    if (darkRatio(l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > 0.22 || darkRatio(l.x0, l.y1 + 2, l.x1, l.y1 + 3 * S) > 0.22) { DBG.push([l, 'orange']); continue; }
+    if (!l.dotted && (darkRatio(l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > 0.22 || darkRatio(l.x0, l.y1 + 2, l.x1, l.y1 + 3 * S) > 0.22)) { DBG.push([l, 'orange']); continue; }
     // a real line is solid; the top/bottom edge of a word has small gaps between the letters
     let best = 0;
     for (let y = l.y0; y <= l.y1; y++) { let n = 0; for (let x = l.x0; x < l.x1; x++) n += ldark[y * W + x]; best = Math.max(best, n / (l.x1 - l.x0)); }
-    if (best < 0.93) { DBG.push([l, 'orange']); continue; }
+    if (best < 0.93 && !l.dotted) {
+      // dots so close that they touch once scaled: a regular dash pattern is still a dotted line
+      let runs = 0, prev = 0, ym = (l.y0 + l.y1) >> 1;
+      for (let x = l.x0; x < l.x1; x++) { const dd = ldark[ym * W + x] | ldark[Math.min(H - 1, ym + 1) * W + x]; if (dd && !prev) runs++; prev = dd; }
+      if (!(best >= 0.2 && runs >= 6 && (l.x1 - l.x0) / runs <= 7 * S)) { DBG.push([l, 'orange']); continue; }
+      l.dotted = true;
+    }
     // a box = two lines joined by vertical sides
     const top = thin.find(t => t !== l && !usedTop.has(t) && l.y0 - t.y1 >= 9 * S && l.y0 - t.y1 <= 32 * S &&
       Math.abs(t.x0 - l.x0) < 6 * S && Math.abs(t.x1 - l.x1) < 6 * S &&
@@ -249,6 +352,7 @@ export async function detectZones(page) {
       z = { x0: l.x0, x1: l.x1, y0: y + 1, y1: l.y0 - 1 };
     }
     if (darkRatio(z.x0 + 3 * S, z.y0 + 1, z.x1 - 3 * S, z.y1 - 2 * S) > 0.045) { DBG.push([l, 'red']); continue; } // already written / text
+    if (l.dotted) z.dotted = true;
     zones.push(z); DBG.push([l, 'lime']);
   }
   const straight = thin.filter(l => l.x1 - l.x0 > 60 * S).length;
@@ -281,7 +385,7 @@ export async function detectZones(page) {
       && darkRatio(x0 + 2 * t, y0 + 2 * t, x1 - 2 * t, y1 - 2 * t) < 0.15)
       boxes.push({ x: x0 / S, y: y0 / S, w: w / S, h: h / S });
   }
-  return { zones: out.slice(0, 120).map(z => ({ x: z.x0 / S, y: z.y0 / S, w: (z.x1 - z.x0) / S, h: (z.y1 - z.y0) / S })), boxes };
+  return { zones: out.slice(0, 120).map(z => ({ x: z.x0 / S, y: z.y0 / S, w: (z.x1 - z.x0) / S, h: (z.y1 - z.y0) / S, dotted: !!z.dotted })), boxes };
 }
 
 const hex = (c) => {

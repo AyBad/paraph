@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Salvar no telefone",
  "ocrFail": "A leitura do texto falhou. Pode preencher manualmente.",
  "ocrWait": "Aguarde: a detetar os campos…",
- "noFieldsUnclear": "Nenhum campo detetado com certeza: a imagem não está nítida ou já está preenchida. Preencha manualmente com as ferramentas."
+ "noFieldsUnclear": "Nenhum campo detetado com certeza: a imagem não está nítida ou já está preenchida. Preencha manualmente com as ferramentas.",
+ "format": "Formato",
+ "chooseFormat": "Escolher o formato",
+ "converting": "A converter…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Recomendado · paginação intacta, editável de novo no Paraph",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Cada página é colocada como imagem no ficheiro Word (texto não editável)",
+ "fmt_jpg": "Imagem (.jpg)",
+ "fmtHint_jpg": "Todas as páginas numa só imagem"
 };

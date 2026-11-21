@@ -169,5 +169,14 @@ export default {
  "saveToPhone": "Shrani v telefon",
  "ocrFail": "Branje besedila ni uspelo. Izpolnite ročno.",
  "ocrWait": "Počakajte: zaznavanje polj…",
- "noFieldsUnclear": "Nobeno polje ni bilo zanesljivo zaznano: slika ni dovolj ostra ali je že izpolnjena. Izpolnite ročno z orodji."
+ "noFieldsUnclear": "Nobeno polje ni bilo zanesljivo zaznano: slika ni dovolj ostra ali je že izpolnjena. Izpolnite ročno z orodji.",
+ "format": "Oblika",
+ "chooseFormat": "Izberite obliko",
+ "converting": "Pretvarjanje…",
+ "fmt_pdf": "PDF",
+ "fmtHint_pdf": "Priporočeno · postavitev ostane, znova urejljivo v Paraphu",
+ "fmt_docx": "Word (.docx)",
+ "fmtHint_docx": "Vsaka stran je vstavljena kot slika v datoteko Word (besedilo ni urejljivo)",
+ "fmt_jpg": "Slika (.jpg)",
+ "fmtHint_jpg": "Vse strani v eni sliki"
 };
