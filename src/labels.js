@@ -132,6 +132,15 @@ export async function ocrTextItems(page, masks = [], onProgress) {
 }
 
 /** group items into text lines */
+/** words side by side: no space when the pieces touch (Word splits words into several runs: "Mai" + "l") */
+export function joinWords(items) {
+  let s = '';
+  items.forEach((it, i) => {
+    const p = items[i - 1];
+    s += (!p ? '' : it.x - (p.x + p.w) < Math.max(0.6, (it.h || 8) * 0.08) && /\S$/.test(p.str) && /^[^\s:;,.!?)]/.test(it.str) && it.x - (p.x + p.w) > -2 ? '' : ' ') + it.str;
+  });
+  return s.replace(/\s+/g, ' ').trim();
+}
 export function textLines(items) {
   const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
   const lines = [];
@@ -141,7 +150,7 @@ export function textLines(items) {
     if (l) { l.items.push(it); l.x0 = Math.min(l.x0, it.x); l.x1 = Math.max(l.x1, it.x + it.w); }
     else lines.push({ cy, h: it.h, y: it.y, x0: it.x, x1: it.x + it.w, items: [it] });
   }
-  for (const l of lines) { l.items.sort((a, b) => a.x - b.x); l.text = l.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim(); }
+  for (const l of lines) { l.items.sort((a, b) => a.x - b.x); l.text = joinWords(l.items); }
   return lines;
 }
 
@@ -195,7 +204,7 @@ export function attachLabels(fields, items) {
     }
     const prev = Math.max(...row.filter(f => f.x + (f.fw ?? f.w) <= o.x + 2).map(f => f.x + (f.fw ?? f.w)), o.x - 230);
     const labs = sameRow.filter(it => it.x < o.x - 2 && it.x + it.w <= o.x + 12 && it.x + it.w > prev - 2).sort((a, b) => a.x - b.x);
-    o.label = labs.map(i => i.str).join(' ');
+    o.label = joinWords(labs);
     o.labelGap = labs.length ? o.x - (labs[labs.length - 1].x + labs[labs.length - 1].w) : 999;
     o.labelConf = labs.length ? Math.max(...labs.map(i => i.conf ?? 100)) : 0;
     // small caption printed under the box (cerfa style); normal-size text below is the next line's label, not a caption
@@ -222,7 +231,14 @@ export function refineByRow(fields) {
     // "N° [..] Rue [.........]"
     for (let i = 0; i < row.length - 1; i++) if (!row[i].match && /^\s*n\s*[°ºo]\.?\s*:?\s*$/i.test(row[i].label || '') && row.slice(i + 1).some(o => /^street/.test(o.match || ''))) row[i].match = 'streetNumber';
     // "[code postal] [commune]": the box after the postal code is the town even if its caption was not read
-    for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'postalCode' && !row[i + 1].match) row[i + 1].match = 'city';
+    for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'postalCode' && !row.slice(i + 1).some(o => o.match === 'city')) {
+      // the town: the first free place after the postal code, the wide one when a small one comes first
+      const free = row.slice(i + 1).filter(o => !o.match);
+      const pick = free.find(o => (o.fw ?? o.w) >= 80) || free[0];
+      if (pick) pick.match = 'city';
+    }
+    // "Date de naissance [..] Ville [....]": the town of birth
+    if (row.some(o => o.match === 'birthDate')) for (const o of row) if (o.match === 'city') o.match = 'birthPlace';
     // "[n°] [ext] [type] [nom]": a long box ending the row after a street type is the street name
     for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'streetType' && !row[i + 1].match) row[i + 1].match = 'streetName';
     for (let i = 1; i < row.length; i++) {

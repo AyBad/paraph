@@ -42,6 +42,8 @@ function matchField(f) {
   if (has(/heure|\bhour/)) return 'hour';
   if (has(/minute/)) return 'minute';
   if (has(/(^|[^a-z])(nom|name|surname|last|family|apellido|cognome|nachname|naam)([^a-z]|$)/)) return 'lastName';
+  // dates that are not "today": entry / leaving / hiring / expiry / validity / start / end
+  if (has(/date d\S*\s*(entree|sortie|embauche|expiration|echeance|debut|fin|depart|arrivee|validite|delivrance|effet)|entry date|end date|start date|expir/)) return null;
   if (has(/(^|[^a-z])date([^a-z]|$)|fait le|signed on|datum|fecha|declaration/)) return 'today';
   return null;
 }
@@ -122,7 +124,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     let boxes = [], zones = [];
     const st = stored && stored[i - 1];
     if (st) {
-      for (const [x, y, w, h, lab] of st.z) fields.push({ kind: 'zone', page: i - 1, x, y, w, h, sure: true, lab });
+      for (const [x, y, w, h, lab, comb, cells] of st.z) fields.push({ kind: 'zone', page: i - 1, x, y, w, h, sure: true, lab, comb, cells });
       for (const [x, y, w, h] of st.b) boxes.push({ x, y, w, h });
       // round / drawn tick boxes of the Word page ("◯ M.  ◯ Mme") are only visible in the picture
       if (!initialObjs) { try { const z = await detectZones(page); for (const bx of z.boxes) if (!boxes.some(o => Math.abs(o.x - bx.x) < 3 && Math.abs(o.y - bx.y) < 3)) boxes.push(bx); } catch { } }
@@ -142,7 +144,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   // fields -> objects (or restore the objects of a document saved earlier)
   if (initialObjs && initialObjs.length) objs = JSON.parse(JSON.stringify(initialObjs));
   else for (const f of fields) {
-    if (f.kind === 'zone') { const z = addZone(f.page, f.x, f.y, f.w, f.h, !f.sure); if (f.lab) z.fixedLabel = f.lab; if (f.dotted) z.dotted = true; }
+    if (f.kind === 'zone') { const z = addZone(f.page, f.x, f.y, f.w, f.h, !f.sure); if (f.lab) z.fixedLabel = f.lab; if (f.dotted) z.dotted = true; if (f.comb > 1) { z.comb = f.comb; if (f.cells) z.cells = f.cells; } }
     else if (f.kind === 'text') {
       const fs = Math.max(5, Math.min(11, f.multiline ? 10 : f.h * 0.68));
       objs.push({
@@ -615,6 +617,11 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         Object.assign(el.style, { left: o.x * s + 'px', top: o.fy * s + 'px', width: o.fw * s + 'px', height: o.fh * s + 'px' });
         if (o.comb) {
           const cw = o.fw / o.comb;
+          if (o.cells) {
+            // boxes not evenly spaced (JJ MM AAAA): each letter centred on its own box
+            const bw = Math.min(...o.cells.slice(1).map((c, i) => c - o.cells[i]), o.fw / o.comb);
+            el.innerHTML = `<div class="comb" style="position:relative;height:100%;font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${[...(o.text || '')].slice(0, o.comb).map((c, i) => `<span style="position:absolute;left:${(o.cells[i] - bw / 2) * s}px;width:${bw * s}px">${esc(c)}</span>`).join('')}</div>`;
+          } else
           el.innerHTML = `<div class="comb" style="font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${[...(o.text || '')].slice(0, o.comb).map(c => `<span style="width:${cw * s}px">${esc(c)}</span>`).join('')}</div>`;
         } else el.innerHTML = `<div class="tx" dir="auto" style="font-size:${o.fontSize * s}px;color:${o.color};padding-top:${(o.y - o.fy) * s}px">${esc(o.text)}</div>`;
       } else {

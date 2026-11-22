@@ -63,14 +63,44 @@ function docxLayout(sec) {
       for (const r of rects) { const [x, y, w, h] = rel(r); words.push({ t: m[0], x, y, w, h }); }
     }
   }
-  // an empty table cell next to a filled one = a place to write
-  for (const td of sec.querySelectorAll('td')) {
-    if (td.textContent.replace(/[\s\u00a0]/g, '') || td.querySelector('img')) continue;
-    const r = td.getBoundingClientRect(); if (r.width < 30 || r.height < 12) continue;
-    const row = td.parentElement, hasText = row && [...row.children].some(c => c !== td && c.textContent.trim());
-    const prevRow = row && row.previousElementSibling, header = prevRow && prevRow.children[[...row.children].indexOf(td)]?.textContent.trim();
-    const left = td.previousElementSibling?.textContent.trim();
-    if (hasText || header) zones.push([...rel({ left: r.left + 3, top: r.top + 2, width: r.width - 6, height: r.height - 4 }), left ? '' : header || '']);
+  // tables: an empty cell with a label on its left (or a header row above) = a place to write;
+  // a run of small empty cells = character boxes (date, n° of social security, phone…)
+  const txt = (c) => c.textContent.replace(/[\s\u00a0]/g, '');
+  for (const tr of sec.querySelectorAll('tr')) {
+    const cells = [...tr.children].filter(c => /^T[DH]$/.test(c.tagName));
+    const prev = tr.previousElementSibling, prevCells = prev ? [...prev.children].filter(c => /^T[DH]$/.test(c.tagName)) : [];
+    const headerRow = prevCells.length > 1 && prevCells.every(c => txt(c)); // a real header row: every cell written
+    if (!cells.some(c => txt(c)) && !headerRow) continue; // spacing row of the layout
+    const headerOf = (r) => {
+      if (!headerRow) return '';
+      let best = null, ov = 0;
+      for (const c of prevCells) { const q = c.getBoundingClientRect(), o = Math.min(q.right, r.right) - Math.max(q.left, r.left); if (o > ov) { ov = o; best = c; } }
+      return best ? best.textContent.trim() : '';
+    };
+    let run = [], leftLabel = '';
+    const flush = () => {
+      if (run.length >= 2) {
+        const x0 = Math.min(...run.map(r => r.left)), x1 = Math.max(...run.map(r => r.right)), y0 = Math.min(...run.map(r => r.top)), y1 = Math.max(...run.map(r => r.bottom));
+        // the centre of every box, so that each letter lands in its box even when the boxes are grouped (JJ MM AAAA)
+        zones.push([...rel({ left: x0 + 1, top: y0 + 1, width: x1 - x0 - 2, height: y1 - y0 - 2 }), '', run.length, run.map(r => Math.round(((r.left + r.right) / 2 - x0 - 1) * 0.75 * 10) / 10)]);
+      } else if (run.length === 1) {
+        const r = run[0];
+        if (Math.abs(r.width - r.height) < 6) boxes.push(rel({ left: r.left + 2, top: r.top + 2, width: r.width - 4, height: r.height - 4 }));
+        else zones.push([...rel({ left: r.left + 2, top: r.top + 2, width: r.width - 4, height: r.height - 4 }), '', 1]);
+      }
+      run = [];
+    };
+    for (const td of cells) {
+      if (txt(td) || td.querySelector('img')) { flush(); leftLabel = td.textContent.trim(); continue; }
+      const r = td.getBoundingClientRect();
+      if (r.height < 12 || r.width < 6) continue;
+      const header = headerOf(r);
+      if (!leftLabel && !header) { flush(); continue; } // empty cell of the label column
+      if (r.width < 34) { run.push(r); continue; }
+      flush();
+      zones.push([...rel({ left: r.left + 3, top: r.top + 2, width: r.width - 6, height: r.height - 4 }), leftLabel ? '' : header]);
+    }
+    flush();
   }
   // underlined blanks (u with spaces only)
   for (const u of sec.querySelectorAll('span')) {
@@ -79,6 +109,17 @@ function docxLayout(sec) {
     const r = u.getBoundingClientRect(); if (r.width > 18) zones.push(rel(r));
   }
   return { words, zones, boxes };
+}
+
+/** Wingdings / Symbol boxes (private-use characters) shown as Unicode boxes, readable everywhere */
+const SYM = { '\uF06F': '☐', '\uF0A8': '☐', '\uF071': '☐', '\uF072': '☐', '\uF070': '☐', '\uF06E': '■', '\uF0FE': '☑', '\uF0FD': '☒', '\uF078': '☒', '\uF0A7': '▪', '\uF0B7': '•', '\uF0D8': '➢', '\uF0FC': '✓' };
+function symbolsToUnicode(sec) {
+  const tw = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT);
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    if (!/[\uF020-\uF0FF]/.test(n.nodeValue)) continue;
+    n.nodeValue = n.nodeValue.replace(/[\uF020-\uF0FF]/g, (c) => SYM[c] || (c === '\uF020' ? ' ' : '☐'));
+    const p = n.parentElement; if (p && /wingdings|symbol|webdings/i.test(getComputedStyle(p).fontFamily)) p.style.fontFamily = 'Arial, sans-serif';
+  }
 }
 
 /** places to write stored by the Word conversion (see docxToPdf) */
@@ -109,6 +150,7 @@ async function docxToPdf(file) {
     const zonesAll = [];
     for (const s of sections) {
       s.style.margin = '0'; s.style.boxShadow = 'none';
+      symbolsToUnicode(s);
       const lay = docxLayout(s);
       const canvas = await html2canvas(s, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
       const jpg = await (await fetch(canvas.toDataURL('image/jpeg', 0.92))).arrayBuffer();
@@ -124,7 +166,7 @@ async function docxToPdf(file) {
         const size = Math.max(2, Math.min(wd.h * 0.75 * 1.2, (wd.w * 0.75) / wpt));
         try { pg.drawText(txt, { x: wd.x * 0.75, y: h - (wd.y + wd.h * 0.8) * 0.75, size, font, opacity: 0 }); } catch { }
       }
-      zonesAll.push({ z: lay.zones.map(z => z.map(v => typeof v === 'number' ? Math.round(v * 0.75 * 10) / 10 : v)), b: lay.boxes.map(z => z.map(v => Math.round(v * 0.75 * 10) / 10)) });
+      zonesAll.push({ z: lay.zones.map(z => z.map((v, k) => k < 4 ? Math.round(v * 0.75 * 10) / 10 : v)), b: lay.boxes.map(z => z.map(v => Math.round(v * 0.75 * 10) / 10)) });
     }
     if (!sections.length) throw new Error('empty');
     pdf.getInfoDict().set(PDFName.of('ParaphZones'), PDFHexString.fromText(JSON.stringify(zonesAll)));
@@ -476,7 +518,7 @@ export async function exportPdf(bytes, objects, pagesInfo) {
       const chars = [...(o.text || '')].slice(0, o.comb); const cw = o.w / o.comb;
       for (let i = 0; i < chars.length; i++) {
         let vector = true; try { helv.encodeText(chars[i]); } catch { vector = false; }
-        const cx = o.x + cw * i + cw / 2;
+        const cx = o.cells && o.cells[i] != null ? o.x + o.cells[i] : o.x + cw * i + cw / 2;
         if (vector) {
           const tw = helv.widthOfTextAtSize(chars[i], o.fontSize);
           const a = P(cx - tw / 2, o.y + 0.9465 * o.fontSize);
