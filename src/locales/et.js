@@ -103,7 +103,7 @@ export default {
  "roleB": "Ostja (uus omanik)",
  "roleBoth": "Mõlemad",
  "ad": "Reklaam",
- "freeLimit": "Tasuta versioon lubab 2 profiili. Pro-ga piiramatult.",
+ "freeLimit": "Tasuta versioon lubab 5 profiili. Pro-ga piiramatult.",
  "seePro": "Vaata Pro-d",
  "perkNoAds": "Reklaamideta",
  "perkProfiles": "Piiramatult profiile",

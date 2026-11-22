@@ -106,7 +106,7 @@ export default {
  "roleB": "Buyer (new owner)",
  "roleBoth": "Both",
  "ad": "Ad",
- "freeLimit": "The free version allows 2 profiles. Go Pro for unlimited profiles.",
+ "freeLimit": "The free version allows 5 profiles. Go Pro for unlimited profiles.",
  "seePro": "See Pro",
  "perkNoAds": "No ads",
  "perkProfiles": "Unlimited profiles",

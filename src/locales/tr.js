@@ -103,7 +103,7 @@ export default {
  "roleB": "Alıcı (yeni sahip)",
  "roleBoth": "İkisi de",
  "ad": "Reklam",
- "freeLimit": "Ücretsiz sürüm 2 profile izin verir. Pro ile sınırsız.",
+ "freeLimit": "Ücretsiz sürüm 5 profile izin verir. Pro ile sınırsız.",
  "seePro": "Pro'yu gör",
  "perkNoAds": "Reklamsız",
  "perkProfiles": "Sınırsız profil",

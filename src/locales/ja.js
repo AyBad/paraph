@@ -103,7 +103,7 @@ export default {
  "roleB": "買い手（新所有者）",
  "roleBoth": "両方",
  "ad": "広告",
- "freeLimit": "無料版のプロフィールは2つまでです。Pro なら無制限。",
+ "freeLimit": "無料版のプロフィールは5つまでです。Pro なら無制限。",
  "seePro": "Pro を見る",
  "perkNoAds": "広告なし",
  "perkProfiles": "プロフィール無制限",

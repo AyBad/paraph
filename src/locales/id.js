@@ -103,7 +103,7 @@ export default {
  "roleB": "Pembeli (pemilik baru)",
  "roleBoth": "Keduanya",
  "ad": "Iklan",
- "freeLimit": "Versi gratis mengizinkan 2 profil. Dengan Pro tanpa batas.",
+ "freeLimit": "Versi gratis mengizinkan 5 profil. Dengan Pro tanpa batas.",
  "seePro": "Lihat Pro",
  "perkNoAds": "Tanpa iklan",
  "perkProfiles": "Profil tanpa batas",

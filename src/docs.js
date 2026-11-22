@@ -24,6 +24,35 @@ async function loadImage(src) {
   return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 }
 
+/**
+ * Tilt of the text lines of a photo, in degrees (clockwise > 0): the angle for which the dark pixels
+ * pile up in the sharpest rows (projection profile). 0 when the picture holds no clear lines.
+ */
+export function skewAngle(img) {
+  const k = Math.min(1, 700 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+  const w = Math.round((img.naturalWidth || img.width) * k), h = Math.round((img.naturalHeight || img.height) * k);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  // centre of the picture only (the edges are often the table / background around the sheet)
+  const x0 = Math.round(w * 0.12), x1 = Math.round(w * 0.88), y0 = Math.round(h * 0.1), y1 = Math.round(h * 0.9);
+  const lum = (x, y) => { const i = (y * w + x) * 4; return (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000; };
+  let sum = 0, n = 0; for (let y = y0; y < y1; y += 2) for (let x = x0; x < x1; x += 2) { sum += lum(x, y); n++; }
+  const thr = sum / n - 50, pts = [];
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (lum(x, y) < thr) pts.push(x - w / 2, y - h / 2);
+  if (pts.length < 400) return 0;
+  const score = (deg) => {
+    const r = deg * Math.PI / 180, sn = Math.sin(r), cs = Math.cos(r), bins = new Float32Array(h * 2 + 4);
+    for (let i = 0; i < pts.length; i += 2) bins[Math.round(pts[i + 1] * cs - pts[i] * sn + h + 2)]++;
+    let s2 = 0; for (let i = 1; i < bins.length; i++) { const dd = bins[i] - bins[i - 1]; s2 += dd * dd; } return s2;
+  };
+  let best = 0, bs = score(0);
+  for (let a = -5; a <= 5.001; a += 0.25) { const v = score(a); if (v > bs) { bs = v; best = a; } }
+  const c0 = best; for (let a = c0 - 0.25; a <= c0 + 0.25; a += 0.05) { const v = score(a); if (v > bs) { bs = v; best = a; } }
+  // a clear gain over the straight picture, otherwise leave it as it is
+  return bs > score(0) * 1.15 ? Math.round(best * 100) / 100 : 0;
+}
+
 async function imageToPdf(file) {
   const url = URL.createObjectURL(file);
   const img = await loadImage(url);
@@ -34,7 +63,11 @@ async function imageToPdf(file) {
   c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  // a photo taken slightly askew: straighten it so that the writing lines are horizontal again
+  const a = skewAngle(img);
+  if (Math.abs(a) >= 0.15) { ctx.translate(c.width / 2, c.height / 2); ctx.rotate(-a * Math.PI / 180); ctx.translate(-c.width / 2, -c.height / 2); }
   ctx.drawImage(img, 0, 0, c.width, c.height);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   const jpg = await (await fetch(c.toDataURL('image/jpeg', 0.9))).arrayBuffer();
   const pdf = await PDFDocument.create();
   const im = await pdf.embedJpg(jpg);
@@ -265,13 +298,33 @@ export async function detectZones(page) {
   let sum = 0; const lum = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) { const l = (px[i * 4] * 299 + px[i * 4 + 1] * 587 + px[i * 4 + 2] * 114) / 1000; lum[i] = l; sum += l; }
   const mean = sum / (W * H), thr = Math.min(150, mean - 45);
-  const dark = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) dark[i] = lum[i] < thr ? 1 : 0;
+  // photos are unevenly lit (shadow, paper curving): a pixel must also be darker than its surroundings,
+  // otherwise a whole greyish area of the paper reads as one big dark block and no line is found
+  const R = Math.round(15 * S), II = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += lum[y * W + x]; II[(y + 1) * (W + 1) + x + 1] = II[y * (W + 1) + x + 1] + row; } }
+  const local = (x, y) => {
+    const x0 = Math.max(0, x - R), y0 = Math.max(0, y - R), x1 = Math.min(W, x + R + 1), y1 = Math.min(H, y + R + 1);
+    return (II[y1 * (W + 1) + x1] - II[y0 * (W + 1) + x1] - II[y1 * (W + 1) + x0] + II[y0 * (W + 1) + x0]) / ((x1 - x0) * (y1 - y0));
+  };
+  const dark = new Uint8Array(W * H), ldark = new Uint8Array(W * H);
   // thin printed lines come out light grey once scaled: a softer threshold to find them
-  const lthr = Math.min(215, mean - 22), ldark = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) ldark[i] = lum[i] < lthr ? 1 : 0;
+  const lthr = Math.min(215, mean - 22);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, l = lum[i]; if (l >= lthr) continue;
+    if (l < thr) dark[i] = 1;
+    const m = local(x, y);
+    if (l < m - 22) { ldark[i] = 1; if (l < m - 45) dark[i] = 1; }
+  }
   const darkRatio = (x0, y0, x1, y1) => {
     x0 = Math.max(0, x0 | 0); y0 = Math.max(0, y0 | 0); x1 = Math.min(W, x1 | 0); y1 = Math.min(H, y1 | 0);
     if (x1 <= x0 || y1 <= y0) return 1; let n = 0;
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) n += dark[y * W + x];
+    return n / ((x1 - x0) * (y1 - y0));
+  };
+  const ratioIn = (m, x0, y0, x1, y1) => {
+    x0 = Math.max(0, x0 | 0); y0 = Math.max(0, y0 | 0); x1 = Math.min(W, x1 | 0); y1 = Math.min(H, y1 | 0);
+    if (x1 <= x0 || y1 <= y0) return 1; let n = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) n += m[y * W + x];
     return n / ((x1 - x0) * (y1 - y0));
   };
   // 1. horizontal segments (allow 2px gaps)
@@ -364,6 +417,9 @@ export async function detectZones(page) {
     if (l.x1 - l.x0 > W * 0.9) continue; // page / section borders
     // a real line has white just above and below it; the bottom edge of bold text has letter strokes above
     if (!l.dotted && (darkRatio(l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > 0.22 || darkRatio(l.x0, l.y1 + 2, l.x1, l.y1 + 3 * S) > 0.22)) { DBG.push([l, 'orange']); continue; }
+    // same with light grey print (photos): the bottom of a word is not a line
+    // (a blurred word gives a short, thick "line" with a few ascenders above it)
+    if (!l.dotted && l.x1 - l.x0 < 60 * S && ratioIn(ldark, l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > (l.y1 - l.y0 >= 2 * S ? 0.06 : 0.3)) { DBG.push([l, 'orange']); continue; }
     // a real line is solid; the top/bottom edge of a word has small gaps between the letters
     let best = 0;
     for (let y = l.y0; y <= l.y1; y++) { let n = 0; for (let x = l.x0; x < l.x1; x++) n += ldark[y * W + x]; best = Math.max(best, n / (l.x1 - l.x0)); }
@@ -372,6 +428,8 @@ export async function detectZones(page) {
       let runs = 0, prev = 0, ym = (l.y0 + l.y1) >> 1;
       for (let x = l.x0; x < l.x1; x++) { const dd = ldark[ym * W + x] | ldark[Math.min(H - 1, ym + 1) * W + x]; if (dd && !prev) runs++; prev = dd; }
       if (!(best >= 0.2 && runs >= 6 && (l.x1 - l.x0) / runs <= 7 * S)) { DBG.push([l, 'orange']); continue; }
+      // the bottom of a word in light grey print also looks like dashes: a dotted line has paper above it
+      if (ratioIn(ldark, l.x0, l.y0 - 3 * S, l.x1, l.y0 - 1) > 0.18) { DBG.push([l, 'orange']); continue; }
       l.dotted = true;
     }
     // a box = two lines joined by vertical sides
@@ -435,6 +493,7 @@ export async function detectZones(page) {
         boxes.push({ x: x0 / S, y: y0 / S, w: w / S, h: h / S, round: true });
     }
   }
+  if (window.__pdbg) window.__pdbg.push({ zonesDbg: DBG.map(([l, c]) => c + ' ' + [l.x0, l.y0, l.x1 - l.x0, l.y1 - l.y0].join(',')), segs: segs.length, thin: thin.length });
   return { zones: out.slice(0, 120).map(z => ({ x: z.x0 / S, y: z.y0 / S, w: (z.x1 - z.x0) / S, h: (z.y1 - z.y0) / S, dotted: !!z.dotted })), boxes };
 }
 

@@ -103,7 +103,7 @@ export default {
  "roleB": "Koper (nieuwe eigenaar)",
  "roleBoth": "Beide",
  "ad": "Advertentie",
- "freeLimit": "De gratis versie staat 2 profielen toe. Neem Pro voor onbeperkte profielen.",
+ "freeLimit": "De gratis versie staat 5 profielen toe. Neem Pro voor onbeperkte profielen.",
  "seePro": "Bekijk Pro",
  "perkNoAds": "Geen advertenties",
  "perkProfiles": "Onbeperkt profielen",

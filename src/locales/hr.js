@@ -103,7 +103,7 @@ export default {
  "roleB": "Kupac (novi vlasnik)",
  "roleBoth": "Oboje",
  "ad": "Oglas",
- "freeLimit": "Besplatna verzija dopušta 2 profila. S Pro ih imate neograničeno.",
+ "freeLimit": "Besplatna verzija dopušta 5 profila. S Pro ih imate neograničeno.",
  "seePro": "Pogledaj Pro",
  "perkNoAds": "Bez oglasa",
  "perkProfiles": "Neograničeni profili",

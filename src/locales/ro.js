@@ -103,7 +103,7 @@ export default {
  "roleB": "Cumpărător (noul proprietar)",
  "roleBoth": "Amândoi",
  "ad": "Reclamă",
- "freeLimit": "Versiunea gratuită permite 2 profiluri. Treci la Pro pentru profiluri nelimitate.",
+ "freeLimit": "Versiunea gratuită permite 5 profiluri. Treci la Pro pentru profiluri nelimitate.",
  "seePro": "Vezi Pro",
  "perkNoAds": "Fără reclame",
  "perkProfiles": "Profiluri nelimitate",

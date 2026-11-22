@@ -215,14 +215,20 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       }
     }
     refineByRow(fieldsAll.filter(o => !o.admin));
+    if (window.__pdbg) window.__pdbg.push({ fields: fieldsAll.map(o => [Math.round(o.x), Math.round(o.fy ?? o.y), Math.round(o.fw ?? o.w), o.label, o.caption, o.match, o.admin ? 'ADMIN' : '', o.maxLen]) });
     const textFields = fieldsAll.filter(o => o.type === 'text');
     // 2. dates typed in several boxes on one row (dd | mm | yyyy)
     for (const key of ['birthDate', 'today']) {
       const used = new Set();
       for (const o of textFields.filter(x => x.match === key)) {
         if (used.has(o) || o.part) continue;
-        const row = textFields.filter(x => x.match === key && !x.part && x.page === o.page && Math.abs(rowY(x) - rowY(o)) < 5).sort((a, c) => a.x - c.x);
+        let row = textFields.filter(x => x.match === key && !x.part && x.page === o.page && Math.abs(rowY(x) - rowY(o)) < 5).sort((a, c) => a.x - c.x);
         row.forEach(x => used.add(x));
+        // "Né(e) le __ / __ / ____ à ________": a fourth box after the date (label not read) is the place
+        if (key === 'birthDate' && row.length > 3 && row.slice(3).every(x => !/\d|le\b/i.test(x.label || ''))) {
+          for (const x of row.slice(3)) x.match = 'birthPlace';
+          row = row.slice(0, 3);
+        }
         if (row.length === 3) ['d', 'm', 'y'].forEach((p, i) => row[i].part = p);
         else if (row.length === 2) { row[0].part = row[0].maxLen === 4 ? 'dm' : 'd'; row[1].part = row[1].maxLen === 4 && row[0].maxLen !== 4 ? 'y' : 'my'; }
       }
@@ -352,15 +358,17 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
         Math.min(x1, it.x + it.w) - Math.max(x0, it.x) > it.w * 0.5 && /[\p{L}]{3,}/u.test(it.str));
       const L = (o.label || '').trim();
       // a whole sentence before a line is running text, not a field label (unless it ends with ":")
-      const sentence = L.split(/\s+/).length > 5 && !/:\s*$/.test(L);
+      // ("… domicile depuis le ____" ends like a prompt: it is a field)
+      const sentence = L.split(/\s+/).length > 5 && !/:\s*$/.test(L) && !/(^|\s)(le|du|au)\s*$/i.test(L);
       // a short gap in the middle of a sentence (words right before and right after it) is not a field
       const rowY = o.fy + o.fh - Math.min(5, o.fh / 2);
       const wordAfter = items.some(it => Math.abs(it.y + it.h / 2 - rowY) < 5 && it.x >= o.x + o.fw - 1 && it.x - (o.x + o.fw) < 6 && /[\p{L}]{2,}/u.test(it.str));
       const inSentence = wordAfter && o.fw < 70 && (o.labelGap ?? 99) < 8 && !/(:\s*$)|((^|\s|,)(le|à|a|h)\s*$)/i.test(L);
       const goodLabel = (o.labelGap ?? 0) <= 80 && L && !sentence && !inSentence && ((o.labelConf ?? 100) >= 60 && /[\p{L}]{3,}/u.test(L) || /[:]\s*$/.test(L) || /(^|\s|,)(le|à|a|h)[\s:\-]*$/i.test(L) || /^[\/\-]$/.test(L) || !!matchField({ name: '', alt: L }));
       const lab = (goodLabel ? L : '') + ' ' + (o.caption || '');
-      if (!filled && !crossed && o.fw >= 18 && !/[\p{L}]{2,}|[:/]/u.test(lab)) { o.maybe = true; continue; }
+      if (!filled && !crossed && o.fw >= 18 && !/[\p{L}]{2,}|[:/]/u.test(lab)) { o.maybe = true; if (window.__pdbg) window.__pdbg.push({ maybe: 1, x: Math.round(o.x), y: Math.round(o.fy), w: Math.round(o.fw), h: Math.round(o.fh), L, gap: o.labelGap, conf: o.labelConf }); continue; }
       const ok = !filled && !crossed && o.fw >= 18;
+      if (window.__pdbg) window.__pdbg.push({ pi, x: Math.round(o.x), y: Math.round(o.fy), w: Math.round(o.fw), L, cap: o.caption, filled, crossed, goodLabel, gap: o.labelGap, conf: o.labelConf });
       if (ok) delete o.pending; else o.drop = true;
     }
     // no label of its own but right after another field on the same row ("Le |_|_| |_|_|", "Fait à ___ , le ___")
@@ -373,6 +381,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     for (const o of zs) if (o.maybe) o.drop = true;
     // most of what looked like lines was not: handwriting, a curved photo… nothing on this page can be trusted
     const kept = zs.filter(o => !o.drop).length;
+    if (window.__pdbg) window.__pdbg.push({ pi, total: zs.length, kept, maybe: zs.filter(o => o.maybe).length });
     if (zs.length >= 8 && kept < zs.length * 0.4) for (const o of zs) o.drop = true;
     objs = objs.filter(o => !o.drop);
   }
@@ -396,6 +405,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
           new Promise((_, rej) => { const iv = setInterval(() => { if (cancelled) { clearInterval(iv); rej(new Error('cancel')); } }, 300); })
         ]);
         const sp = splitLeaders(items); sp.text.ink = items.ink; sp.text.quality = items.quality;
+        if (window.__pdbg) window.__pdbg.push({ ocr: items.map(it => [Math.round(it.x), Math.round(it.y), Math.round(it.w), it.str, it.conf]), q: items.quality });
         pageText[pi] = { items: sp.text, lines: textLines(sp.text), ocr: true };
         // too few readable words = blurry / dark photo: nothing can be trusted on this page
         if (sp.text.length < 4 || items.quality < 50) { dropPending(pi); continue; }

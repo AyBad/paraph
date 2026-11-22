@@ -103,7 +103,7 @@ export default {
  "roleB": "Kupujący (nowy właściciel)",
  "roleBoth": "Oboje",
  "ad": "Reklama",
- "freeLimit": "Wersja darmowa pozwala na 2 profile. Przejdź na Pro, by mieć ich bez limitu.",
+ "freeLimit": "Wersja darmowa pozwala na 5 profili. Przejdź na Pro, by mieć ich bez limitu.",
  "seePro": "Zobacz Pro",
  "perkNoAds": "Bez reklam",
  "perkProfiles": "Nieograniczone profile",

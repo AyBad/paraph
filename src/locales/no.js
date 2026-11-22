@@ -103,7 +103,7 @@ export default {
  "roleB": "Kjøper (ny eier)",
  "roleBoth": "Begge",
  "ad": "Annonse",
- "freeLimit": "Gratisversjonen tillater 2 profiler. Med Pro ubegrenset.",
+ "freeLimit": "Gratisversjonen tillater 5 profiler. Med Pro ubegrenset.",
  "seePro": "Se Pro",
  "perkNoAds": "Ingen annonser",
  "perkProfiles": "Ubegrensede profiler",

@@ -103,7 +103,7 @@ export default {
  "roleB": "Köpare (ny ägare)",
  "roleBoth": "Båda",
  "ad": "Annons",
- "freeLimit": "Gratisversionen tillåter 2 profiler. Med Pro obegränsat.",
+ "freeLimit": "Gratisversionen tillåter 5 profiler. Med Pro obegränsat.",
  "seePro": "Se Pro",
  "perkNoAds": "Inga annonser",
  "perkProfiles": "Obegränsade profiler",

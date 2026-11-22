@@ -103,7 +103,7 @@ export default {
  "roleB": "Pircējs (jaunais īpašnieks)",
  "roleBoth": "Abi",
  "ad": "Reklāma",
- "freeLimit": "Bezmaksas versija atļauj 2 profilus. Ar Pro — neierobežoti.",
+ "freeLimit": "Bezmaksas versija atļauj 5 profilus. Ar Pro — neierobežoti.",
  "seePro": "Skatīt Pro",
  "perkNoAds": "Bez reklāmām",
  "perkProfiles": "Neierobežoti profili",

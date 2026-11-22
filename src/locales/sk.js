@@ -103,7 +103,7 @@ export default {
  "roleB": "Kupujúci (nový vlastník)",
  "roleBoth": "Obaja",
  "ad": "Reklama",
- "freeLimit": "Bezplatná verzia umožňuje 2 profily. S Pro ich máte neobmedzene.",
+ "freeLimit": "Bezplatná verzia umožňuje 5 profilov. S Pro ich máte neobmedzene.",
  "seePro": "Zobraziť Pro",
  "perkNoAds": "Bez reklám",
  "perkProfiles": "Neobmedzené profily",

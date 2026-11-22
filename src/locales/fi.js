@@ -103,7 +103,7 @@ export default {
  "roleB": "Ostaja (uusi omistaja)",
  "roleBoth": "Molemmat",
  "ad": "Mainos",
- "freeLimit": "Ilmaisversio sallii 2 profiilia. Pro-versiossa rajaton määrä.",
+ "freeLimit": "Ilmaisversio sallii 5 profiilia. Pro-versiossa rajaton määrä.",
  "seePro": "Katso Pro",
  "perkNoAds": "Ei mainoksia",
  "perkProfiles": "Rajattomasti profiileja",

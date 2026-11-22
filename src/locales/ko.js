@@ -103,7 +103,7 @@ export default {
  "roleB": "구매자(새 소유자)",
  "roleBoth": "둘 다",
  "ad": "광고",
- "freeLimit": "무료 버전은 프로필 2개까지 가능합니다. Pro는 무제한입니다.",
+ "freeLimit": "무료 버전은 프로필 5개까지 가능합니다. Pro는 무제한입니다.",
  "seePro": "Pro 보기",
  "perkNoAds": "광고 없음",
  "perkProfiles": "무제한 프로필",
