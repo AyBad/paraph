@@ -20,24 +20,28 @@ export async function pdfTextItems(page, vp) {
 // "Nom : ............" / "Ville : ________": the run of dots or underscores is the place to write
 const LEADER = /(?:[.·_]|…){2,}|…|(?:\. ?){4,}/g;
 const leaderOk = (m) => m.replace(/\s/g, '').replace(/…/g, '...').length >= 4 || /_{3,}/.test(m);
-const cw = (c) => /[.,:;·' ]/.test(c) ? 0.28 : c === '_' ? 0.556 : c === '…' ? 1 : /[A-ZÀ-ÖØ-Þ]/.test(c) ? 0.68 : /[il|!]/.test(c) ? 0.24 : 0.53;
+const cw = (c) => /[.,:;·' ]/.test(c) ? 0.28 : c === '_' ? 0.556 : c === '…' ? 1 : /[Iil|!¦]/.test(c) ? 0.26 : /[A-ZÀ-ÖØ-Þ]/.test(c) ? 0.68 : 0.53;
+// character boxes typed as text in Word: "I__I__I__I" or "|_|_|_|" (one box per run of underscores)
+const COMB = /[I|l¦](?:_{1,4}[I|l¦])+_*|(?:_{1,4}[I|l¦]){3,}_*/g;
+const ALL = new RegExp(COMB.source + '|' + LEADER.source, 'g');
+const isComb = (m) => { COMB.lastIndex = 0; const r = COMB.exec(m); return !!r && r[0] === m; };
 export function splitLeaders(items) {
   const text = [], leaders = [];
   for (const it of items) {
     const s = it.str;
-    LEADER.lastIndex = 0;
-    if (![...s.matchAll(LEADER)].some(m => leaderOk(m[0]))) { text.push(it); continue; }
+    if (![...s.matchAll(ALL)].some(m => isComb(m[0]) || leaderOk(m[0]))) { text.push(it); continue; }
     const ch = [...s], acc = [0];
     for (const c of ch) acc.push(acc[acc.length - 1] + cw(c));
     // regex indices are UTF-16: map them to characters
     const idx = []; { let u = 0; ch.forEach((c, i) => { idx[u] = i; u += c.length; }); idx[s.length] = ch.length; }
     const k = it.w / (acc[ch.length] || 1), xAt = (u) => it.x + acc[idx[u] ?? ch.length] * k;
-    let last = 0, m; LEADER.lastIndex = 0;
-    while ((m = LEADER.exec(s))) {
-      if (!leaderOk(m[0])) continue;
+    let last = 0, m; ALL.lastIndex = 0;
+    while ((m = ALL.exec(s))) {
+      const comb = isComb(m[0]) ? (m[0].match(/_+/g) || []).length : 0;
+      if (!comb && !leaderOk(m[0])) continue;
       const pre = s.slice(last, m.index);
       if (pre.trim()) text.push({ ...it, str: pre.trim(), x: xAt(last), w: xAt(m.index) - xAt(last) });
-      leaders.push({ ...it, str: m[0], x: xAt(m.index), w: xAt(m.index + m[0].length) - xAt(m.index), leader: true });
+      leaders.push({ ...it, str: m[0], x: xAt(m.index), w: xAt(m.index + m[0].length) - xAt(m.index), leader: true, comb });
       last = m.index + m[0].length;
     }
     const post = s.slice(last);
@@ -215,6 +219,8 @@ export function refineByRow(fields) {
     row.sort((a, b) => a.x - b.x);
     // "Adresse : [n°] [type] [nom de la voie]": the first box is only the number
     for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'fullAddress' && row.slice(i + 1).some(o => /^street/.test(o.match || ''))) row[i].match = 'streetNumber';
+    // "N° [..] Rue [.........]"
+    for (let i = 0; i < row.length - 1; i++) if (!row[i].match && /^\s*n\s*[°ºo]\.?\s*:?\s*$/i.test(row[i].label || '') && row.slice(i + 1).some(o => /^street/.test(o.match || ''))) row[i].match = 'streetNumber';
     // "[code postal] [commune]": the box after the postal code is the town even if its caption was not read
     for (let i = 0; i < row.length - 1; i++) if (row[i].match === 'postalCode' && !row[i + 1].match) row[i + 1].match = 'city';
     // "[n°] [ext] [type] [nom]": a long box ending the row after a street type is the street name

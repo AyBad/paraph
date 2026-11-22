@@ -33,10 +33,10 @@ function matchField(f) {
   if (has(/fait a\b|signed at|lieu (de )?(la )?(signature|declaration)/)) return 'signCity';
   if (has(/commune|ville|\bcity\b|localite|\btown\b|\bort\b|ciudad|citta|municipal/)) return 'city';
   if (has(/\bpays\b|country|\bpais\b/)) return 'country';
+  if (has(/mail|courriel/)) return 'email'; // before the address: "Adresse courriel / e-mail address"
   if (has(/adress|address|domicile|anschrift|direcc|indirizzo|demeurant/)) return 'fullAddress';
   if (has(/nom.*prenom|full ?name|nom complet|soussigne|undersigned|identite|identity/)) return 'fullName';
   if (has(/pre ?nom|first|given|vorname|nombre|prenome|forename/)) return 'firstName';
-  if (has(/mail|courriel/)) return 'email';
   if (has(/phone|\btel\b|telephone|mobile|portable|telef|gsm/)) return 'phone';
   if (has(/horaire/)) return /2$/.test(n.trim()) ? 'minute' : 'hour';
   if (has(/heure|\bhour/)) return 'hour';
@@ -174,11 +174,22 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     for (const l of leaders) {
       if (l.w < 14) continue;
       const yb = l.ocr ? l.y + l.h : l.y + l.h * 0.85;
-      const fh = l.ocr ? 16 : Math.max(12, Math.min(22, l.h * 1.6)), fy = yb - fh + 1;
+      const fh = l.comb ? Math.max(9, l.h * 1.05) : l.ocr ? 16 : Math.max(12, Math.min(22, l.h * 1.6)), fy = yb - fh + (l.comb ? 2 : 1);
       // the same dotted line found in the picture: keep only this one
       objs = objs.filter(o => !(o.pending && o.page === pi && Math.min(o.x + o.fw, l.x + l.w) - Math.max(o.x, l.x) > 0.5 * Math.min(o.fw, l.w) && Math.abs((o.fy + o.fh) - yb) < 8));
       if (objs.some(o => o.zone && !o.pending && o.page === pi && Math.abs(o.x - l.x) < 4 && Math.abs((o.fy + o.fh) - (fy + fh)) < 4)) continue;
-      addZone(pi, l.x, fy, l.w, fh, false);
+      const z = addZone(pi, l.x, fy, l.w, fh, false);
+      if (l.comb >= 2) z.comb = l.comb;
+    }
+  }
+  // tick boxes written as a character (Word symbol fonts: ☐, Wingdings ¨ / q / o…)
+  const BOX_CH = /^[☐□❑▢◻\uF06F\uF0A8\uF071\uF072\uF070\uF06E]$/;
+  function textBoxes(pi, raw) {
+    for (const it of raw) {
+      if (!BOX_CH.test((it.str || '').trim())) continue;
+      const sz = Math.max(6, Math.min(it.w || it.h, it.h * 0.9)), yb = it.y + it.h * 0.85;
+      const bx = { x: it.x + Math.max(0, ((it.w || sz) - sz) / 2), y: yb - sz * 0.95, w: sz, h: sz };
+      if (!pagesInfo[pi].boxes.some(o => Math.abs(o.x - bx.x) < 4 && Math.abs(o.y - bx.y) < 4)) pagesInfo[pi].boxes.push(bx);
     }
   }
   // ---------- understanding the form: labels, values, sections ----------
@@ -240,6 +251,12 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
   function computeSections() {
     const SKIP = new Set(['today', 'hour', 'minute', 'signCity']);
     const IDENT = new Set(['lastName', 'firstName', 'fullName', 'sex', 'physical']);
+    const ADDR = new Set(['fullAddress', 'streetNumber', 'streetName', 'streetType', 'addressExtra', 'postalCode', 'city', 'email', 'phone']);
+    // a short "Adresse" / "Coordonnées" heading between two blocks starts the address part
+    const addrHeading = (pg, y0, y1) => (pageText[pg]?.lines || []).some(l => l.cy > y0 + 2 && l.cy < y1 - 2 && l.text.length <= 30 &&
+      /^(adresse|coordonn|domicile|contact|address)/i.test(norm(l.text)) &&
+      // a heading stands alone: no place to write on its line ("Adresse complète : [..]" is a label, not a heading)
+      !objs.some(o => o.field && o.page === pg && (o.fy ?? o.y) - 4 < l.cy && (o.fy ?? o.y) + (o.fh ?? o.h) + 4 > l.cy));
     const list = objs.filter(o => o.field && o.match).sort((a, b) => a.page - b.page || Math.round(rowY(a) / 6) - Math.round(rowY(b) / 6) || a.x - b.x);
     sections = []; let cur = null;
     const headingBetween = (pg, y0, y1) => (pageText[pg]?.lines || []).some(l => l.cy > y0 + 2 && l.cy < y1 - 2 && l.text.length >= 12 &&
@@ -249,7 +266,8 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       const key = o.match + (o.part || '') + (o.match === 'sex' ? o.val : '');
       const top = o.fy ?? o.y;
       const brk = !cur || cur.keys.has(key) || (o.role && cur.role && o.role !== cur.role) ||
-        (IDENT.has(o.match) && cur.n >= 3 && (o.page !== cur.page || headingBetween(o.page, cur.last, top)));
+        (IDENT.has(o.match) && cur.n >= 3 && (o.page !== cur.page || headingBetween(o.page, cur.last, top))) ||
+        (ADDR.has(o.match) && cur.n >= 2 && [...cur.keys].some(k => IDENT.has(k.replace(/[dmy]$/, ''))) && addrHeading(o.page, cur.last - 20, top));
       if (brk) { cur = { id: sections.length, keys: new Set(), role: o.role || null, page: o.page, top, n: 0, last: top }; sections.push(cur); }
       cur.keys.add(key); cur.n++; cur.last = Math.max(cur.last, top + (o.fh ?? o.h)); cur.page = o.page;
       if (!cur.role && o.role) cur.role = o.role;
@@ -265,15 +283,20 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     sections.forEach((sct, i) => {
       const first = list.find(o => o.section === sct.id && !SKIP.has(o.match));
       let title = '';
+      // "Nom 1 / Prénom 1", "Nom 2 / Prénom 2": numbered persons
+      const num = first && !sct.role && (/(?:^|\s)(\d)\s*:?\s*$/.exec(first.label || '') || [])[1];
       if (sct.role) title = t(sct.role === 'seller' ? 'roleA' : 'roleB');
+      else if (num && list.some(o => o !== first && o.section !== sct.id && /(?:^|\s)\d\s*:?\s*$/.test(o.label || ''))) title = `${t('profile')} ${num}`;
       else if (first) {
-        const lines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 && l.text.length > 3 &&
+        const fx0 = first.x - 170, fx1 = first.x + (first.fw ?? first.w) + 20;
+        const near = (l) => { const its = l.items.filter(i => i.x + i.w > fx0 && i.x < fx1); return its.length ? { ...l, text: its.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim() } : null; };
+        const lines = (pageText[first.page]?.lines || []).map(near).filter(Boolean).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 90 && l.text.length > 3 &&
           !objs.some(o => o.field && o.type === 'text' && o.page === first.page && Math.abs(rowY(o) - l.cy) < 6));
         // a heading naming a person ("Ancien propriétaire", "Le demandeur"…) a bit higher wins over the nearest line
         // "… propriétaire" whose first word was misread, after the seller's part = the buyer
         const afterSeller = sections.slice(0, i).some(x => x.group === 'seller');
         const roleOfL = (t2) => roleOf(t2) || (afterSeller && /propri[eé]taire|acqu[eé]reur/i.test(t2) && !/ancien/i.test(t2) ? 'buyer' : null);
-        const roleLines = (pageText[first.page]?.lines || []).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 160 && roleOfL(l.text) && !/signature|signataire/i.test(l.text))
+        const roleLines = (pageText[first.page]?.lines || []).map(near).filter(Boolean).filter(l => l.cy < (first.fy ?? first.y) - 1 && l.cy > (first.fy ?? first.y) - 160 && roleOfL(l.text) && !/signature|signataire/i.test(l.text))
           .sort((a, b) => b.cy - a.cy);
         // "Je soussigné(e)" says little about who: a heading such as "Nouveau propriétaire" above it wins
         let roleLine = roleLines[0];
@@ -286,11 +309,17 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
       if (title.length > 48) title = title.slice(0, 46) + '…';
       sct.title = title; sct.group = sct.role || sct.role2 || roleOf(title) || norm(title);
     });
+    // an address part without any name (shared address of the household): filled with the first person's profile
+    sections.forEach((sct, i) => {
+      if (i && !list.some(o => o.section === sct.id && IDENT.has(o.match))) { sct.group = sections[0].group; sct.title = sections[0].title; }
+    });
   }
 
   async function readLabels() {
     for (let pi = 0; pi < pagesInfo.length; pi++) {
-      const { text: items, leaders } = splitLeaders(await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp));
+      const raw = await pdfTextItems(pagesInfo[pi].page, pagesInfo[pi].vp);
+      if (!initialObjs) textBoxes(pi, raw);
+      const { text: items, leaders } = splitLeaders(raw);
       pageText[pi] = { items, lines: textLines(items), ocr: false };
       if (!initialObjs) leaderZones(pi, leaders);
       if (items.length) { attachLabels(objs.filter(o => o.field && o.page === pi), items); markAdmin(objs.filter(o => o.field && o.page === pi), pageText[pi].lines); validateZones(pi, items); }
@@ -442,7 +471,7 @@ export async function openEditor({ bytes, name, docId, profiles, profileId, onEx
     if (!o.field || o.type !== 'text') return;
     const base = o.baseFs || o.fontSize;
     if (o.comb) {
-      o.fontSize = Math.max(5, Math.min(base, (o.fw / o.comb) * 1.05, o.fh * 0.72));
+      o.fontSize = Math.max(5, Math.min(base, (o.fw / o.comb) * 1.05, o.fh * (o.zone ? 0.9 : 0.72)));
     } else if (!o.multiline) {
       const w1 = textWidth(o.text || '', 1);
       o.fontSize = w1 > 0 ? Math.max(4, Math.min(base, (o.fw - 3) / w1)) : base;
