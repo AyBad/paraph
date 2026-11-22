@@ -200,5 +200,7 @@ export default {
  "lockNone": "Aucun",
  "lockPin": "Code PIN",
  "lockOfferD": "Verrouillez Paraph avec votre empreinte, votre visage ou un code à 4 chiffres. Modifiable dans les Paramètres.",
- "rateApp": "Noter l'application"
+ "rateApp": "Noter l'application",
+ "nameTaken": "Ce nom de profil existe déjà. Choisissez-en un autre.",
+ "nameRequired": "Donnez un nom au profil"
 };

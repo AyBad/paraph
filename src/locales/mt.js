@@ -200,5 +200,7 @@ export default {
  "lockNone": "Xejn",
  "lockPin": "Kodiċi PIN",
  "lockOfferD": "Sakkar Paraph bil-marka tas-swaba', il-wiċċ jew kodiċi ta' 4 ċifri. Jinbidel fis-Settings.",
- "rateApp": "Ivvaluta l-app"
+ "rateApp": "Ivvaluta l-app",
+ "nameTaken": "Dan l-isem tal-profil diġà jeżisti. Agħżel ieħor.",
+ "nameRequired": "Agħti isem lill-profil"
 };

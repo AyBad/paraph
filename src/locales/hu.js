@@ -200,5 +200,7 @@ export default {
  "lockNone": "Nincs",
  "lockPin": "PIN-kód",
  "lockOfferD": "Zárolja a Paraph-ot ujjlenyomattal, arccal vagy 4 jegyű kóddal. A Beállításokban módosítható.",
- "rateApp": "Értékelje az alkalmazást"
+ "rateApp": "Értékelje az alkalmazást",
+ "nameTaken": "Ez a profilnév már létezik. Válasszon másikat.",
+ "nameRequired": "Adjon nevet a profilnak"
 };

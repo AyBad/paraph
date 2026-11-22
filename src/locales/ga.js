@@ -200,5 +200,7 @@ export default {
  "lockNone": "Dada",
  "lockPin": "Cód PIN",
  "lockOfferD": "Cuir Paraph faoi ghlas le do mhéarlorg, d'aghaidh nó cód 4 dhigit. Is féidir é a athrú sna Socruithe.",
- "rateApp": "Rátáil an aip"
+ "rateApp": "Rátáil an aip",
+ "nameTaken": "Tá an t-ainm próifíle seo ann cheana. Roghnaigh ceann eile.",
+ "nameRequired": "Tabhair ainm don phróifíl"
 };

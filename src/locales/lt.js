@@ -200,5 +200,7 @@ export default {
  "lockNone": "Nėra",
  "lockPin": "PIN kodas",
  "lockOfferD": "Užrakinkite Paraph piršto atspaudu, veidu arba 4 skaitmenų kodu. Keičiama nustatymuose.",
- "rateApp": "Įvertinkite programėlę"
+ "rateApp": "Įvertinkite programėlę",
+ "nameTaken": "Toks profilio pavadinimas jau yra. Pasirinkite kitą.",
+ "nameRequired": "Suteikite profiliui pavadinimą"
 };

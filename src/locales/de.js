@@ -200,5 +200,7 @@ export default {
  "lockNone": "Keine",
  "lockPin": "PIN-Code",
  "lockOfferD": "Sperren Sie Paraph mit Fingerabdruck, Gesicht oder einem 4-stelligen Code. Änderbar in den Einstellungen.",
- "rateApp": "App bewerten"
+ "rateApp": "App bewerten",
+ "nameTaken": "Dieser Profilname existiert bereits. Wählen Sie einen anderen.",
+ "nameRequired": "Geben Sie dem Profil einen Namen"
 };

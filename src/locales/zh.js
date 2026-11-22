@@ -200,5 +200,7 @@ export default {
  "lockNone": "无",
  "lockPin": "PIN 码",
  "lockOfferD": "使用指纹、面容或 4 位数字码锁定 Paraph，可在设置中更改。",
- "rateApp": "为应用评分"
+ "rateApp": "为应用评分",
+ "nameTaken": "该资料名称已存在，请换一个。",
+ "nameRequired": "请为资料命名"
 };

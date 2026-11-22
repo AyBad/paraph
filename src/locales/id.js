@@ -200,5 +200,7 @@ export default {
  "lockNone": "Tidak ada",
  "lockPin": "Kode PIN",
  "lockOfferD": "Kunci Paraph dengan sidik jari, wajah, atau kode 4 digit. Dapat diubah di Pengaturan.",
- "rateApp": "Beri nilai aplikasi"
+ "rateApp": "Beri nilai aplikasi",
+ "nameTaken": "Nama profil ini sudah ada. Pilih nama lain.",
+ "nameRequired": "Beri nama profil"
 };

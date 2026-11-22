@@ -200,5 +200,7 @@ export default {
  "lockNone": "Niciunul",
  "lockPin": "Cod PIN",
  "lockOfferD": "Blocați Paraph cu amprenta, fața sau un cod din 4 cifre. Se poate schimba în Setări.",
- "rateApp": "Evaluați aplicația"
+ "rateApp": "Evaluați aplicația",
+ "nameTaken": "Acest nume de profil există deja. Alegeți altul.",
+ "nameRequired": "Dați un nume profilului"
 };

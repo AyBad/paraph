@@ -200,5 +200,7 @@ export default {
  "lockNone": "なし",
  "lockPin": "PIN コード",
  "lockOfferD": "指紋・顔認証または 4 桁のコードで Paraph をロックします。設定で変更できます。",
- "rateApp": "アプリを評価"
+ "rateApp": "アプリを評価",
+ "nameTaken": "このプロフィール名は既に使われています。別の名前にしてください。",
+ "nameRequired": "プロフィールに名前を付けてください"
 };

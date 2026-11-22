@@ -200,5 +200,7 @@ export default {
  "lockNone": "Ništa",
  "lockPin": "PIN kod",
  "lockOfferD": "Zaključajte Paraph otiskom prsta, licem ili kodom od 4 znamenke. Mijenja se u Postavkama.",
- "rateApp": "Ocijenite aplikaciju"
+ "rateApp": "Ocijenite aplikaciju",
+ "nameTaken": "Taj naziv profila već postoji. Odaberite drugi.",
+ "nameRequired": "Dajte profilu naziv"
 };

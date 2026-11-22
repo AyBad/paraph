@@ -200,5 +200,7 @@ export default {
  "lockNone": "Ingen",
  "lockPin": "Pinkode",
  "lockOfferD": "Lås Paraph med fingeraftryk, ansigt eller en 4-cifret kode. Kan ændres i Indstillinger.",
- "rateApp": "Bedøm appen"
+ "rateApp": "Bedøm appen",
+ "nameTaken": "Profilnavnet findes allerede. Vælg et andet.",
+ "nameRequired": "Giv profilen et navn"
 };

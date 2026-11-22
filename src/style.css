@@ -367,3 +367,7 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .bio-btn svg{width:46px;height:46px;stroke-width:1.6}
 [data-theme=dark] .bio-btn{background:#272c4a;color:#c5cbff}
 .lock .unl{margin-top:10px;width:100%}
+/* on-screen keyboard: room under the content (the page itself keeps its size) */
+body.kb-open #app{padding-bottom:calc(var(--kb, 0px) + 16px)}
+body.kb-open .modal-back{padding-bottom:calc(var(--kb, 0px) + 12px)}
+input.err{border-color:#d32f2f!important;box-shadow:0 0 0 3px #d32f2f22}

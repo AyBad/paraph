@@ -200,5 +200,7 @@ export default {
  "lockNone": "Ei mitään",
  "lockPin": "PIN-koodi",
  "lockOfferD": "Lukitse Paraph sormenjäljellä, kasvoilla tai 4-numeroisella koodilla. Muutettavissa asetuksissa.",
- "rateApp": "Arvioi sovellus"
+ "rateApp": "Arvioi sovellus",
+ "nameTaken": "Profiilin nimi on jo käytössä. Valitse toinen.",
+ "nameRequired": "Anna profiilille nimi"
 };

@@ -200,5 +200,7 @@ export default {
  "lockNone": "Không",
  "lockPin": "Mã PIN",
  "lockOfferD": "Khóa Paraph bằng vân tay, khuôn mặt hoặc mã 4 số. Có thể đổi trong Cài đặt.",
- "rateApp": "Đánh giá ứng dụng"
+ "rateApp": "Đánh giá ứng dụng",
+ "nameTaken": "Tên hồ sơ này đã tồn tại. Hãy chọn tên khác.",
+ "nameRequired": "Hãy đặt tên cho hồ sơ"
 };
