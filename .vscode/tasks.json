@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Paraph : lancer dans le navigateur", "type": "npm", "script": "dev", "isBackground": true, "problemMatcher": [] },
+    { "label": "Paraph : tous les tests", "type": "npm", "script": "test", "group": { "kind": "test", "isDefault": true }, "problemMatcher": [] },
+    { "label": "Paraph : tests en mode visuel", "type": "npm", "script": "test:ui", "problemMatcher": [] },
+    { "label": "Paraph : rapport des derniers tests", "type": "npm", "script": "test:report", "problemMatcher": [] }
+  ]
+}
