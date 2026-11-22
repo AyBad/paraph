@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SaveAsPlugin.class);
         registerPlugin(TextOcrPlugin.class);
         registerPlugin(BioAuthPlugin.class);
+        registerPlugin(PlayReviewPlugin.class);
         super.onCreate(savedInstanceState);
     }
 
