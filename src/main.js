@@ -31,12 +31,17 @@ const money = (v) => { try { return new Intl.NumberFormat(document.documentEleme
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
 // opening screen (index.html): shown at least until its animation has played, then fades into the app
-const SPLASH_MIN = 2100;
+// about 5 s in all: the text stays readable for ~1.5 s; a tap skips it
+const SPLASH_MIN = 5000;
 function endSplash() {
   const sp = document.getElementById('splash');
   if (!sp) return Promise.resolve();
-  const wait = Math.max(0, SPLASH_MIN - performance.now());
-  return new Promise(r => setTimeout(() => { sp.classList.add('out'); setTimeout(() => { sp.remove(); r(); }, 450); }, wait));
+  return new Promise(r => {
+    let done = false;
+    const out = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => { sp.remove(); r(); }, 700); };
+    setTimeout(out, Math.max(0, SPLASH_MIN - performance.now()));
+    sp.addEventListener('click', () => { if (performance.now() > 1200) out(); });
+  });
 }
 
 async function init() {
