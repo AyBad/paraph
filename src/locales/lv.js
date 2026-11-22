@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Lietotnes bloķēšana",
  "lockNone": "Nav",
  "lockPin": "PIN kods",
- "lockOfferD": "Bloķējiet Paraph ar pirksta nospiedumu, seju vai 4 ciparu kodu. Maināms iestatījumos."
+ "lockOfferD": "Bloķējiet Paraph ar pirksta nospiedumu, seju vai 4 ciparu kodu. Maināms iestatījumos.",
+ "rateApp": "Novērtējiet lietotni"
 };

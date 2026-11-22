@@ -199,5 +199,6 @@ export default {
  "lockMethod": "App-vergrendeling",
  "lockNone": "Geen",
  "lockPin": "Pincode",
- "lockOfferD": "Vergrendel Paraph met je vingerafdruk, gezicht of een 4-cijferige code. Wijzigen kan in Instellingen."
+ "lockOfferD": "Vergrendel Paraph met je vingerafdruk, gezicht of een 4-cijferige code. Wijzigen kan in Instellingen.",
+ "rateApp": "App beoordelen"
 };

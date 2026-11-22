@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Lock tal-app",
  "lockNone": "Xejn",
  "lockPin": "Kodiċi PIN",
- "lockOfferD": "Sakkar Paraph bil-marka tas-swaba', il-wiċċ jew kodiċi ta' 4 ċifri. Jinbidel fis-Settings."
+ "lockOfferD": "Sakkar Paraph bil-marka tas-swaba', il-wiċċ jew kodiċi ta' 4 ċifri. Jinbidel fis-Settings.",
+ "rateApp": "Ivvaluta l-app"
 };

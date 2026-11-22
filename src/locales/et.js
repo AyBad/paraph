@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Rakenduse lukk",
  "lockNone": "Puudub",
  "lockPin": "PIN-kood",
- "lockOfferD": "Lukustage Paraph sõrmejälje, näo või 4-kohalise koodiga. Muudetav seadetes."
+ "lockOfferD": "Lukustage Paraph sõrmejälje, näo või 4-kohalise koodiga. Muudetav seadetes.",
+ "rateApp": "Hinda rakendust"
 };

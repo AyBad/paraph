@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Glas aipe",
  "lockNone": "Dada",
  "lockPin": "Cód PIN",
- "lockOfferD": "Cuir Paraph faoi ghlas le do mhéarlorg, d'aghaidh nó cód 4 dhigit. Is féidir é a athrú sna Socruithe."
+ "lockOfferD": "Cuir Paraph faoi ghlas le do mhéarlorg, d'aghaidh nó cód 4 dhigit. Is féidir é a athrú sna Socruithe.",
+ "rateApp": "Rátáil an aip"
 };

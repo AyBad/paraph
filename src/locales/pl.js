@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Blokada aplikacji",
  "lockNone": "Brak",
  "lockPin": "Kod PIN",
- "lockOfferD": "Zablokuj Paraph odciskiem palca, twarzą lub 4-cyfrowym kodem. Zmienisz to w Ustawieniach."
+ "lockOfferD": "Zablokuj Paraph odciskiem palca, twarzą lub 4-cyfrowym kodem. Zmienisz to w Ustawieniach.",
+ "rateApp": "Oceń aplikację"
 };

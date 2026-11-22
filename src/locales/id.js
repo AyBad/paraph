@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Kunci aplikasi",
  "lockNone": "Tidak ada",
  "lockPin": "Kode PIN",
- "lockOfferD": "Kunci Paraph dengan sidik jari, wajah, atau kode 4 digit. Dapat diubah di Pengaturan."
+ "lockOfferD": "Kunci Paraph dengan sidik jari, wajah, atau kode 4 digit. Dapat diubah di Pengaturan.",
+ "rateApp": "Beri nilai aplikasi"
 };

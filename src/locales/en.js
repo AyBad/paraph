@@ -199,5 +199,6 @@ export default {
  "lockMethod": "App lock",
  "lockNone": "None",
  "lockPin": "PIN code",
- "lockOfferD": "Lock Paraph with your fingerprint, your face or a 4-digit code. You can change it in Settings."
+ "lockOfferD": "Lock Paraph with your fingerprint, your face or a 4-digit code. You can change it in Settings.",
+ "rateApp": "Rate the app"
 };

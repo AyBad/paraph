@@ -199,5 +199,6 @@ export default {
  "lockMethod": "앱 잠금",
  "lockNone": "없음",
  "lockPin": "PIN 코드",
- "lockOfferD": "지문, 얼굴 또는 4자리 코드로 Paraph를 잠급니다. 설정에서 바꿀 수 있습니다."
+ "lockOfferD": "지문, 얼굴 또는 4자리 코드로 Paraph를 잠급니다. 설정에서 바꿀 수 있습니다.",
+ "rateApp": "앱 평가하기"
 };

@@ -199,5 +199,6 @@ export default {
  "lockMethod": "アプリのロック",
  "lockNone": "なし",
  "lockPin": "PIN コード",
- "lockOfferD": "指紋・顔認証または 4 桁のコードで Paraph をロックします。設定で変更できます。"
+ "lockOfferD": "指紋・顔認証または 4 桁のコードで Paraph をロックします。設定で変更できます。",
+ "rateApp": "アプリを評価"
 };

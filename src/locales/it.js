@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Blocco app",
  "lockNone": "Nessuno",
  "lockPin": "Codice PIN",
- "lockOfferD": "Blocca Paraph con impronta, volto o un codice di 4 cifre. Modificabile nelle Impostazioni."
+ "lockOfferD": "Blocca Paraph con impronta, volto o un codice di 4 cifre. Modificabile nelle Impostazioni.",
+ "rateApp": "Valuta l'app"
 };

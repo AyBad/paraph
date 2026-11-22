@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Blocarea aplicației",
  "lockNone": "Niciunul",
  "lockPin": "Cod PIN",
- "lockOfferD": "Blocați Paraph cu amprenta, fața sau un cod din 4 cifre. Se poate schimba în Setări."
+ "lockOfferD": "Blocați Paraph cu amprenta, fața sau un cod din 4 cifre. Se poate schimba în Setări.",
+ "rateApp": "Evaluați aplicația"
 };

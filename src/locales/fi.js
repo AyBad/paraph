@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Sovelluksen lukitus",
  "lockNone": "Ei mitään",
  "lockPin": "PIN-koodi",
- "lockOfferD": "Lukitse Paraph sormenjäljellä, kasvoilla tai 4-numeroisella koodilla. Muutettavissa asetuksissa."
+ "lockOfferD": "Lukitse Paraph sormenjäljellä, kasvoilla tai 4-numeroisella koodilla. Muutettavissa asetuksissa.",
+ "rateApp": "Arvioi sovellus"
 };

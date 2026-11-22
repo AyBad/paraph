@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Applås",
  "lockNone": "Ingen",
  "lockPin": "Pinkode",
- "lockOfferD": "Lås Paraph med fingeraftryk, ansigt eller en 4-cifret kode. Kan ændres i Indstillinger."
+ "lockOfferD": "Lås Paraph med fingeraftryk, ansigt eller en 4-cifret kode. Kan ændres i Indstillinger.",
+ "rateApp": "Bedøm appen"
 };
