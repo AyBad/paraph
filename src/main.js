@@ -36,6 +36,7 @@ const SPLASH_MIN = 5000;
 function endSplash() {
   const sp = document.getElementById('splash');
   if (!sp) return Promise.resolve();
+  if (document.documentElement.classList.contains('sp-skip')) { sp.remove(); return Promise.resolve(); }
   return new Promise(r => {
     let done = false;
     const out = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => { sp.remove(); r(); }, 700); };
@@ -47,6 +48,11 @@ function endSplash() {
 // ---------------- ON-SCREEN KEYBOARD ----------------
 // The app is not resized by Android (that broke the layout on recent phones and after the screen locked):
 // room is made under the content for the keyboard and the field being typed in is brought into view.
+// remember when the app was last in use (see the opening animation in index.html)
+const markActive = () => { try { localStorage.setItem('paraph:lastActive', String(Date.now())); } catch { } };
+markActive(); setInterval(() => { if (!document.hidden) markActive(); }, 20000);
+document.addEventListener('visibilitychange', markActive);
+
 let kbH0 = window.innerHeight, kbOpen = false;
 window.addEventListener('resize', () => { if (!kbOpen) kbH0 = window.innerHeight; });
 function setKbSpace(h) {
@@ -94,7 +100,7 @@ async function init() {
     // lock again when coming back after a while; pick up files sent with "Open with / Share"
     let away = 0;
     import('@capacitor/app').then(({ App }) => {
-      App.addListener('pause', () => { away = Date.now(); });
+      App.addListener('pause', () => { away = Date.now(); markActive(); });
       App.addListener('resume', async () => {
         // back from the lock screen: the keyboard is gone, the page gets its full height again
         kbOpen = false; setKbSpace(0);
@@ -544,6 +550,7 @@ async function editProfile(p, isNew) {
     ${header(isNew ? t('newProfile') : esc(pname(p)))}
     <div class="form">
       <label class="field-l">${t('profileName')}<input data-k="name" type="text" value="${esc(p.name)}" placeholder="${t('profileName')}"></label>
+      <div class="field-err" id="name-err" role="alert" hidden></div>
       <div class="two">${F('lastName', 'text', 'autocomplete="family-name"')}${F('firstName', 'text', 'autocomplete="given-name"')}</div>
       <div class="two">${F('birthDate', 'date')}${F('birthPlace')}</div>
       <label class="field-l">${t('sex')}<div class="seg sex">${[['', '—'], ['M', t('male')], ['F', t('female')]].map(([v, l]) => `<button class="seg-b${(p.sex || '') === v ? ' on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></label>
@@ -579,10 +586,16 @@ async function editProfile(p, isNew) {
     // two profiles cannot have the same name
     const nm = (p.name || '').trim(); p.name = nm;
     const inp = app.querySelector('input[data-k="name"]');
-    if (!nm) { toast(t('nameRequired')); inp && inp.focus(); return; }
+    const err = app.querySelector('#name-err');
+    const showErr = (msg) => {
+      if (inp) { inp.classList.add('err'); inp.focus(); inp.select(); inp.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      if (err) { err.textContent = msg; err.hidden = false; } else toast(msg);
+      if (inp && !inp._errClear) { inp._errClear = true; inp.addEventListener('input', () => { inp.classList.remove('err'); if (err) err.hidden = true; }); }
+    };
+    if (!nm) { showErr(t('nameRequired')); return; }
     const others = (await store.getProfiles()).filter(o => o.id !== p.id);
     if (others.some(o => (o.name || '').trim().toLocaleLowerCase() === nm.toLocaleLowerCase())) {
-      toast(t('nameTaken')); if (inp) { inp.classList.add('err'); inp.focus(); inp.select(); } return;
+      showErr(t('nameTaken')); return;
     }
     await store.saveProfile(p);
     if (isNew) await store.setActiveProfileId(p.id);
