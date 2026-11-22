@@ -12,6 +12,59 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Paraph</title>
+<style>
+/* opening screen: visible at once, before the app code is loaded */
+#splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 28%,#3f51b5 0%,#1a237e 52%,#0b1240 100%);
+  transition:opacity .45s ease,transform .45s ease}
+#splash.out{opacity:0;transform:scale(1.07);pointer-events:none}
+#splash .glow{position:absolute;border-radius:50%;filter:blur(42px);opacity:.5;animation:spFloat 5s ease-in-out infinite alternate}
+#splash .g1{width:280px;height:280px;background:#5c6bc0;top:-70px;left:-90px}
+#splash .g2{width:240px;height:240px;background:#7aa2ff;bottom:-60px;right:-70px;animation-delay:-1.5s}
+#splash .g3{width:170px;height:170px;background:#7e57c2;top:58%;left:6%;opacity:.28;animation-delay:-3s}
+@keyframes spFloat{to{transform:translate(34px,-26px) scale(1.12)}}
+#splash .center{position:relative;text-align:center;color:#fff;padding:0 24px}
+#splash .card{position:relative;width:124px;height:124px;margin:0 auto;border-radius:32px;overflow:hidden;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);box-shadow:0 22px 60px rgba(0,0,0,.38);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:grid;place-items:center;
+  animation:spPop .65s cubic-bezier(.2,1.45,.4,1) both}
+#splash .card::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.38) 50%,transparent 70%);
+  transform:translateX(-130%);animation:spShine .9s 1.45s ease-in-out forwards}
+#splash svg{width:98px;height:98px;overflow:visible}
+#splash .sig{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;
+  animation:spDraw 1s .35s cubic-bezier(.6,.1,.3,1) forwards}
+#splash .line{fill:none;stroke:#7aa2ff;stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:spDraw .4s 1.25s ease-out forwards}
+#splash .name{margin:24px 0 8px;font:800 40px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.5px}
+#splash .name span{display:inline-block;opacity:0;transform:translateY(16px);animation:spUp .5s cubic-bezier(.2,1,.3,1) forwards}
+#splash .name span:nth-child(1){animation-delay:1.0s}#splash .name span:nth-child(2){animation-delay:1.06s}
+#splash .name span:nth-child(3){animation-delay:1.12s}#splash .name span:nth-child(4){animation-delay:1.18s}
+#splash .name span:nth-child(5){animation-delay:1.24s}#splash .name span:nth-child(6){animation-delay:1.30s}
+#splash .tag{margin:0;min-height:1.3em;font:500 15px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:rgba(255,255,255,.78);opacity:0;animation:spFade .6s 1.5s forwards}
+@keyframes spDraw{to{stroke-dashoffset:0}}
+@keyframes spPop{from{transform:scale(.4) rotate(-10deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes spShine{to{transform:translateX(130%)}}
+@keyframes spUp{to{opacity:1;transform:none}}
+@keyframes spFade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#splash *,#splash *::after{animation-duration:.01s!important;animation-delay:0s!important}}
+</style>
+
 </head>
-<body><div id="app"></div><script type="module" src="/src/main.js"></script></body>
+<body>
+<div id="splash" aria-hidden="true">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+  <div class="center">
+    <div class="card"><svg viewBox="0 0 64 64">
+      <path class="sig" pathLength="1" d="M14 44c6-2 8-14 12-20s6 0 2 8-4 12 2 8 6-8 10-6 2 6 6 4"/>
+      <path class="line" pathLength="1" d="M14 51h36"/>
+      <circle r="2.8" fill="#fff" opacity="0" style="filter:drop-shadow(0 0 4px #fff)">
+        <set attributeName="opacity" to="1" begin="0.35s"/>
+        <animateMotion dur="1s" begin="0.35s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".6 .1 .3 1" path="M14 44c6-2 8-14 12-20s6 0 2 8-4 12 2 8 6-8 10-6 2 6 6 4"/>
+        <animate attributeName="opacity" from="1" to="0" begin="1.35s" dur="0.3s" fill="freeze"/>
+      </circle>
+    </svg></div>
+    <h1 class="name"><span>P</span><span>a</span><span>r</span><span>a</span><span>p</span><span>h</span></h1>
+    <p class="tag" id="sp-tag"></p>
+  </div>
+</div>
+<div id="app"></div><script type="module" src="/src/main.js"></script></body>
 </html>
