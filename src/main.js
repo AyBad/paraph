@@ -9,6 +9,7 @@ import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
 import { exportAs } from './convert.js';
 import { bioAvailable, bioEnroll, bioVerify, lockMode } from './bio.js';
+import { noteFirstUse, maybeAskReview } from './review.js';
 import { showBanner, hideBanner, showInterstitial, removeBannerForPro, prepareInterstitial } from './ads.js';
 import { scanDocument } from './scan.js';
 const IncomingFile = registerPlugin('IncomingFile');
@@ -36,6 +37,7 @@ async function init() {
     await store.setSetting('themeV2', 1);
   }
   applyTheme(await store.getSetting('theme', 'light'));
+  noteFirstUse();
   if (await lockMode()) await lockScreen();
   if ('serviceWorker' in navigator && !native && location.protocol === 'https:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { });
@@ -247,6 +249,12 @@ function openMenu() {
 let backToMenu = false;
 const header = (title) => `<header class="top"><button class="icon-btn back">${ICON.back}</button><h1 class="h">${title}</h1><span></span></header>`;
 
+/** after a save: now and then the Google Play rating card, otherwise the full-screen ad */
+async function afterSave() {
+  if (await maybeAskReview()) return;
+  await showInterstitial();
+}
+
 // ---------------- HOME ----------------
 let docQuery = '', docFolder = '';
 
@@ -423,7 +431,7 @@ async function openNew(bytes, name) {
   const profiles = await store.getProfiles();
   let id = (await store.getActiveProfileId()) || profiles[0].id;
   if (profiles.length > 1) { id = await chooseProfile(profiles, id); if (!id) return home(); }
-  openEditor({ bytes: new Uint8Array(bytes), name, profiles, profileId: id, onExit: home, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: showInterstitial });
+  openEditor({ bytes: new Uint8Array(bytes), name, profiles, profileId: id, onExit: home, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: afterSave });
 }
 
 /** a saved document opens for viewing, with a button to edit it */
@@ -435,7 +443,7 @@ async function openSaved(d) {
   const id = (await store.getActiveProfileId()) || profiles[0].id;
   openEditor({
     bytes: new Uint8Array(bytes), name: d.name, docId: d.id, profiles, profileId: id, onExit: home, initialObjs: src ? objs : null,
-    viewOnly: true, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: showInterstitial
+    viewOnly: true, chooseProfile: (cur) => chooseProfile(profiles, cur), onSaved: afterSave
   });
 }
 
