@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Bloqueio da app",
  "lockNone": "Nenhum",
  "lockPin": "Código PIN",
- "lockOfferD": "Bloqueie o Paraph com a impressão digital, o rosto ou um código de 4 dígitos. Pode alterar nas Definições."
+ "lockOfferD": "Bloqueie o Paraph com a impressão digital, o rosto ou um código de 4 dígitos. Pode alterar nas Definições.",
+ "rateApp": "Avaliar a app"
 };

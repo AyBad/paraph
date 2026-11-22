@@ -254,13 +254,14 @@ function openMenu() {
     <hr>
     <button class="d-item" data-a="tutorial">${ICON.book}<span>${t('tutorial')}</span></button>
     <button class="d-item" data-a="pro">${ICON.star}<span>${t('pro')}</span><em class="pro-tag">Pro</em></button>
+    ${!isIOS ? `<button class="d-item" data-a="rate">${ICON.star}<span>${t('rateApp')}</span></button>` : ''}
     <button class="d-item" data-a="about">${ICON.info}<span>${t('about')}</span></button>
   </aside>`;
   document.body.appendChild(back);
   requestAnimationFrame(() => back.classList.add('in'));
   const close = () => { back.classList.remove('in'); setTimeout(() => back.remove(), 200); };
   back.onclick = (e) => { if (e.target === back) close(); };
-  const acts = { profiles: profilesScreen, settings: settingsScreen, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen };
+  const acts = { profiles: profilesScreen, settings: settingsScreen, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen, rate: rateApp };
   // coming back from a screen opened here shows the menu again
   back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); hideBanner(); backToMenu = true; acts[b.dataset.a](); });
 }
@@ -272,6 +273,16 @@ const header = (title) => `<header class="top"><button class="icon-btn back">${I
 async function afterSave() {
   if (await maybeAskReview()) return;
   await showInterstitial();
+}
+
+/** "Rate the app": the Paraph page of Google Play (the Play Store app on Android) */
+const PLAY_ID = 'com.aybad.paraph';
+function rateApp() {
+  backToMenu = false;
+  home();
+  const web = `https://play.google.com/store/apps/details?id=${PLAY_ID}`;
+  if (native) { location.href = `market://details?id=${PLAY_ID}`; setTimeout(() => { if (document.visibilityState === 'visible') window.open(web, '_blank'); }, 1200); }
+  else window.open(web, '_blank');
 }
 
 // ---------------- HOME ----------------

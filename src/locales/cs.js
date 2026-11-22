@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Zámek aplikace",
  "lockNone": "Žádný",
  "lockPin": "Kód PIN",
- "lockOfferD": "Zamkněte Paraph otiskem prstu, obličejem nebo 4místným kódem. Změníte v Nastavení."
+ "lockOfferD": "Zamkněte Paraph otiskem prstu, obličejem nebo 4místným kódem. Změníte v Nastavení.",
+ "rateApp": "Ohodnotit aplikaci"
 };

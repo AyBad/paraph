@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Khóa ứng dụng",
  "lockNone": "Không",
  "lockPin": "Mã PIN",
- "lockOfferD": "Khóa Paraph bằng vân tay, khuôn mặt hoặc mã 4 số. Có thể đổi trong Cài đặt."
+ "lockOfferD": "Khóa Paraph bằng vân tay, khuôn mặt hoặc mã 4 số. Có thể đổi trong Cài đặt.",
+ "rateApp": "Đánh giá ứng dụng"
 };

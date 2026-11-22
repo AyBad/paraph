@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Alkalmazászár",
  "lockNone": "Nincs",
  "lockPin": "PIN-kód",
- "lockOfferD": "Zárolja a Paraph-ot ujjlenyomattal, arccal vagy 4 jegyű kóddal. A Beállításokban módosítható."
+ "lockOfferD": "Zárolja a Paraph-ot ujjlenyomattal, arccal vagy 4 jegyű kóddal. A Beállításokban módosítható.",
+ "rateApp": "Értékelje az alkalmazást"
 };

@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Verrouillage de l'application",
  "lockNone": "Aucun",
  "lockPin": "Code PIN",
- "lockOfferD": "Verrouillez Paraph avec votre empreinte, votre visage ou un code à 4 chiffres. Modifiable dans les Paramètres."
+ "lockOfferD": "Verrouillez Paraph avec votre empreinte, votre visage ou un code à 4 chiffres. Modifiable dans les Paramètres.",
+ "rateApp": "Noter l'application"
 };

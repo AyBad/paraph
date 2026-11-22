@@ -199,5 +199,6 @@ export default {
  "lockMethod": "应用锁",
  "lockNone": "无",
  "lockPin": "PIN 码",
- "lockOfferD": "使用指纹、面容或 4 位数字码锁定 Paraph，可在设置中更改。"
+ "lockOfferD": "使用指纹、面容或 4 位数字码锁定 Paraph，可在设置中更改。",
+ "rateApp": "为应用评分"
 };

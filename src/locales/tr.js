@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Uygulama kilidi",
  "lockNone": "Yok",
  "lockPin": "PIN kodu",
- "lockOfferD": "Paraph'ı parmak izi, yüz veya 4 haneli kodla kilitleyin. Ayarlar'dan değiştirebilirsiniz."
+ "lockOfferD": "Paraph'ı parmak izi, yüz veya 4 haneli kodla kilitleyin. Ayarlar'dan değiştirebilirsiniz.",
+ "rateApp": "Uygulamayı değerlendir"
 };

@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Zaklep aplikacije",
  "lockNone": "Brez",
  "lockPin": "Koda PIN",
- "lockOfferD": "Zaklenite Paraph s prstnim odtisom, obrazom ali 4-mestno kodo. Spremenite v Nastavitvah."
+ "lockOfferD": "Zaklenite Paraph s prstnim odtisom, obrazom ali 4-mestno kodo. Spremenite v Nastavitvah.",
+ "rateApp": "Ocenite aplikacijo"
 };

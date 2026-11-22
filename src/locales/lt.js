@@ -199,5 +199,6 @@ export default {
  "lockMethod": "Programos užraktas",
  "lockNone": "Nėra",
  "lockPin": "PIN kodas",
- "lockOfferD": "Užrakinkite Paraph piršto atspaudu, veidu arba 4 skaitmenų kodu. Keičiama nustatymuose."
+ "lockOfferD": "Užrakinkite Paraph piršto atspaudu, veidu arba 4 skaitmenų kodu. Keičiama nustatymuose.",
+ "rateApp": "Įvertinkite programėlę"
 };

@@ -199,5 +199,6 @@ export default {
  "lockMethod": "App-Sperre",
  "lockNone": "Keine",
  "lockPin": "PIN-Code",
- "lockOfferD": "Sperren Sie Paraph mit Fingerabdruck, Gesicht oder einem 4-stelligen Code. Änderbar in den Einstellungen."
+ "lockOfferD": "Sperren Sie Paraph mit Fingerabdruck, Gesicht oder einem 4-stelligen Code. Änderbar in den Einstellungen.",
+ "rateApp": "App bewerten"
 };
