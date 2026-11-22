@@ -17,17 +17,13 @@ export async function downloadPdf(bytes, name, mime = 'application/pdf') {
   name = safeName(name, mime);
   if (native()) {
     const data = toBase64(bytes);
-    // let the user choose the folder on the phone (Downloads, Documents, Drive…)
+    // straight into Downloads/Paraph, size checked by the app; if the phone refuses, the share sheet instead
     try {
-      const r = await SaveAs.save({ name, mime, data });
-      return r && r.saved ? name : '';
-    } catch (e) {
-      const { Filesystem, Directory } = await import('@capacitor/filesystem');
-      try {
-        await Filesystem.writeFile({ path: 'Paraph/' + name, data, directory: Directory.Documents, recursive: true });
-        return 'Documents/Paraph/' + name;
-      } catch { await shareFile(bytes, name, name, mime); return ''; }
-    }
+      const r = await SaveAs.saveToDownloads({ name, mime, data });
+      if (r && r.saved) return 'Download/Paraph/' + (r.name || name);
+    } catch (e) { console.warn('saveToDownloads', e); }
+    await shareFile(bytes, name, name, mime);
+    return '';
   }
   const blob = new Blob([bytes], { type: mime });
   const url = URL.createObjectURL(blob);
