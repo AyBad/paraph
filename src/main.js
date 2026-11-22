@@ -31,6 +31,10 @@ const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
 async function init() {
   await setLanguage((await store.getLang()) || detectLang());
+  if (!(await store.getSetting('themeV2'))) {
+    if ((await store.getSetting('theme')) === 'auto') await store.setSetting('theme', 'light');
+    await store.setSetting('themeV2', 1);
+  }
   applyTheme(await store.getSetting('theme', 'light'));
   if (await lockMode()) await lockScreen();
   if ('serviceWorker' in navigator && !native && location.protocol === 'https:') {
@@ -236,9 +240,11 @@ function openMenu() {
   const close = () => { back.classList.remove('in'); setTimeout(() => back.remove(), 200); };
   back.onclick = (e) => { if (e.target === back) close(); };
   const acts = { profiles: profilesScreen, settings: settingsScreen, backup: backupScreen, tutorial: tutorialScreen, pro: proScreen, about: aboutScreen };
-  back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); hideBanner(); acts[b.dataset.a](); });
+  // coming back from a screen opened here shows the menu again
+  back.querySelectorAll('.d-item').forEach(b => b.onclick = () => { close(); hideBanner(); backToMenu = true; acts[b.dataset.a](); });
 }
 
+let backToMenu = false;
 const header = (title) => `<header class="top"><button class="icon-btn back">${ICON.back}</button><h1 class="h">${title}</h1><span></span></header>`;
 
 // ---------------- HOME ----------------
@@ -355,6 +361,7 @@ async function home() {
   };
   renderDocs();
   const q = $('.q'); if (q) q.oninput = () => { docQuery = q.value; renderDocs(); };
+  if (backToMenu) { backToMenu = false; openMenu(); }
   // folders: a drop-down list
   const fdd = $('.fdd');
   if (fdd) fdd.onclick = (e) => {
