@@ -103,7 +103,7 @@ export default {
  "roleB": "Kupec (novi lastnik)",
  "roleBoth": "Oba",
  "ad": "Oglas",
- "freeLimit": "Brezplačna različica dovoli 2 profila. S Pro jih imate neomejeno.",
+ "freeLimit": "Brezplačna različica dovoli 5 profilov. S Pro jih imate neomejeno.",
  "seePro": "Oglejte si Pro",
  "perkNoAds": "Brez oglasov",
  "perkProfiles": "Neomejeni profili",

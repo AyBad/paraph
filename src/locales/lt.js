@@ -103,7 +103,7 @@ export default {
  "roleB": "Pirkėjas (naujas savininkas)",
  "roleBoth": "Abu",
  "ad": "Reklama",
- "freeLimit": "Nemokama versija leidžia 2 profilius. Su Pro – neribotai.",
+ "freeLimit": "Nemokama versija leidžia 5 profilius. Su Pro – neribotai.",
  "seePro": "Žiūrėti Pro",
  "perkNoAds": "Be reklamų",
  "perkProfiles": "Neriboti profiliai",

@@ -103,7 +103,7 @@ export default {
  "roleB": "Ceannaitheoir (úinéir nua)",
  "roleBoth": "An bheirt",
  "ad": "Fógra",
- "freeLimit": "Ceadaíonn an leagan saor 2 phróifíl. Le Pro, gan teorainn.",
+ "freeLimit": "Ceadaíonn an leagan saor 5 phróifíl. Le Pro, gan teorainn.",
  "seePro": "Féach ar Pro",
  "perkNoAds": "Gan fógraí",
  "perkProfiles": "Próifílí gan teorainn",

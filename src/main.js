@@ -21,7 +21,7 @@ const standalone = window.matchMedia('(display-mode: standalone)').matches || na
 const pname = (p) => p.name || [p.firstName, p.lastName].filter(Boolean).join(' ') || t('unnamed');
 const LOGO = `<svg viewBox="0 0 64 64" class="logo"><rect width="64" height="64" rx="16" fill="#1a237e"/><path d="M14 44c6-2 8-14 12-20s6 0 2 8-4 12 2 8 6-8 10-6 2 6 6 4" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 51h36" stroke="#7aa2ff" stroke-width="3" stroke-linecap="round"/></svg>`;
 const fmtTime = (d) => { try { return new Intl.DateTimeFormat(document.documentElement.lang, { hour: '2-digit', minute: '2-digit' }).format(d); } catch { return d.toTimeString().slice(0, 5); } };
-const FREE_PROFILES = 2;
+const FREE_PROFILES = 5;
 const PLANS = [
   { id: 'monthly', price: 1.99, per: 'perMonth' },
   { id: 'yearly', price: 11.99, per: 'perYear', badge: '-50%' },

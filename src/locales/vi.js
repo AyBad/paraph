@@ -103,7 +103,7 @@ export default {
  "roleB": "Người mua (chủ mới)",
  "roleBoth": "Cả hai",
  "ad": "Quảng cáo",
- "freeLimit": "Bản miễn phí cho phép 2 hồ sơ. Nâng cấp Pro để không giới hạn.",
+ "freeLimit": "Bản miễn phí cho phép 5 hồ sơ. Nâng cấp Pro để không giới hạn.",
  "seePro": "Xem Pro",
  "perkNoAds": "Không quảng cáo",
  "perkProfiles": "Hồ sơ không giới hạn",

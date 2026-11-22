@@ -103,7 +103,7 @@ export default {
  "roleB": "Xerrej (sid ġdid)",
  "roleBoth": "It-tnejn",
  "ad": "Reklam",
- "freeLimit": "Il-verżjoni b'xejn tippermetti 2 profili. B'Pro, bla limitu.",
+ "freeLimit": "Il-verżjoni b'xejn tippermetti 5 profili. B'Pro, bla limitu.",
  "seePro": "Ara Pro",
  "perkNoAds": "Bla reklami",
  "perkProfiles": "Profili bla limitu",

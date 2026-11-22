@@ -49,7 +49,7 @@ html.sp-skip #splash{display:none}
 @media (prefers-reduced-motion:reduce){#splash *,#splash *::after{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 <script>/* app reopened shortly after it was last used (e.g. Android restarted it while the screen was locked): no opening animation */
-try{var la=+localStorage.getItem('paraph:lastActive')||0;if(Date.now()-la<30*60e3)document.documentElement.classList.add('sp-skip')}catch(e){}</script>
+try{var la=+localStorage.getItem('paraph:lastActive')||0;if(Date.now()-la<10*60e3)document.documentElement.classList.add('sp-skip')}catch(e){}</script>
 
 </head>
 <body>

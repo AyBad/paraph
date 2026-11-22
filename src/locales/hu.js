@@ -103,7 +103,7 @@ export default {
  "roleB": "Vevő (új tulajdonos)",
  "roleBoth": "Mindkettő",
  "ad": "Hirdetés",
- "freeLimit": "Az ingyenes verzió 2 profilt enged. A Pro-val korlátlan.",
+ "freeLimit": "Az ingyenes verzió 5 profilt enged. A Pro-val korlátlan.",
  "seePro": "Pro megtekintése",
  "perkNoAds": "Reklám nélkül",
  "perkProfiles": "Korlátlan profil",

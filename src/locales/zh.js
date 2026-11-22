@@ -103,7 +103,7 @@ export default {
  "roleB": "买方（新车主）",
  "roleBoth": "双方",
  "ad": "广告",
- "freeLimit": "免费版最多 2 个个人资料。升级 Pro 可无限创建。",
+ "freeLimit": "免费版最多 5 个个人资料。升级 Pro 可无限创建。",
  "seePro": "查看 Pro",
  "perkNoAds": "无广告",
  "perkProfiles": "无限个人资料",
