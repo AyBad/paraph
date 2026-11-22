@@ -200,5 +200,7 @@ export default {
  "lockNone": "Brak",
  "lockPin": "Kod PIN",
  "lockOfferD": "Zablokuj Paraph odciskiem palca, twarzą lub 4-cyfrowym kodem. Zmienisz to w Ustawieniach.",
- "rateApp": "Oceń aplikację"
+ "rateApp": "Oceń aplikację",
+ "nameTaken": "Ta nazwa profilu już istnieje. Wybierz inną.",
+ "nameRequired": "Nadaj profilowi nazwę"
 };

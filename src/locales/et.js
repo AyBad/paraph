@@ -200,5 +200,7 @@ export default {
  "lockNone": "Puudub",
  "lockPin": "PIN-kood",
  "lockOfferD": "Lukustage Paraph sõrmejälje, näo või 4-kohalise koodiga. Muudetav seadetes.",
- "rateApp": "Hinda rakendust"
+ "rateApp": "Hinda rakendust",
+ "nameTaken": "Selline profiilinimi on juba olemas. Valige teine.",
+ "nameRequired": "Andke profiilile nimi"
 };

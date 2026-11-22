@@ -200,5 +200,7 @@ export default {
  "lockNone": "Nav",
  "lockPin": "PIN kods",
  "lockOfferD": "Bloķējiet Paraph ar pirksta nospiedumu, seju vai 4 ciparu kodu. Maināms iestatījumos.",
- "rateApp": "Novērtējiet lietotni"
+ "rateApp": "Novērtējiet lietotni",
+ "nameTaken": "Šāds profila nosaukums jau pastāv. Izvēlieties citu.",
+ "nameRequired": "Piešķiriet profilam nosaukumu"
 };

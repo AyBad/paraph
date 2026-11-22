@@ -200,5 +200,7 @@ export default {
  "lockNone": "없음",
  "lockPin": "PIN 코드",
  "lockOfferD": "지문, 얼굴 또는 4자리 코드로 Paraph를 잠급니다. 설정에서 바꿀 수 있습니다.",
- "rateApp": "앱 평가하기"
+ "rateApp": "앱 평가하기",
+ "nameTaken": "이미 있는 프로필 이름입니다. 다른 이름을 선택하세요.",
+ "nameRequired": "프로필 이름을 입력하세요"
 };

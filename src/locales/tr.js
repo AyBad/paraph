@@ -200,5 +200,7 @@ export default {
  "lockNone": "Yok",
  "lockPin": "PIN kodu",
  "lockOfferD": "Paraph'ı parmak izi, yüz veya 4 haneli kodla kilitleyin. Ayarlar'dan değiştirebilirsiniz.",
- "rateApp": "Uygulamayı değerlendir"
+ "rateApp": "Uygulamayı değerlendir",
+ "nameTaken": "Bu profil adı zaten var. Başka bir ad seçin.",
+ "nameRequired": "Profile bir ad verin"
 };

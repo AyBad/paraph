@@ -200,5 +200,7 @@ export default {
  "lockNone": "Geen",
  "lockPin": "Pincode",
  "lockOfferD": "Vergrendel Paraph met je vingerafdruk, gezicht of een 4-cijferige code. Wijzigen kan in Instellingen.",
- "rateApp": "App beoordelen"
+ "rateApp": "App beoordelen",
+ "nameTaken": "Deze profielnaam bestaat al. Kies een andere.",
+ "nameRequired": "Geef het profiel een naam"
 };

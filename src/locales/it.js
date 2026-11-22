@@ -200,5 +200,7 @@ export default {
  "lockNone": "Nessuno",
  "lockPin": "Codice PIN",
  "lockOfferD": "Blocca Paraph con impronta, volto o un codice di 4 cifre. Modificabile nelle Impostazioni.",
- "rateApp": "Valuta l'app"
+ "rateApp": "Valuta l'app",
+ "nameTaken": "Questo nome di profilo esiste già. Scegline un altro.",
+ "nameRequired": "Dai un nome al profilo"
 };

@@ -3,11 +3,12 @@
   "appName": "Paraph",
   "webDir": "dist",
   "android": {
-    "allowMixedContent": false
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "auto"
   },
   "plugins": {
     "Keyboard": {
-      "resizeOnFullScreen": true
+      "resizeOnFullScreen": false
     }
   }
 }

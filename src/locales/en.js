@@ -200,5 +200,7 @@ export default {
  "lockNone": "None",
  "lockPin": "PIN code",
  "lockOfferD": "Lock Paraph with your fingerprint, your face or a 4-digit code. You can change it in Settings.",
- "rateApp": "Rate the app"
+ "rateApp": "Rate the app",
+ "nameTaken": "This profile name already exists. Choose another one.",
+ "nameRequired": "Give the profile a name"
 };

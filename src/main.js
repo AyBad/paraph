@@ -44,7 +44,32 @@ function endSplash() {
   });
 }
 
+// ---------------- ON-SCREEN KEYBOARD ----------------
+// The app is not resized by Android (that broke the layout on recent phones and after the screen locked):
+// room is made under the content for the keyboard and the field being typed in is brought into view.
+let kbH0 = window.innerHeight, kbOpen = false;
+window.addEventListener('resize', () => { if (!kbOpen) kbH0 = window.innerHeight; });
+function setKbSpace(h) {
+  // if the system did resize the page (older phones), no extra space is needed
+  const k = h && window.innerHeight < kbH0 - 80 ? 0 : h;
+  document.documentElement.style.setProperty('--kb', k + 'px');
+  // the editor makes its own room (suggestion bar above the keyboard)
+  document.body.classList.toggle('kb-open', k > 0 && !document.querySelector('.editor'));
+  const a = document.activeElement;
+  if (k && a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.closest('.editor')) setTimeout(() => a.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60);
+}
+function watchKeyboard() {
+  if (!native) return;
+  import('@capacitor/keyboard').then(({ Keyboard }) => {
+    Keyboard.addListener('keyboardWillShow', (i) => { kbOpen = true; setKbSpace(i.keyboardHeight); });
+    Keyboard.addListener('keyboardDidShow', (i) => { kbOpen = true; setKbSpace(i.keyboardHeight); });
+    Keyboard.addListener('keyboardWillHide', () => { kbOpen = false; setKbSpace(0); });
+    Keyboard.addListener('keyboardDidHide', () => { kbOpen = false; setKbSpace(0); });
+  }).catch(() => { });
+}
+
 async function init() {
+  watchKeyboard();
   await setLanguage((await store.getLang()) || detectLang());
   const tag = document.getElementById('sp-tag'); if (tag) tag.textContent = t('tagline');
   if (!(await store.getSetting('themeV2'))) {
@@ -71,6 +96,8 @@ async function init() {
     import('@capacitor/app').then(({ App }) => {
       App.addListener('pause', () => { away = Date.now(); });
       App.addListener('resume', async () => {
+        // back from the lock screen: the keyboard is gone, the page gets its full height again
+        kbOpen = false; setKbSpace(0);
         if (away && Date.now() - away > 60000 && await lockMode() && !document.querySelector('.lock')) await lockScreen();
         checkIncoming();
       });
@@ -549,6 +576,14 @@ async function editProfile(p, isNew) {
   });
   $('.back').onclick = isNew ? home : profilesScreen;
   $('.save').onclick = async () => {
+    // two profiles cannot have the same name
+    const nm = (p.name || '').trim(); p.name = nm;
+    const inp = app.querySelector('input[data-k="name"]');
+    if (!nm) { toast(t('nameRequired')); inp && inp.focus(); return; }
+    const others = (await store.getProfiles()).filter(o => o.id !== p.id);
+    if (others.some(o => (o.name || '').trim().toLocaleLowerCase() === nm.toLocaleLowerCase())) {
+      toast(t('nameTaken')); if (inp) { inp.classList.add('err'); inp.focus(); inp.select(); } return;
+    }
     await store.saveProfile(p);
     if (isNew) await store.setActiveProfileId(p.id);
     toast('✓'); profilesScreen();
