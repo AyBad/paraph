@@ -1,0 +1,22 @@
+# Shared: fresh start of the app, through the opening animation and the introduction
+appId: com.aybad.paraph
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Passer"
+    timeout: 20000
+- takeScreenshot: captures/01-presentation
+- tapOn: "Passer"
+- tapOn:
+    text: "Autoriser|Suivant|Commencer"
+    optional: true
+- tapOn:
+    text: "Plus tard"
+    optional: true
+- tapOn:
+    text: "Plus tard"
+    optional: true
+- extendedWaitUntil:
+    visible: "Ouvrir un document"
+    timeout: 10000

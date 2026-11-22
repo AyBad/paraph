@@ -1,0 +1,4 @@
+# Tests of the real Android app (APK) with Maestro — see maestro/README.md
+# every flow starts the app from scratch, so they can run in any order
+flows:
+  - "*"

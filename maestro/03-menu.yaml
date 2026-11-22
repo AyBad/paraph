@@ -1,0 +1,13 @@
+appId: com.aybad.paraph
+name: Menu et paramètres
+---
+- runFlow: commun/demarrage.yaml
+- tapOn: "Menu"
+- assertVisible: "Paramètres"
+- takeScreenshot: captures/05-menu
+- tapOn: "Paramètres"
+- assertVisible: "Thème"
+- takeScreenshot: captures/06-parametres
+# back from a sub-menu: the menu is shown again
+- back
+- assertVisible: "Paramètres"
