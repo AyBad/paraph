@@ -186,5 +186,18 @@ export default {
  "streetType": "Loại đường",
  "hour": "Giờ",
  "minute": "Phút",
- "me": "Tôi"
+ "me": "Tôi",
+ "locked": "Paraph đã khóa",
+ "unlock": "Mở khóa",
+ "usePin": "Dùng mã PIN",
+ "bioReason": "Mở khóa Paraph",
+ "bioFailed": "Không nhận diện được. Thử lại.",
+ "bioUnavailable": "Thiết bị này không hỗ trợ vân tay / khuôn mặt",
+ "bioBackupPin": "Hãy chọn thêm một mã PIN dự phòng",
+ "lockBio": "Vân tay / khuôn mặt",
+ "lockPinBtn": "Mã PIN",
+ "lockMethod": "Khóa ứng dụng",
+ "lockNone": "Không",
+ "lockPin": "Mã PIN",
+ "lockOfferD": "Khóa Paraph bằng vân tay, khuôn mặt hoặc mã 4 số. Có thể đổi trong Cài đặt."
 };

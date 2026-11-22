@@ -186,5 +186,18 @@ export default {
  "streetType": "Ielas veids",
  "hour": "Stunda",
  "minute": "Minūte",
- "me": "Es"
+ "me": "Es",
+ "locked": "Paraph ir bloķēts",
+ "unlock": "Atbloķēt",
+ "usePin": "Izmantot PIN kodu",
+ "bioReason": "Atbloķēt Paraph",
+ "bioFailed": "Netika atpazīts. Mēģiniet vēlreiz.",
+ "bioUnavailable": "Pirksta nospiedums / seja šajā ierīcē nav pieejama",
+ "bioBackupPin": "Izvēlieties arī rezerves PIN",
+ "lockBio": "Pirksta nospiedums / seja",
+ "lockPinBtn": "PIN kods",
+ "lockMethod": "Lietotnes bloķēšana",
+ "lockNone": "Nav",
+ "lockPin": "PIN kods",
+ "lockOfferD": "Bloķējiet Paraph ar pirksta nospiedumu, seju vai 4 ciparu kodu. Maināms iestatījumos."
 };

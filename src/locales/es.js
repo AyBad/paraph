@@ -186,5 +186,18 @@ export default {
  "streetType": "Tipo de vía",
  "hour": "Hora",
  "minute": "Minuto",
- "me": "Yo"
+ "me": "Yo",
+ "locked": "Paraph está bloqueado",
+ "unlock": "Desbloquear",
+ "usePin": "Usar el código PIN",
+ "bioReason": "Desbloquear Paraph",
+ "bioFailed": "No reconocido. Inténtelo de nuevo.",
+ "bioUnavailable": "Huella / rostro no disponible en este dispositivo",
+ "bioBackupPin": "Elija también un PIN de respaldo",
+ "lockBio": "Huella / rostro",
+ "lockPinBtn": "Código PIN",
+ "lockMethod": "Bloqueo de la app",
+ "lockNone": "Ninguno",
+ "lockPin": "Código PIN",
+ "lockOfferD": "Bloquee Paraph con su huella, su rostro o un código de 4 cifras. Puede cambiarlo en Ajustes."
 };

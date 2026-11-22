@@ -186,5 +186,18 @@ export default {
  "streetType": "Tipo de via",
  "hour": "Hora",
  "minute": "Minuto",
- "me": "Eu"
+ "me": "Eu",
+ "locked": "O Paraph está bloqueado",
+ "unlock": "Desbloquear",
+ "usePin": "Usar o código PIN",
+ "bioReason": "Desbloquear o Paraph",
+ "bioFailed": "Não reconhecido. Tente novamente.",
+ "bioUnavailable": "Impressão digital / rosto indisponível neste dispositivo",
+ "bioBackupPin": "Escolha também um PIN de reserva",
+ "lockBio": "Impressão digital / rosto",
+ "lockPinBtn": "Código PIN",
+ "lockMethod": "Bloqueio da app",
+ "lockNone": "Nenhum",
+ "lockPin": "Código PIN",
+ "lockOfferD": "Bloqueie o Paraph com a impressão digital, o rosto ou um código de 4 dígitos. Pode alterar nas Definições."
 };

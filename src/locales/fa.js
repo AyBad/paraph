@@ -186,5 +186,18 @@ export default {
  "streetType": "نوع خیابان",
  "hour": "ساعت",
  "minute": "دقیقه",
- "me": "من"
+ "me": "من",
+ "locked": "Paraph قفل است",
+ "unlock": "باز کردن قفل",
+ "usePin": "استفاده از کد PIN",
+ "bioReason": "باز کردن قفل Paraph",
+ "bioFailed": "شناسایی نشد. دوباره تلاش کنید.",
+ "bioUnavailable": "اثر انگشت / چهره در این دستگاه در دسترس نیست",
+ "bioBackupPin": "یک کد PIN پشتیبان هم انتخاب کنید",
+ "lockBio": "اثر انگشت / چهره",
+ "lockPinBtn": "کد PIN",
+ "lockMethod": "قفل برنامه",
+ "lockNone": "هیچ",
+ "lockPin": "کد PIN",
+ "lockOfferD": "Paraph را با اثر انگشت، چهره یا کد ۴ رقمی قفل کنید. در تنظیمات قابل تغییر است."
 };

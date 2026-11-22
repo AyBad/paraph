@@ -186,5 +186,18 @@ export default {
  "streetType": "Tip stradă",
  "hour": "Ora",
  "minute": "Minutul",
- "me": "Eu"
+ "me": "Eu",
+ "locked": "Paraph este blocat",
+ "unlock": "Deblocare",
+ "usePin": "Folosiți codul PIN",
+ "bioReason": "Deblocați Paraph",
+ "bioFailed": "Nerecunoscut. Încercați din nou.",
+ "bioUnavailable": "Amprentă / față indisponibile pe acest dispozitiv",
+ "bioBackupPin": "Alegeți și un PIN de rezervă",
+ "lockBio": "Amprentă / față",
+ "lockPinBtn": "Cod PIN",
+ "lockMethod": "Blocarea aplicației",
+ "lockNone": "Niciunul",
+ "lockPin": "Cod PIN",
+ "lockOfferD": "Blocați Paraph cu amprenta, fața sau un cod din 4 cifre. Se poate schimba în Setări."
 };

@@ -186,5 +186,18 @@ export default {
  "streetType": "道路类型",
  "hour": "时",
  "minute": "分",
- "me": "我"
+ "me": "我",
+ "locked": "Paraph 已锁定",
+ "unlock": "解锁",
+ "usePin": "使用 PIN 码",
+ "bioReason": "解锁 Paraph",
+ "bioFailed": "未能识别，请重试。",
+ "bioUnavailable": "此设备不支持指纹 / 面容",
+ "bioBackupPin": "另请设置一个备用 PIN 码",
+ "lockBio": "指纹 / 面容",
+ "lockPinBtn": "PIN 码",
+ "lockMethod": "应用锁",
+ "lockNone": "无",
+ "lockPin": "PIN 码",
+ "lockOfferD": "使用指纹、面容或 4 位数字码锁定 Paraph，可在设置中更改。"
 };

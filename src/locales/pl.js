@@ -186,5 +186,18 @@ export default {
  "streetType": "Rodzaj ulicy",
  "hour": "Godzina",
  "minute": "Minuta",
- "me": "Ja"
+ "me": "Ja",
+ "locked": "Paraph jest zablokowany",
+ "unlock": "Odblokuj",
+ "usePin": "Użyj kodu PIN",
+ "bioReason": "Odblokuj Paraph",
+ "bioFailed": "Nie rozpoznano. Spróbuj ponownie.",
+ "bioUnavailable": "Odcisk palca / twarz niedostępne na tym urządzeniu",
+ "bioBackupPin": "Wybierz też zapasowy kod PIN",
+ "lockBio": "Odcisk palca / twarz",
+ "lockPinBtn": "Kod PIN",
+ "lockMethod": "Blokada aplikacji",
+ "lockNone": "Brak",
+ "lockPin": "Kod PIN",
+ "lockOfferD": "Zablokuj Paraph odciskiem palca, twarzą lub 4-cyfrowym kodem. Zmienisz to w Ustawieniach."
 };

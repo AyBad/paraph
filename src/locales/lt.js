@@ -186,5 +186,18 @@ export default {
  "streetType": "Gatvės tipas",
  "hour": "Valanda",
  "minute": "Minutė",
- "me": "Aš"
+ "me": "Aš",
+ "locked": "Paraph užrakinta",
+ "unlock": "Atrakinti",
+ "usePin": "Naudoti PIN kodą",
+ "bioReason": "Atrakinti Paraph",
+ "bioFailed": "Neatpažinta. Bandykite dar kartą.",
+ "bioUnavailable": "Piršto atspaudas / veidas šiame įrenginyje neprieinami",
+ "bioBackupPin": "Pasirinkite ir atsarginį PIN",
+ "lockBio": "Piršto atspaudas / veidas",
+ "lockPinBtn": "PIN kodas",
+ "lockMethod": "Programos užraktas",
+ "lockNone": "Nėra",
+ "lockPin": "PIN kodas",
+ "lockOfferD": "Užrakinkite Paraph piršto atspaudu, veidu arba 4 skaitmenų kodu. Keičiama nustatymuose."
 };

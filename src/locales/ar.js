@@ -186,5 +186,18 @@ export default {
  "streetType": "نوع الطريق",
  "hour": "الساعة",
  "minute": "الدقيقة",
- "me": "أنا"
+ "me": "أنا",
+ "locked": "Paraph مقفل",
+ "unlock": "فتح القفل",
+ "usePin": "استخدام رمز PIN",
+ "bioReason": "فتح قفل Paraph",
+ "bioFailed": "لم يتم التعرف. أعد المحاولة.",
+ "bioUnavailable": "البصمة / الوجه غير متاحين على هذا الجهاز",
+ "bioBackupPin": "اختر أيضًا رمز PIN احتياطيًا",
+ "lockBio": "البصمة / الوجه",
+ "lockPinBtn": "رمز PIN",
+ "lockMethod": "قفل التطبيق",
+ "lockNone": "بدون",
+ "lockPin": "رمز PIN",
+ "lockOfferD": "اقفل Paraph ببصمتك أو وجهك أو رمز من 4 أرقام. يمكنك تغييره في الإعدادات."
 };

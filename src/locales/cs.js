@@ -186,5 +186,18 @@ export default {
  "streetType": "Typ ulice",
  "hour": "Hodina",
  "minute": "Minuta",
- "me": "Já"
+ "me": "Já",
+ "locked": "Paraph je zamčený",
+ "unlock": "Odemknout",
+ "usePin": "Použít kód PIN",
+ "bioReason": "Odemknout Paraph",
+ "bioFailed": "Nerozpoznáno. Zkuste to znovu.",
+ "bioUnavailable": "Otisk prstu / obličej na tomto zařízení nejsou k dispozici",
+ "bioBackupPin": "Zvolte také záložní PIN",
+ "lockBio": "Otisk prstu / obličej",
+ "lockPinBtn": "Kód PIN",
+ "lockMethod": "Zámek aplikace",
+ "lockNone": "Žádný",
+ "lockPin": "Kód PIN",
+ "lockOfferD": "Zamkněte Paraph otiskem prstu, obličejem nebo 4místným kódem. Změníte v Nastavení."
 };

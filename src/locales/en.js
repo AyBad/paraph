@@ -186,5 +186,18 @@ export default {
  "scanBW": "Black & white",
  "noProfile": "No profile",
  "noProfileHint": "Nothing is filled in automatically",
- "me": "Me"
+ "me": "Me",
+ "locked": "Paraph is locked",
+ "unlock": "Unlock",
+ "usePin": "Use the PIN code",
+ "bioReason": "Unlock Paraph",
+ "bioFailed": "Not recognised. Try again.",
+ "bioUnavailable": "Fingerprint / face not available on this device",
+ "bioBackupPin": "Also choose a backup PIN code",
+ "lockBio": "Fingerprint / face",
+ "lockPinBtn": "PIN code",
+ "lockMethod": "App lock",
+ "lockNone": "None",
+ "lockPin": "PIN code",
+ "lockOfferD": "Lock Paraph with your fingerprint, your face or a 4-digit code. You can change it in Settings."
 };

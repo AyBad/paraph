@@ -186,5 +186,18 @@ export default {
  "streetType": "Jenis jalan",
  "hour": "Jam",
  "minute": "Menit",
- "me": "Saya"
+ "me": "Saya",
+ "locked": "Paraph terkunci",
+ "unlock": "Buka kunci",
+ "usePin": "Gunakan kode PIN",
+ "bioReason": "Buka kunci Paraph",
+ "bioFailed": "Tidak dikenali. Coba lagi.",
+ "bioUnavailable": "Sidik jari / wajah tidak tersedia di perangkat ini",
+ "bioBackupPin": "Pilih juga PIN cadangan",
+ "lockBio": "Sidik jari / wajah",
+ "lockPinBtn": "Kode PIN",
+ "lockMethod": "Kunci aplikasi",
+ "lockNone": "Tidak ada",
+ "lockPin": "Kode PIN",
+ "lockOfferD": "Kunci Paraph dengan sidik jari, wajah, atau kode 4 digit. Dapat diubah di Pengaturan."
 };

@@ -186,5 +186,18 @@ export default {
  "streetType": "Gatetype",
  "hour": "Time",
  "minute": "Minutt",
- "me": "Meg"
+ "me": "Meg",
+ "locked": "Paraph er låst",
+ "unlock": "Lås opp",
+ "usePin": "Bruk PIN-koden",
+ "bioReason": "Lås opp Paraph",
+ "bioFailed": "Ikke gjenkjent. Prøv igjen.",
+ "bioUnavailable": "Fingeravtrykk / ansikt er ikke tilgjengelig på denne enheten",
+ "bioBackupPin": "Velg også en reserve-PIN",
+ "lockBio": "Fingeravtrykk / ansikt",
+ "lockPinBtn": "PIN-kode",
+ "lockMethod": "Applås",
+ "lockNone": "Ingen",
+ "lockPin": "PIN-kode",
+ "lockOfferD": "Lås Paraph med fingeravtrykk, ansikt eller en firesifret kode. Kan endres i Innstillinger."
 };

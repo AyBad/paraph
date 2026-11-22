@@ -186,5 +186,18 @@ export default {
  "streetType": "سڑک کی قسم",
  "hour": "گھنٹہ",
  "minute": "منٹ",
- "me": "میں"
+ "me": "میں",
+ "locked": "Paraph مقفل ہے",
+ "unlock": "کھولیں",
+ "usePin": "PIN کوڈ استعمال کریں",
+ "bioReason": "Paraph کھولیں",
+ "bioFailed": "شناخت نہیں ہوئی۔ دوبارہ کوشش کریں۔",
+ "bioUnavailable": "فنگر پرنٹ / چہرہ اس آلے پر دستیاب نہیں",
+ "bioBackupPin": "ایک بیک اپ PIN بھی منتخب کریں",
+ "lockBio": "فنگر پرنٹ / چہرہ",
+ "lockPinBtn": "PIN کوڈ",
+ "lockMethod": "ایپ لاک",
+ "lockNone": "کوئی نہیں",
+ "lockPin": "PIN کوڈ",
+ "lockOfferD": "Paraph کو فنگر پرنٹ، چہرے یا 4 ہندسوں کے کوڈ سے لاک کریں۔ ترتیبات میں تبدیل کریں۔"
 };

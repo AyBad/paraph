@@ -186,5 +186,18 @@ export default {
  "streetType": "सड़क का प्रकार",
  "hour": "घंटा",
  "minute": "मिनट",
- "me": "मैं"
+ "me": "मैं",
+ "locked": "Paraph लॉक है",
+ "unlock": "अनलॉक करें",
+ "usePin": "पिन कोड का उपयोग करें",
+ "bioReason": "Paraph अनलॉक करें",
+ "bioFailed": "पहचान नहीं हुई। फिर कोशिश करें।",
+ "bioUnavailable": "इस डिवाइस पर फ़िंगरप्रिंट / चेहरा उपलब्ध नहीं",
+ "bioBackupPin": "एक बैकअप पिन भी चुनें",
+ "lockBio": "फ़िंगरप्रिंट / चेहरा",
+ "lockPinBtn": "पिन कोड",
+ "lockMethod": "ऐप लॉक",
+ "lockNone": "कोई नहीं",
+ "lockPin": "पिन कोड",
+ "lockOfferD": "Paraph को फ़िंगरप्रिंट, चेहरे या 4 अंकों के कोड से लॉक करें। सेटिंग में बदल सकते हैं।"
 };

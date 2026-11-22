@@ -186,5 +186,18 @@ export default {
  "streetType": "Közterület jellege",
  "hour": "Óra",
  "minute": "Perc",
- "me": "Én"
+ "me": "Én",
+ "locked": "A Paraph zárolva",
+ "unlock": "Feloldás",
+ "usePin": "PIN-kód használata",
+ "bioReason": "Paraph feloldása",
+ "bioFailed": "Nem ismerhető fel. Próbálja újra.",
+ "bioUnavailable": "Ujjlenyomat / arc nem érhető el ezen az eszközön",
+ "bioBackupPin": "Válasszon tartalék PIN-kódot is",
+ "lockBio": "Ujjlenyomat / arc",
+ "lockPinBtn": "PIN-kód",
+ "lockMethod": "Alkalmazászár",
+ "lockNone": "Nincs",
+ "lockPin": "PIN-kód",
+ "lockOfferD": "Zárolja a Paraph-ot ujjlenyomattal, arccal vagy 4 jegyű kóddal. A Beállításokban módosítható."
 };

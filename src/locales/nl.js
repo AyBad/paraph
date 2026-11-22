@@ -186,5 +186,18 @@ export default {
  "streetType": "Type straat",
  "hour": "Uur",
  "minute": "Minuut",
- "me": "Ik"
+ "me": "Ik",
+ "locked": "Paraph is vergrendeld",
+ "unlock": "Ontgrendelen",
+ "usePin": "Pincode gebruiken",
+ "bioReason": "Paraph ontgrendelen",
+ "bioFailed": "Niet herkend. Probeer opnieuw.",
+ "bioUnavailable": "Vingerafdruk / gezicht niet beschikbaar op dit toestel",
+ "bioBackupPin": "Kies ook een reserve-pincode",
+ "lockBio": "Vingerafdruk / gezicht",
+ "lockPinBtn": "Pincode",
+ "lockMethod": "App-vergrendeling",
+ "lockNone": "Geen",
+ "lockPin": "Pincode",
+ "lockOfferD": "Vergrendel Paraph met je vingerafdruk, gezicht of een 4-cijferige code. Wijzigen kan in Instellingen."
 };

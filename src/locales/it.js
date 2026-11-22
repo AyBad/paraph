@@ -186,5 +186,18 @@ export default {
  "streetType": "Tipo di via",
  "hour": "Ora",
  "minute": "Minuto",
- "me": "Io"
+ "me": "Io",
+ "locked": "Paraph è bloccato",
+ "unlock": "Sblocca",
+ "usePin": "Usa il codice PIN",
+ "bioReason": "Sblocca Paraph",
+ "bioFailed": "Non riconosciuto. Riprova.",
+ "bioUnavailable": "Impronta / volto non disponibile su questo dispositivo",
+ "bioBackupPin": "Scegli anche un PIN di riserva",
+ "lockBio": "Impronta / volto",
+ "lockPinBtn": "Codice PIN",
+ "lockMethod": "Blocco app",
+ "lockNone": "Nessuno",
+ "lockPin": "Codice PIN",
+ "lockOfferD": "Blocca Paraph con impronta, volto o un codice di 4 cifre. Modificabile nelle Impostazioni."
 };

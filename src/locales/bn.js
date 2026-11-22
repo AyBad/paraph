@@ -186,5 +186,18 @@ export default {
  "streetType": "রাস্তার ধরন",
  "hour": "ঘণ্টা",
  "minute": "মিনিট",
- "me": "আমি"
+ "me": "আমি",
+ "locked": "Paraph লক করা",
+ "unlock": "আনলক করুন",
+ "usePin": "পিন কোড ব্যবহার করুন",
+ "bioReason": "Paraph আনলক করুন",
+ "bioFailed": "চেনা যায়নি। আবার চেষ্টা করুন।",
+ "bioUnavailable": "এই ডিভাইসে আঙুলের ছাপ / মুখ উপলব্ধ নয়",
+ "bioBackupPin": "একটি ব্যাকআপ পিনও বেছে নিন",
+ "lockBio": "আঙুলের ছাপ / মুখ",
+ "lockPinBtn": "পিন কোড",
+ "lockMethod": "অ্যাপ লক",
+ "lockNone": "কিছু না",
+ "lockPin": "পিন কোড",
+ "lockOfferD": "আঙুলের ছাপ, মুখ বা ৪ অঙ্কের কোড দিয়ে Paraph লক করুন। সেটিংসে বদলানো যায়।"
 };
