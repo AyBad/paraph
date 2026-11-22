@@ -1,0 +1,37 @@
+appId: com.aybad.paraph
+name: Ouvrir, remplir et enregistrer un formulaire
+# Before: drag samples/formulaires/pdf-sans-champs-attestation-domicile-pointilles.pdf
+# onto the emulator window (it goes to the Download folder).
+---
+- runFlow: commun/demarrage.yaml
+- tapOn: "Ouvrir un document"
+# Android file picker
+- tapOn:
+    text: "Téléchargements|Downloads"
+    optional: true
+- tapOn: "pdf-sans-champs-attestation.*"
+- tapOn:
+    text: "Moi"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*zones à remplir.*"
+    timeout: 60000
+- takeScreenshot: captures/07-zones-detectees
+- tapOn: "Remplissage auto"
+- tapOn:
+    text: "Remplir"
+    optional: true
+- takeScreenshot: captures/08-remplissage
+- tapOn: "Enregistrer"
+- tapOn:
+    text: "Enregistrer"
+    index: 1
+- extendedWaitUntil:
+    visible: "Partager|✕"
+    timeout: 20000
+- tapOn:
+    text: "✕"
+    optional: true
+- takeScreenshot: captures/09-enregistre
+- tapOn: "Enregistrer sur le téléphone"
+- takeScreenshot: captures/10-telechargement

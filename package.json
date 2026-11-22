@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "node scripts/copy-ocr.mjs && vite build",
     "preview": "vite preview",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
+    "test": "playwright test --project=android-phone",
+    "test:ui": "playwright test --ui --project=android-phone",
     "test:report": "playwright show-report",
-    "test:install": "playwright install chromium"
+    "test:install": "playwright install chromium ffmpeg",
+    "test:voir": "playwright test --project=voir --headed --workers=1",
+    "test:apk": "maestro test maestro --format junit --output maestro/rapport.xml"
   },
   "keywords": [],
   "author": "",

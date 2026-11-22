@@ -8,3 +8,5 @@ public/ocr/
 test-results/
 playwright-report/
 blob-report/
+maestro/captures/
+maestro/rapport.xml

@@ -35,6 +35,8 @@ Application pour remplir des formulaires PDF et Word, puis les signer.
 | `npm run dev` | Lance l'application dans le navigateur (rechargée à chaque modification) |
 | `npm test` | Tous les tests automatiques (≈ 5 min) |
 | `npm run test:ui` | Fenêtre de test : choisir un test, le voir s'exécuter pas à pas |
+| `npm run test:voir` | Tests un par un dans une fenêtre de téléphone visible, ralentis et filmés (vidéos dans le rapport) |
+| `npm run test:apk` | Tests de la vraie application Android dans un émulateur (voir `maestro/README.md`) |
 | `npm run test:report` | Rapport des derniers tests (captures, traces des échecs) |
 | `npx playwright test profiles` | Seulement les tests dont le fichier contient « profiles » |
 
