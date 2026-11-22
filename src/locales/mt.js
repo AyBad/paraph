@@ -186,5 +186,18 @@ export default {
  "streetType": "Tip ta' triq",
  "hour": "Siegħa",
  "minute": "Minuta",
- "me": "Jien"
+ "me": "Jien",
+ "locked": "Paraph huwa msakkar",
+ "unlock": "Iftaħ",
+ "usePin": "Uża l-kodiċi PIN",
+ "bioReason": "Iftaħ Paraph",
+ "bioFailed": "Mhux magħruf. Erġa' pprova.",
+ "bioUnavailable": "Marka tas-swaba' / wiċċ mhux disponibbli f'dan l-apparat",
+ "bioBackupPin": "Agħżel ukoll PIN ta' riżerva",
+ "lockBio": "Marka tas-swaba' / wiċċ",
+ "lockPinBtn": "Kodiċi PIN",
+ "lockMethod": "Lock tal-app",
+ "lockNone": "Xejn",
+ "lockPin": "Kodiċi PIN",
+ "lockOfferD": "Sakkar Paraph bil-marka tas-swaba', il-wiċċ jew kodiċi ta' 4 ċifri. Jinbidel fis-Settings."
 };

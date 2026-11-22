@@ -186,5 +186,18 @@ export default {
  "streetType": "Vrsta ulice",
  "hour": "Ura",
  "minute": "Minuta",
- "me": "Jaz"
+ "me": "Jaz",
+ "locked": "Paraph je zaklenjen",
+ "unlock": "Odkleni",
+ "usePin": "Uporabi kodo PIN",
+ "bioReason": "Odkleni Paraph",
+ "bioFailed": "Ni prepoznano. Poskusite znova.",
+ "bioUnavailable": "Prstni odtis / obraz ni na voljo v tej napravi",
+ "bioBackupPin": "Izberite tudi rezervno kodo PIN",
+ "lockBio": "Prstni odtis / obraz",
+ "lockPinBtn": "Koda PIN",
+ "lockMethod": "Zaklep aplikacije",
+ "lockNone": "Brez",
+ "lockPin": "Koda PIN",
+ "lockOfferD": "Zaklenite Paraph s prstnim odtisom, obrazom ali 4-mestno kodo. Spremenite v Nastavitvah."
 };

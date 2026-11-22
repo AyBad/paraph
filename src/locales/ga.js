@@ -186,5 +186,18 @@ export default {
  "streetType": "Cineál sráide",
  "hour": "Uair",
  "minute": "Nóiméad",
- "me": "Mé"
+ "me": "Mé",
+ "locked": "Tá Paraph faoi ghlas",
+ "unlock": "Díghlasáil",
+ "usePin": "Úsáid an cód PIN",
+ "bioReason": "Díghlasáil Paraph",
+ "bioFailed": "Níor aithníodh. Bain triail eile as.",
+ "bioUnavailable": "Méarlorg / aghaidh ní ar fáil ar an ngléas seo",
+ "bioBackupPin": "Roghnaigh cód PIN cúltaca freisin",
+ "lockBio": "Méarlorg / aghaidh",
+ "lockPinBtn": "Cód PIN",
+ "lockMethod": "Glas aipe",
+ "lockNone": "Dada",
+ "lockPin": "Cód PIN",
+ "lockOfferD": "Cuir Paraph faoi ghlas le do mhéarlorg, d'aghaidh nó cód 4 dhigit. Is féidir é a athrú sna Socruithe."
 };

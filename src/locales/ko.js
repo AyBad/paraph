@@ -186,5 +186,18 @@ export default {
  "streetType": "도로 유형",
  "hour": "시",
  "minute": "분",
- "me": "나"
+ "me": "나",
+ "locked": "Paraph가 잠겨 있습니다",
+ "unlock": "잠금 해제",
+ "usePin": "PIN 코드 사용",
+ "bioReason": "Paraph 잠금 해제",
+ "bioFailed": "인식되지 않았습니다. 다시 시도하세요.",
+ "bioUnavailable": "이 기기에서는 지문 / 얼굴 인식을 사용할 수 없습니다",
+ "bioBackupPin": "예비 PIN도 설정하세요",
+ "lockBio": "지문 / 얼굴",
+ "lockPinBtn": "PIN 코드",
+ "lockMethod": "앱 잠금",
+ "lockNone": "없음",
+ "lockPin": "PIN 코드",
+ "lockOfferD": "지문, 얼굴 또는 4자리 코드로 Paraph를 잠급니다. 설정에서 바꿀 수 있습니다."
 };

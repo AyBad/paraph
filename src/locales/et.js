@@ -186,5 +186,18 @@ export default {
  "streetType": "Tänava tüüp",
  "hour": "Tund",
  "minute": "Minut",
- "me": "Mina"
+ "me": "Mina",
+ "locked": "Paraph on lukus",
+ "unlock": "Ava",
+ "usePin": "Kasuta PIN-koodi",
+ "bioReason": "Ava Paraph",
+ "bioFailed": "Ei tuvastatud. Proovige uuesti.",
+ "bioUnavailable": "Sõrmejälg / nägu pole selles seadmes saadaval",
+ "bioBackupPin": "Valige ka varu-PIN",
+ "lockBio": "Sõrmejälg / nägu",
+ "lockPinBtn": "PIN-kood",
+ "lockMethod": "Rakenduse lukk",
+ "lockNone": "Puudub",
+ "lockPin": "PIN-kood",
+ "lockOfferD": "Lukustage Paraph sõrmejälje, näo või 4-kohalise koodiga. Muudetav seadetes."
 };

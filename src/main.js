@@ -8,6 +8,7 @@ import { fileToPdfBytes } from './docs.js';
 import { openEditor } from './editor.js';
 import { downloadPdf, shareFile } from './share.js';
 import { exportAs } from './convert.js';
+import { bioAvailable, bioEnroll, bioVerify, lockMode } from './bio.js';
 import { showBanner, hideBanner, showInterstitial, removeBannerForPro, prepareInterstitial } from './ads.js';
 import { scanDocument } from './scan.js';
 const IncomingFile = registerPlugin('IncomingFile');
@@ -30,8 +31,8 @@ const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
 async function init() {
   await setLanguage((await store.getLang()) || detectLang());
-  applyTheme(await store.getSetting('theme', 'auto'));
-  if (await store.getSetting('pin')) await lockScreen();
+  applyTheme(await store.getSetting('theme', 'light'));
+  if (await lockMode()) await lockScreen();
   if ('serviceWorker' in navigator && !native && location.protocol === 'https:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { });
   }
@@ -48,7 +49,7 @@ async function init() {
     import('@capacitor/app').then(({ App }) => {
       App.addListener('pause', () => { away = Date.now(); });
       App.addListener('resume', async () => {
-        if (away && Date.now() - away > 60000 && await store.getSetting('pin') && !document.querySelector('.lock')) await lockScreen();
+        if (away && Date.now() - away > 60000 && await lockMode() && !document.querySelector('.lock')) await lockScreen();
         checkIncoming();
       });
     }).catch(() => { });
@@ -70,9 +71,9 @@ async function checkIncoming() {
 
 // ---------------- THEME / LOCK ----------------
 const darkMq = window.matchMedia('(prefers-color-scheme: dark)');
-let themeMode = 'auto';
+let themeMode = 'light';
 function applyTheme(mode) {
-  themeMode = mode || 'auto';
+  themeMode = mode || 'light';
   const dark = themeMode === 'dark' || (themeMode === 'auto' && darkMq.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#12131a' : '#1a237e';
@@ -102,11 +103,52 @@ function pinPad({ title, onCode, cancellable }) {
   const cc = el.querySelector('.pin-cancel'); if (cc) cc.onclick = () => { api.close(); onCode(null, api); };
   return api;
 }
-function lockScreen() {
+async function lockScreen() {
+  if ((await lockMode()) === 'bio') return bioLock();
+  return pinLock();
+}
+function pinLock() {
   return new Promise(res => pinPad({
     title: t('pinEnter'),
     onCode: async (c, api) => { if ((await store.sha256(c)) === (await store.getSetting('pin'))) { api.close(); res(); } else api.error(t('pinWrong')); }
   }));
+}
+/** locked with the fingerprint / face: the system prompt opens at once; the backup PIN when there is one */
+async function bioLock() {
+  const hasPin = !!(await store.getSetting('pin'));
+  return new Promise(res => {
+    const el = document.createElement('div');
+    el.className = 'lock';
+    el.innerHTML = `<div class="lock-box">${LOGO}<h2>${t('locked')}</h2>
+      <button class="bio-btn">${ICON.finger}</button><p class="pin-err"></p>
+      <button class="btn primary big unl">${t('unlock')}</button>
+      ${hasPin ? `<button class="link use-pin">${t('usePin')}</button>` : ''}</div>`;
+    document.body.appendChild(el);
+    let busyNow = false;
+    const go = async () => {
+      if (busyNow) return; busyNow = true;
+      const ok = await bioVerify(t('bioReason'));
+      busyNow = false;
+      if (ok) { el.remove(); res(); } else el.querySelector('.pin-err').textContent = t('bioFailed');
+    };
+    el.querySelector('.unl').onclick = go; el.querySelector('.bio-btn').onclick = go;
+    const up = el.querySelector('.use-pin');
+    if (up) up.onclick = async () => { el.remove(); await pinLock(); res(); };
+    setTimeout(go, 300);
+  });
+}
+/** choose how the app is locked: null (no lock), 'pin' or 'bio'. Resolves true when the choice is in place */
+async function setLock(mode) {
+  if (!mode) { await store.setSetting('lock', null); await store.setSetting('pin', null); await store.setSetting('bioCred', null); return true; }
+  if (mode === 'pin') {
+    if (!(await setPinFlow())) return false;
+    await store.setSetting('lock', 'pin'); return true;
+  }
+  if (!(await bioAvailable())) { toast(t('bioUnavailable')); return false; }
+  try { await bioEnroll(t('bioReason')); } catch (e) { toast(t('bioFailed')); return false; }
+  // iPhone / browser: a backup PIN in case the device key is lost (Android offers the phone's own code instead)
+  if (!native && !(await store.getSetting('pin'))) { toast(t('bioBackupPin')); if (!(await setPinFlow())) return false; }
+  await store.setSetting('lock', 'bio'); return true;
 }
 function setPinFlow() {
   return new Promise(res => {
@@ -131,10 +173,11 @@ function onboarding(fromMenu) {
     { ic: ICON.sign, t: 's3t', d: 's3d' },
     { ic: ICON.share, t: 's4t', d: 's4d' },
     { ic: ICON.lock, t: 'permT', d: 'permD', perm: true },
-    { ic: ICON.shield, t: 'pinOffer', d: 'pinOfferD', pin: true }
+    { ic: ICON.shield, t: 'pinOffer', d: 'lockOfferD', pin: true }
   ];
   if (fromMenu) slides.splice(-2);
-  let i = 0;
+  let i = 0, bioOk = false;
+  bioAvailable().then(v => { bioOk = v; if (slides[i] && slides[i].pin) draw(); });
   const finish = async () => { await store.setOnboarded(); home(); };
   const draw = () => {
     const s = slides[i], last = i === slides.length - 1;
@@ -144,10 +187,12 @@ function onboarding(fromMenu) {
       <div class="onb-art">${i === 0 ? LOGO : `<div class="onb-ic">${s.ic}</div>`}</div>
       <h1>${t(s.t)}</h1><p>${t(s.d)}</p>
       <div class="dots">${slides.map((_, k) => `<span class="${k === i ? 'on' : ''}"></span>`).join('')}</div>
-      <button class="btn primary big nx">${s.perm ? t('allow') : s.pin ? t('pinLock') : last ? t('getStarted') : t('next')}</button>
+      ${s.pin && bioOk ? `<button class="btn primary big bio-nx">${ICON.finger}<span>${t('lockBio')}</span></button>` : ''}
+      <button class="btn ${s.pin && bioOk ? 'ghost' : 'primary'} big nx">${s.perm ? t('allow') : s.pin ? t('lockPinBtn') : last ? t('getStarted') : t('next')}</button>
       ${s.pin ? `<button class="link later">${t('later')}</button>` : ''}
     </div>`;
     const lt = app.querySelector('.later'); if (lt) lt.onclick = finish;
+    const bn = app.querySelector('.bio-nx'); if (bn) bn.onclick = async () => { if (await setLock('bio')) finish(); };
     const sk = app.querySelector('.skip'); if (sk) sk.onclick = () => { const k = slides.findIndex(x => x.perm); i = k >= 0 ? k : slides.length - 1; draw(); };
     app.querySelector('.nx').onclick = async () => {
       if (s.perm) {
@@ -156,7 +201,7 @@ function onboarding(fromMenu) {
         }
         i++; return draw();
       }
-      if (s.pin) { await setPinFlow(); return finish(); }
+      if (s.pin) { if (await setLock('pin')) finish(); return; }
       if (last) return finish();
       i++; draw();
     };
@@ -469,7 +514,7 @@ async function editProfile(p, isNew) {
 // ---------------- SETTINGS ----------------
 async function settingsScreen() {
   hideBanner();
-  const [lang, theme, pin] = [await store.getLang(), await store.getSetting('theme', 'auto'), await store.getSetting('pin')];
+  const [lang, theme, mode, bioOk] = [await store.getLang(), await store.getSetting('theme', 'light'), await lockMode(), await bioAvailable()];
   app.innerHTML = `
   <div class="screen">
     ${header(t('settings'))}
@@ -477,15 +522,20 @@ async function settingsScreen() {
     <section class="card"><div class="card-h"><h2>${ICON.moon}${t('theme')}</h2></div>
       <div class="seg theme">${[['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]].map(([v, l]) => `<button class="seg-b${theme === v ? ' on' : ''}" data-v="${v}">${l}</button>`).join('')}</div></section>
     <section class="card"><div class="card-h"><h2>${ICON.shield}${t('security')}</h2></div>
-      <label class="switch-row"><span>${t('pinLock')}</span><input type="checkbox" class="pin-t" ${pin ? 'checked' : ''}><i class="sw-ui"></i></label></section>
+      <p class="muted small">${t('lockMethod')}</p>
+      <div class="seg lockm">${[['', t('lockNone')], ['pin', t('lockPin')], ['bio', t('lockBio')]].map(([v, l]) => `<button class="seg-b${(mode || '') === v ? ' on' : ''}" data-v="${v}" ${v === 'bio' && !bioOk ? 'disabled' : ''}>${v === 'bio' ? ICON.finger : ''}<span>${l}</span></button>`).join('')}</div>
+      ${!bioOk ? `<p class="muted small">${t('bioUnavailable')}</p>` : ''}</section>
   </div>`;
   app.querySelector('.back').onclick = home;
   app.querySelector('.lang').onclick = settings;
   app.querySelectorAll('.theme .seg-b').forEach(b => b.onclick = async () => { await store.setSetting('theme', b.dataset.v); applyTheme(b.dataset.v); settingsScreen(); });
-  app.querySelector('.pin-t').onchange = async (e) => {
-    if (e.target.checked) { const ok = await setPinFlow(); if (!ok) e.target.checked = false; else toast('✓'); }
-    else { await store.setSetting('pin', null); toast('✓'); }
-  };
+  app.querySelectorAll('.lockm .seg-b').forEach(b => b.onclick = async () => {
+    const v = b.dataset.v || null;
+    if (v === (mode || null)) return;
+    if (mode && (await lockMode())) await lockScreen(); // prove it is you before changing the lock
+    if (await setLock(v)) toast('✓');
+    settingsScreen();
+  });
 }
 
 // ---------------- LANGUAGE ----------------

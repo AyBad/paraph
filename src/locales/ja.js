@@ -186,5 +186,18 @@ export default {
  "streetType": "通りの種類",
  "hour": "時",
  "minute": "分",
- "me": "自分"
+ "me": "自分",
+ "locked": "Paraph はロック中",
+ "unlock": "ロック解除",
+ "usePin": "PIN コードを使う",
+ "bioReason": "Paraph のロック解除",
+ "bioFailed": "認識できません。もう一度お試しください。",
+ "bioUnavailable": "この端末では指紋 / 顔認証を利用できません",
+ "bioBackupPin": "予備の PIN も設定してください",
+ "lockBio": "指紋 / 顔認証",
+ "lockPinBtn": "PIN コード",
+ "lockMethod": "アプリのロック",
+ "lockNone": "なし",
+ "lockPin": "PIN コード",
+ "lockOfferD": "指紋・顔認証または 4 桁のコードで Paraph をロックします。設定で変更できます。"
 };

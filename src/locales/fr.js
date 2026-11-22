@@ -186,5 +186,18 @@ export default {
  "scanBW": "Noir et blanc",
  "noProfile": "Sans profil",
  "noProfileHint": "Rien n'est rempli automatiquement",
- "me": "Moi"
+ "me": "Moi",
+ "locked": "Paraph est verrouillé",
+ "unlock": "Déverrouiller",
+ "usePin": "Utiliser le code PIN",
+ "bioReason": "Déverrouiller Paraph",
+ "bioFailed": "Non reconnu. Réessayez.",
+ "bioUnavailable": "Empreinte / visage non disponible sur cet appareil",
+ "bioBackupPin": "Choisissez aussi un code PIN de secours",
+ "lockBio": "Empreinte / visage",
+ "lockPinBtn": "Code PIN",
+ "lockMethod": "Verrouillage de l'application",
+ "lockNone": "Aucun",
+ "lockPin": "Code PIN",
+ "lockOfferD": "Verrouillez Paraph avec votre empreinte, votre visage ou un code à 4 chiffres. Modifiable dans les Paramètres."
 };

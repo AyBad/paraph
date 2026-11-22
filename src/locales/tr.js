@@ -186,5 +186,18 @@ export default {
  "streetType": "Yol türü",
  "hour": "Saat",
  "minute": "Dakika",
- "me": "Ben"
+ "me": "Ben",
+ "locked": "Paraph kilitli",
+ "unlock": "Kilidi aç",
+ "usePin": "PIN kodunu kullan",
+ "bioReason": "Paraph kilidini aç",
+ "bioFailed": "Tanınmadı. Tekrar deneyin.",
+ "bioUnavailable": "Parmak izi / yüz bu cihazda kullanılamıyor",
+ "bioBackupPin": "Yedek bir PIN de seçin",
+ "lockBio": "Parmak izi / yüz",
+ "lockPinBtn": "PIN kodu",
+ "lockMethod": "Uygulama kilidi",
+ "lockNone": "Yok",
+ "lockPin": "PIN kodu",
+ "lockOfferD": "Paraph'ı parmak izi, yüz veya 4 haneli kodla kilitleyin. Ayarlar'dan değiştirebilirsiniz."
 };

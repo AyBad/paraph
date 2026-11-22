@@ -186,5 +186,18 @@ export default {
  "streetType": "ประเภทถนน",
  "hour": "ชั่วโมง",
  "minute": "นาที",
- "me": "ฉัน"
+ "me": "ฉัน",
+ "locked": "Paraph ถูกล็อก",
+ "unlock": "ปลดล็อก",
+ "usePin": "ใช้รหัส PIN",
+ "bioReason": "ปลดล็อก Paraph",
+ "bioFailed": "ไม่รู้จัก ลองอีกครั้ง",
+ "bioUnavailable": "อุปกรณ์นี้ไม่รองรับลายนิ้วมือ / ใบหน้า",
+ "bioBackupPin": "ตั้งรหัส PIN สำรองด้วย",
+ "lockBio": "ลายนิ้วมือ / ใบหน้า",
+ "lockPinBtn": "รหัส PIN",
+ "lockMethod": "ล็อกแอป",
+ "lockNone": "ไม่มี",
+ "lockPin": "รหัส PIN",
+ "lockOfferD": "ล็อก Paraph ด้วยลายนิ้วมือ ใบหน้า หรือรหัส 4 หลัก เปลี่ยนได้ในการตั้งค่า"
 };

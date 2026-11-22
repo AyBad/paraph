@@ -186,5 +186,18 @@ export default {
  "streetType": "Kadun tyyppi",
  "hour": "Tunti",
  "minute": "Minuutti",
- "me": "Minä"
+ "me": "Minä",
+ "locked": "Paraph on lukittu",
+ "unlock": "Avaa",
+ "usePin": "Käytä PIN-koodia",
+ "bioReason": "Avaa Paraph",
+ "bioFailed": "Ei tunnistettu. Yritä uudelleen.",
+ "bioUnavailable": "Sormenjälki / kasvot eivät ole käytettävissä tässä laitteessa",
+ "bioBackupPin": "Valitse myös vara-PIN",
+ "lockBio": "Sormenjälki / kasvot",
+ "lockPinBtn": "PIN-koodi",
+ "lockMethod": "Sovelluksen lukitus",
+ "lockNone": "Ei mitään",
+ "lockPin": "PIN-koodi",
+ "lockOfferD": "Lukitse Paraph sormenjäljellä, kasvoilla tai 4-numeroisella koodilla. Muutettavissa asetuksissa."
 };

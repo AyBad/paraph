@@ -360,3 +360,10 @@ body.ad-on .modal.sheet{margin-bottom:0}
 .dot.hollow{background:transparent!important;border:2px dashed var(--mut)}
 .list-item.prof.none{flex-wrap:wrap}
 .list-item.prof.none span{font-size:12.5px;flex:1 1 100%;white-space:normal;overflow:visible;text-overflow:clip;padding-inline-start:28px}
+.lockm .seg-b{display:flex;align-items:center;justify-content:center;gap:4px}
+.lockm .seg-b svg{width:18px;height:18px}
+.lockm .seg-b:disabled{opacity:.4}
+.bio-btn{width:84px;height:84px;border-radius:50%;margin:18px auto 6px;display:grid;place-items:center;background:#e8eaf6;color:var(--ink)}
+.bio-btn svg{width:46px;height:46px;stroke-width:1.6}
+[data-theme=dark] .bio-btn{background:#272c4a;color:#c5cbff}
+.lock .unl{margin-top:10px;width:100%}

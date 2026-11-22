@@ -186,5 +186,18 @@ export default {
  "streetType": "Straßentyp",
  "hour": "Stunde",
  "minute": "Minute",
- "me": "Ich"
+ "me": "Ich",
+ "locked": "Paraph ist gesperrt",
+ "unlock": "Entsperren",
+ "usePin": "PIN verwenden",
+ "bioReason": "Paraph entsperren",
+ "bioFailed": "Nicht erkannt. Bitte erneut versuchen.",
+ "bioUnavailable": "Fingerabdruck / Gesicht auf diesem Gerät nicht verfügbar",
+ "bioBackupPin": "Wählen Sie auch eine Ersatz-PIN",
+ "lockBio": "Fingerabdruck / Gesicht",
+ "lockPinBtn": "PIN-Code",
+ "lockMethod": "App-Sperre",
+ "lockNone": "Keine",
+ "lockPin": "PIN-Code",
+ "lockOfferD": "Sperren Sie Paraph mit Fingerabdruck, Gesicht oder einem 4-stelligen Code. Änderbar in den Einstellungen."
 };
