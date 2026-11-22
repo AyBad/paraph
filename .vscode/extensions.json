@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ms-playwright.playwright",
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "editorconfig.editorconfig"
+  ]
+}

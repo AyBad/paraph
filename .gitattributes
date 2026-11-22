@@ -1,0 +1,10 @@
+# same line endings on Windows and in GitHub Actions (gradlew must stay LF)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.docx binary
+*.jar binary
+*.gz binary
+*.webp binary

@@ -3,3 +3,8 @@ dist/
 .DS_Store
 *.log
 public/ocr/
+
+# automated tests
+test-results/
+playwright-report/
+blob-report/
