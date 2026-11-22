@@ -30,15 +30,26 @@ const PLANS = [
 const money = (v) => { try { return new Intl.NumberFormat(document.documentElement.lang, { style: 'currency', currency: 'EUR' }).format(v); } catch { return v + ' €'; } };
 const SWATCHES = ['#000000', '#1a237e', '#0d47a1', '#1b5e20', '#b71c1c'];
 
+// opening screen (index.html): shown at least until its animation has played, then fades into the app
+const SPLASH_MIN = 2100;
+function endSplash() {
+  const sp = document.getElementById('splash');
+  if (!sp) return Promise.resolve();
+  const wait = Math.max(0, SPLASH_MIN - performance.now());
+  return new Promise(r => setTimeout(() => { sp.classList.add('out'); setTimeout(() => { sp.remove(); r(); }, 450); }, wait));
+}
+
 async function init() {
   await setLanguage((await store.getLang()) || detectLang());
+  const tag = document.getElementById('sp-tag'); if (tag) tag.textContent = t('tagline');
   if (!(await store.getSetting('themeV2'))) {
     if ((await store.getSetting('theme')) === 'auto') await store.setSetting('theme', 'light');
     await store.setSetting('themeV2', 1);
   }
   applyTheme(await store.getSetting('theme', 'light'));
   noteFirstUse();
-  if (await lockMode()) await lockScreen();
+  // the lock is put in place under the opening screen, so nothing shows in between
+  if (await lockMode()) lockScreen();
   if ('serviceWorker' in navigator && !native && location.protocol === 'https:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { });
   }
@@ -62,6 +73,7 @@ async function init() {
     try { IncomingFile.addListener('incoming', () => checkIncoming()); } catch { }
   }
   if (!(await store.isOnboarded())) onboarding(); else home();
+  await endSplash();
   checkIncoming();
 }
 
@@ -140,7 +152,9 @@ async function bioLock() {
     el.querySelector('.unl').onclick = go; el.querySelector('.bio-btn').onclick = go;
     const up = el.querySelector('.use-pin');
     if (up) up.onclick = async () => { el.remove(); await pinLock(); res(); };
-    setTimeout(go, 300);
+    // the fingerprint / face prompt opens once the opening screen is gone
+    const start = () => document.getElementById('splash') ? setTimeout(start, 150) : go();
+    setTimeout(start, 300);
   });
 }
 /** choose how the app is locked: null (no lock), 'pin' or 'bio'. Resolves true when the choice is in place */
