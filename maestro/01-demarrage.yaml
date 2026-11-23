@@ -2,5 +2,5 @@ appId: com.aybad.paraph
 name: Démarrage et accueil
 ---
 - runFlow: commun/demarrage.yaml
-- assertVisible: "Mes documents"
+- assertVisible: "Mes documents|My documents"
 - takeScreenshot: captures/02-accueil
