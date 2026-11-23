@@ -3,20 +3,24 @@ appId: com.aybad.paraph
 ---
 - launchApp:
     clearState: true
+# an emulator can be slow: first start of the WebView + 5 s opening animation
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: captures/00-lancement
 - extendedWaitUntil:
-    visible: "Passer"
-    timeout: 20000
+    visible: "Passer|Skip"
+    timeout: 90000
 - takeScreenshot: captures/01-presentation
-- tapOn: "Passer"
+- tapOn: "Passer|Skip"
 - tapOn:
-    text: "Autoriser|Suivant|Commencer"
+    text: "Autoriser|Suivant|Commencer|Allow|Next|Get started"
     optional: true
 - tapOn:
-    text: "Plus tard"
+    text: "Plus tard|Later"
     optional: true
 - tapOn:
-    text: "Plus tard"
+    text: "Plus tard|Later"
     optional: true
 - extendedWaitUntil:
-    visible: "Ouvrir un document"
+    visible: "Ouvrir un document|Open a document"
     timeout: 10000

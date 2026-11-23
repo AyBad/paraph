@@ -2,42 +2,42 @@ appId: com.aybad.paraph
 name: Profils (nom unique, 5 gratuits)
 ---
 - runFlow: commun/demarrage.yaml
-- tapOn: "Modifier"
-- tapOn: "Nouveau profil"
-# the name field shows "Nom du profil" when empty
-- tapOn: "Nom du profil"
+- tapOn: "Modifier|Edit"
+- tapOn: "Nouveau profil|New profile"
+# the name field shows "Nom du profil|Profile name" when empty
+- tapOn: "Nom du profil|Profile name"
 - inputText: "moi"
 - hideKeyboard
-- tapOn: "Enregistrer"
-- assertVisible: "Ce nom de profil existe déjà.*"
+- tapOn: "Enregistrer|Save"
+- assertVisible: "(Ce nom de profil existe déjà|This profile name already exists).*"
 - takeScreenshot: captures/03-nom-deja-utilise
 - tapOn: "moi"
 - eraseText: 5
 - inputText: "Sarah"
 - hideKeyboard
-- tapOn: "Enregistrer"
+- tapOn: "Enregistrer|Save"
 - assertVisible: "Sarah"
 # up to 5 profiles
-- tapOn: "Nouveau profil"
-- tapOn: "Nom du profil"
+- tapOn: "Nouveau profil|New profile"
+- tapOn: "Nom du profil|Profile name"
 - inputText: "Profil 3"
 - hideKeyboard
-- tapOn: "Enregistrer"
+- tapOn: "Enregistrer|Save"
 - assertVisible: "Profil 3"
-- tapOn: "Nouveau profil"
-- tapOn: "Nom du profil"
+- tapOn: "Nouveau profil|New profile"
+- tapOn: "Nom du profil|Profile name"
 - inputText: "Profil 4"
 - hideKeyboard
-- tapOn: "Enregistrer"
+- tapOn: "Enregistrer|Save"
 - assertVisible: "Profil 4"
-- tapOn: "Nouveau profil"
-- tapOn: "Nom du profil"
+- tapOn: "Nouveau profil|New profile"
+- tapOn: "Nom du profil|Profile name"
 - inputText: "Profil 5"
 - hideKeyboard
-- tapOn: "Enregistrer"
+- tapOn: "Enregistrer|Save"
 - assertVisible: "Profil 5"
 # the 6th asks for the Pro version
-- tapOn: "Nouveau profil"
-- assertVisible: ".*5 profils.*"
+- tapOn: "Nouveau profil|New profile"
+- assertVisible: ".*5 (profils|profiles).*"
 - takeScreenshot: captures/04-limite-5-profils
-- tapOn: "Annuler"
+- tapOn: "Annuler|Cancel"

@@ -4,7 +4,7 @@ name: Ouvrir, remplir et enregistrer un formulaire
 # onto the emulator window (it goes to the Download folder).
 ---
 - runFlow: commun/demarrage.yaml
-- tapOn: "Ouvrir un document"
+- tapOn: "Ouvrir un document|Open a document"
 # Android file picker
 - tapOn:
     text: "Téléchargements|Downloads"
@@ -14,24 +14,24 @@ name: Ouvrir, remplir et enregistrer un formulaire
     text: "Moi"
     optional: true
 - extendedWaitUntil:
-    visible: ".*zones à remplir.*"
+    visible: ".*(zones à remplir|areas to fill).*"
     timeout: 60000
 - takeScreenshot: captures/07-zones-detectees
-- tapOn: "Remplissage auto"
+- tapOn: "Remplissage auto|Auto-fill"
 - tapOn:
-    text: "Remplir"
+    text: "Remplir|Fill in"
     optional: true
 - takeScreenshot: captures/08-remplissage
-- tapOn: "Enregistrer"
+- tapOn: "Enregistrer|Save"
 - tapOn:
-    text: "Enregistrer"
+    text: "Enregistrer|Save"
     index: 1
 - extendedWaitUntil:
-    visible: "Partager|✕"
+    visible: "Partager|Share|✕"
     timeout: 20000
 - tapOn:
     text: "✕"
     optional: true
 - takeScreenshot: captures/09-enregistre
-- tapOn: "Enregistrer sur le téléphone"
+- tapOn: "Enregistrer sur le téléphone|Save to phone"
 - takeScreenshot: captures/10-telechargement
